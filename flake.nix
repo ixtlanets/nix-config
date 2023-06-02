@@ -13,6 +13,9 @@
     home-manager.url = "github:nix-community/home-manager/release-23.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # NUR
+    nur.url = github:nix-community/NUR;
+
     # TODO: Add any other flake you might need
     hardware.url = "github:nixos/nixos-hardware/master";
 
@@ -21,7 +24,7 @@
     # nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, hardware, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, hardware, nur, ... }@inputs:
     let
       inherit (self) outputs;
       forAllSystems = nixpkgs.lib.genAttrs [
@@ -47,7 +50,7 @@
       );
 
       # Your custom packages and modifications, exported as overlays
-      overlays = import ./overlays { inherit inputs; };
+      overlays = import ./overlays { inherit inputs nur; };
       # Reusable nixos modules you might want to export
       # These are usually stuff you would upstream into nixpkgs
       nixosModules = import ./modules/nixos;
@@ -62,6 +65,7 @@
         x1carbon = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs; };
           modules = [
+            nur.nixosModules.nur
             # > Our main nixos configuration file <
             ./nixos/configuration.nix
             hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
@@ -75,7 +79,7 @@
         # FIXME replace with your username@hostname
         "nik@x1carbon" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-          extraSpecialArgs = { inherit inputs outputs; };
+          extraSpecialArgs = { inherit inputs outputs nur; };
           modules = [
             # > Our main home-manager configuration file <
             ./home-manager/home.nix
