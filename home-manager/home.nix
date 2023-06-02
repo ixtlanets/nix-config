@@ -79,6 +79,10 @@
         };
       };
     };
+    gh = {
+      enable = true;
+      enableGitCredentialHelper = true;
+    };
     vscode = {
       enable = true;
       extensions = [
