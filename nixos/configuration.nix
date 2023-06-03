@@ -48,7 +48,8 @@
   programs = {
     zsh.enable = true;
     dconf.enable = true;
-    kdeconnect = {                                # For GSConnect
+    kdeconnect = {
+      # For GSConnect
       enable = true;
       package = pkgs.gnomeExtensions.gsconnect;
     };
@@ -72,7 +73,17 @@
 
   # Enable sound with pipewire.
   sound.enable = true;
-  hardware.pulseaudio.enable = false;
+  hardware = {
+    pulseaudio.enable = false;
+    opengl = {
+      enable = true;
+      extraPackages = with pkgs; [
+        vaapiIntel
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
+    };
+  };
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
