@@ -103,6 +103,7 @@
         "window.menuBarVisibility" = "toggle";
         "editor.fontFamily" = "'Hack Nerd Font', 'Droid Sans Mono', 'monospace', monospace";
         "editor.fontSize" = 16;
+        "editor.lineNumbers" = "relative";
       };
     };
     git = {
