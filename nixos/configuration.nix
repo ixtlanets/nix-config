@@ -67,6 +67,16 @@
       layout = "us,ru";
       xkbOptions = "grp:win_space_toggle";
     };
+    tailscale = {
+      enable = true;
+      useRoutingFeatures = "both";
+    };
+    zerotierone = {
+      enable = true;
+      joinNetworks = [
+        "88503383901a34c1"
+      ];
+    };
   };
 
   # Enable CUPS to print documents.
@@ -117,6 +127,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    zerotierone
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #  wget
   ];
