@@ -119,6 +119,9 @@
         ignoreDups = true;
       };
     };
+    fzf = {
+      enable = true;
+    };
     neovim = {
       enable = true;
       viAlias = true;
