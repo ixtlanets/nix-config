@@ -89,11 +89,14 @@
     };
     vscode = {
       enable = true;
-      extensions = [
-        pkgs.vscode-extensions.catppuccin.catppuccin-vsc
-        pkgs.vscode-extensions.dbaeumer.vscode-eslint
-        pkgs.vscode-extensions.bbenoist.nix
-        pkgs.vscode-extensions.jnoortheen.nix-ide
+      extensions = with pkgs.vscode-extensions; [
+        catppuccin.catppuccin-vsc
+        dbaeumer.vscode-eslint
+        bbenoist.nix
+        jnoortheen.nix-ide
+        github.copilot
+        github.vscode-pull-request-github
+        github.codespaces
       ];
       userSettings = {
         "window.titleBarStyle" = "custom";
@@ -230,7 +233,6 @@
     };
     firefox = {
       enable = true;
-      enableGnomeExtensions = true;
       profiles.Default = {
         extensions = with pkgs.nur.repos.rycee.firefox-addons; [
           onepassword-password-manager
@@ -263,20 +265,20 @@
       maximize = [ "<Super>Up" ];
       unmaximize = [ "<Super>Down" ];
       toggle-fullscreen = [ "<Super>f" ];
-      switch-to-workspace-left = ["<Ctrl><Alt>Left"];
-      switch-to-workspace-right = ["<Ctrl><Alt>Right"];
-      switch-to-workspace-1 = ["<Ctrl><Alt>1"];
-      switch-to-workspace-2 = ["<Ctrl><Alt>2"];
-      switch-to-workspace-3 = ["<Ctrl><Alt>3"];
-      switch-to-workspace-4 = ["<Ctrl><Alt>4"];
-      switch-to-workspace-5 = ["<Ctrl><Alt>5"];
-      move-to-workspace-left = ["<Shift><Ctrl><Alt>Left"];
-      move-to-workspace-right = ["<Shift><Ctrl><Alt>Right"];
-      move-to-workspace-1 = ["<Shift><Ctrl><Alt>1"];
-      move-to-workspace-2 = ["<Shift><Ctrl><Alt>2"];
-      move-to-workspace-3 = ["<Shift><Ctrl><Alt>3"];
-      move-to-workspace-4 = ["<Shift><Ctrl><Alt>4"];
-      move-to-workspace-5 = ["<Shift><Ctrl><Alt>5"];
+      switch-to-workspace-left = [ "<Ctrl><Alt>Left" ];
+      switch-to-workspace-right = [ "<Ctrl><Alt>Right" ];
+      switch-to-workspace-1 = [ "<Ctrl><Alt>1" ];
+      switch-to-workspace-2 = [ "<Ctrl><Alt>2" ];
+      switch-to-workspace-3 = [ "<Ctrl><Alt>3" ];
+      switch-to-workspace-4 = [ "<Ctrl><Alt>4" ];
+      switch-to-workspace-5 = [ "<Ctrl><Alt>5" ];
+      move-to-workspace-left = [ "<Shift><Ctrl><Alt>Left" ];
+      move-to-workspace-right = [ "<Shift><Ctrl><Alt>Right" ];
+      move-to-workspace-1 = [ "<Shift><Ctrl><Alt>1" ];
+      move-to-workspace-2 = [ "<Shift><Ctrl><Alt>2" ];
+      move-to-workspace-3 = [ "<Shift><Ctrl><Alt>3" ];
+      move-to-workspace-4 = [ "<Shift><Ctrl><Alt>4" ];
+      move-to-workspace-5 = [ "<Shift><Ctrl><Alt>5" ];
     };
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
