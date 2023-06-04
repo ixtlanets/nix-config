@@ -59,6 +59,7 @@
   services = {
     xserver = {
       enable = true;
+      dpi = 144;
       displayManager.gdm.enable = true;
       desktopManager.gnome.enable = true;
       libinput.enable = true;

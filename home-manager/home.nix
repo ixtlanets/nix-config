@@ -80,6 +80,9 @@
         };
       };
     };
+    bat = {
+      enable = true;
+    };
     gh = {
       enable = true;
       enableGitCredentialHelper = true;
@@ -252,6 +255,48 @@
   };
 
   dconf.settings = {
+    "org/gnome/desktop/wm/keybindings" = {
+      close = [ "<Super>q" "<Alt>F4" ];
+      maximize = [ "<Super>Up" ];
+      unmaximize = [ "<Super>Down" ];
+      toggle-fullscreen = [ "<Super>f" ];
+      switch-to-workspace-left = ["<Ctrl><Alt>Left"];
+      switch-to-workspace-right = ["<Ctrl><Alt>Right"];
+      switch-to-workspace-1 = ["<Ctrl><Alt>1"];
+      switch-to-workspace-2 = ["<Ctrl><Alt>2"];
+      switch-to-workspace-3 = ["<Ctrl><Alt>3"];
+      switch-to-workspace-4 = ["<Ctrl><Alt>4"];
+      switch-to-workspace-5 = ["<Ctrl><Alt>5"];
+      move-to-workspace-left = ["<Shift><Ctrl><Alt>Left"];
+      move-to-workspace-right = ["<Shift><Ctrl><Alt>Right"];
+      move-to-workspace-1 = ["<Shift><Ctrl><Alt>1"];
+      move-to-workspace-2 = ["<Shift><Ctrl><Alt>2"];
+      move-to-workspace-3 = ["<Shift><Ctrl><Alt>3"];
+      move-to-workspace-4 = ["<Shift><Ctrl><Alt>4"];
+      move-to-workspace-5 = ["<Shift><Ctrl><Alt>5"];
+    };
+    "org/gnome/settings-daemon/plugins/media-keys" = {
+      custom-keybindings = [
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
+      ];
+    };
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+      binding = "<Super>Return";
+      command = "alacritty";
+      name = "open-terminal";
+    };
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+      binding = "<Super>b";
+      command = "chromium";
+      name = "open-browser";
+    };
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
+      binding = "<Super>e";
+      command = "nautilus";
+      name = "open-file-browser";
+    };
     "org/gnome/shell" = {
       favorite-apps = [
         "firefox.desktop"
