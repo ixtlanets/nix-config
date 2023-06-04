@@ -302,6 +302,7 @@
     };
     "org/gnome/shell" = {
       favorite-apps = [
+        "chromium-browser.desktop"
         "firefox.desktop"
         "Alacritty.desktop"
         "org.gnome.Nautilus.desktop"
