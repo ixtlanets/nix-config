@@ -66,6 +66,8 @@ in
     _1password-gui
     git-credential-1password
     telegram-desktop
+    obsidian
+    moonlight-qt
     xclip
     nerdfonts
     wl-clipboard
