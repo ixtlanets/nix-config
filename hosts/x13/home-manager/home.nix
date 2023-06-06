@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, nur, ... }: {
+{ inputs, outputs, lib, config, pkgs, ... }: {
   # You can import other home-manager modules here
   imports = [
     # If you want to use modules your own flake exports (from modules/home-manager):
@@ -21,17 +21,23 @@
       outputs.overlays.additions
       outputs.overlays.modifications
       outputs.overlays.unstable-packages
-      nur.overlay
 
       # You can also add overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
 
       # Or define it inline, for example:
-      # (final: prev: {
-      #   hi = final.hello.overrideAttrs (oldAttrs: {
-      #     patches = [ ./change-hello-to-hi.patch ];
-      #   });
-      # })
+      (final: prev: {
+        tmuxPluginsDracula = final.tmuxPlugins.dracula.overrideAttrs (oldAttrs: {
+          version = "2.2.0";
+          src = pkgs.fetchFromGitHub {
+            owner = "dracula";
+            repo = "tmux";
+            rev = "v2.2.0";
+            sha256 = "9p+KO3/SrASHGtEk8ioW+BnC4cXndYx4FL0T70lKU2w=";
+          };
+        });
+      })
+
     ];
     # Configure your nixpkgs instance
     config = {
@@ -99,11 +105,12 @@
         github.codespaces
       ];
       userSettings = {
-        "window.titleBarStyle" = "custom";
-        "window.menuBarVisibility" = "toggle";
         "editor.fontFamily" = "'Hack Nerd Font', 'Droid Sans Mono', 'monospace', monospace";
         "editor.fontSize" = 16;
         "editor.lineNumbers" = "relative";
+        "window.menuBarVisibility" = "toggle";
+        "window.titleBarStyle" = "custom";
+        "editor.inlineSuggest.enabled" = true;
       };
     };
     git = {
@@ -212,7 +219,7 @@
         pkgs.tmuxPlugins.urlview
         pkgs.tmuxPlugins.prefix-highlight
         {
-          plugin = pkgs.tmuxPlugins.dracula;
+          plugin = pkgs.tmuxPluginsDracula;
           extraConfig = ''
             set -g @dracula-show-fahrenheit false
             set -g @dracula-plugins "battery cpu-usage ram-usage weather time"
@@ -234,14 +241,6 @@
     };
     firefox = {
       enable = true;
-      profiles.Default = {
-        extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-          onepassword-password-manager
-          sponsorblock
-          ublock-origin
-          link-cleaner
-        ];
-      };
     };
     chromium = {
       enable = true;
@@ -258,9 +257,14 @@
       ];
     };
     btop.enable = true;
+    htop.enable = true;
   };
 
   dconf.settings = {
+    "org/gnome/desktop/input-sources" = {
+      sources = [ (mkTuple [ "xkb" "us" ]) (mkTuple [ "xkb" "ru" ]) ];
+      xkb-options = [ "grp:win_space_toggle" "grp:win_space_toggle" ];
+    };
     "org/gnome/desktop/wm/keybindings" = {
       close = [ "<Super>q" "<Alt>F4" ];
       maximize = [ "<Super>Up" ];

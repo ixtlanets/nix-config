@@ -3,14 +3,14 @@
 
   inputs = {
     # Nixpkgs
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     # You can access packages and modules from different nixpkgs revs
     # at the same time. Here's an working example:
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     # Also see the 'unstable-packages' overlay at 'overlays/default.nix'.
 
     # Home manager
-    home-manager.url = "github:nix-community/home-manager/release-23.05";
+    home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     # NUR
@@ -66,21 +66,32 @@
           modules = [
             nur.nixosModules.nur
             # > Our main nixos configuration file <
-            ./nixos/configuration.nix
+            ./hosts/x1carbon/nixos/configuration.nix
             hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur; };
+                users.nik.imports = [ ./hosts/x1carbon/home-manager/home.nix ];
+              };
+            }
           ];
         };
-      };
-
-      # Standalone home-manager configuration entrypoint
-      # Available through 'home-manager --flake .#your-username@your-hostname'
-      homeConfigurations = {
-        "nik@x1carbon" = home-manager.lib.homeManagerConfiguration {
-          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-          extraSpecialArgs = { inherit inputs outputs nur; };
+        x13 = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
           modules = [
-            # > Our main home-manager configuration file <
-            ./home-manager/home.nix
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/x13/nixos/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur; };
+                users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
+              };
+            }
           ];
         };
       };
