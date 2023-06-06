@@ -71,6 +71,8 @@ in
     xclip
     nerdfonts
     wl-clipboard
+    variety
+    prismlauncher
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -168,6 +170,7 @@ in
         telescope-fzf-native-nvim
         nvim-treesitter
         nvim-treesitter-textobjects
+        copilot-vim
       ];
       extraLuaConfig = ''
         vim.g.mapleader = ' '
@@ -179,6 +182,7 @@ in
 
         -- Make line numbers default
         vim.wo.number = true
+        vim.opt.relativenumber = true
 
         -- Enable mouse mode
         vim.o.mouse = 'a'
