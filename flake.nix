@@ -16,15 +16,17 @@
     # NUR
     nur.url = github:nix-community/NUR;
 
-    # TODO: Add any other flake you might need
     hardware.url = "github:nixos/nixos-hardware/master";
+
+    darwin.url = "github:lnl7/nix-darwin";
+    darwin.inputs.nixpkgs.follows = "nixpkgs";
 
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, hardware, nur, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, ... }@inputs:
     let
       inherit (self) outputs;
       forAllSystems = nixpkgs.lib.genAttrs [
@@ -94,6 +96,23 @@
             }
           ];
         };
+      };
+      darwinConfigurations.m1max = darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs outputs darwin; };
+        system = "aarch64-darwin";
+        pkgs = import nixpkgs { system = "aarch64-darwin"; config.allowUnfree = true; };
+        modules = [
+          nur.nixosModules.nur
+          ./hosts/m1max/nixos/configuration.nix
+          home-manager.darwinModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              extraSpecialArgs = { inherit outputs nur; };
+              users.nik.imports = [ ./hosts/m1max/home-manager/home.nix ];
+            };
+          }
+        ];
       };
     };
 }
