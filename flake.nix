@@ -88,6 +88,17 @@
             nur.nixosModules.nur
             # > Our main nixos configuration file <
             ./hosts/x13/nixos/configuration.nix
+            hardware.nixosModules.common-cpu-amd
+            hardware.nixosModules.common-cpu-amd-pstate
+            hardware.nixosModules.common-gpu-amd
+            hardware.nixosModules.common-gpu-nvidia {
+              hardware.nvidia.prime = {
+                intelBusId = "PCI:8:0:0";
+                nvidiaBusId = "PCI:1:0:0";
+              };
+            }
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-laptop-ssd
             home-manager.nixosModules.home-manager
             {
               home-manager = {

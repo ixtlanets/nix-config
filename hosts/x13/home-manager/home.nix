@@ -17,6 +17,13 @@
     ../../../modules/home-manager/linux-desktop.nix
   ];
 
+  home.packages = with pkgs; [
+    asusctl
+    supergfxctl
+    nvtop
+
+    gnomeExtensions.supergfxctl-gex
+  ];
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";

@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -10,10 +10,10 @@
     [
       # Include the results of the hardware scan.
       ./hardware-configuration.nix
-        ../../../modules/nixos/common.nix
+      ../../../modules/nixos/common.nix
     ];
 
-
+  boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "x13"; # Define your hostname.
 
   # Configure keymap in X11
@@ -23,6 +23,7 @@
       dpi = 144;
       videoDrivers = [ "amdgpu" ];
     };
+    asusd.enable = true;
   };
 
   hardware = {
