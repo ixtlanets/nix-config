@@ -74,6 +74,7 @@
       "istat-menus" 
       "hammerspoon"
       "docker"
+      "vmware-fusion"
     ];
     taps = [ "fujiapple852/trippy" ];
     brews = [ "trippy" ];
