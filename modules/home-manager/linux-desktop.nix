@@ -15,6 +15,8 @@ in
     wl-clipboard
     variety
     prismlauncher
+    rofi
+    zathura
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -28,9 +30,10 @@ in
     alacritty = {
       enable = true;
       settings = {
+        env.TERM = "xterm-256color";
         font = {
           normal.family = "Hack Nerd Font";
-          size = 16;
+          size = 10;
         };
       };
     };
@@ -76,6 +79,22 @@ in
           updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/updates.xml";
         }
       ];
+    };
+    i3status = {
+      enable = true;
+
+      general = {
+        colors = true;
+        color_good = "#8C9440";
+        color_bad = "#A54242";
+        color_degraded = "#DE935F";
+      };
+
+      modules = {
+        ipv6.enable = false;
+        "wireless _first_".enable = true;
+        "battery all".enable = true;
+      };
     };
   };
 
@@ -145,5 +164,16 @@ in
         "gsconnect@andyholmes.github.io"
       ];
     };
+  };
+
+  xresources.extraConfig = builtins.readFile .dotfiles/Xresources;
+  xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
+  xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
+
+  home.pointerCursor = {
+    name = "Vanilla-DMZ";
+    package = pkgs.vanilla-dmz;
+    size = 128;
+    x11.enable = true;
   };
 }

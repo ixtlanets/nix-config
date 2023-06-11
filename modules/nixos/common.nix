@@ -43,7 +43,15 @@
   services = {
     xserver = {
       enable = true;
-      displayManager.gdm.enable = true;
+      displayManager = {
+        gdm.enable = true;
+        sessionCommands = ''
+          ${pkgs.xorg.xset}/bin/xset r rate 250 30
+        '';
+      };
+      windowManager = {
+        i3.enable = true;
+      };
       desktopManager.gnome.enable = true;
       libinput = {
         enable = true;
@@ -71,6 +79,9 @@
       ];
     };
   };
+
+  xdg.portal.enable = true;
+  #xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;

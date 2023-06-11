@@ -43,6 +43,11 @@
   home.packages = with pkgs; [
     niknvim.packages."x86_64-linux".default
     nixpkgs-fmt
+    nodejs
+    (pkgs.python3.withPackages (p: with p; [
+      ipython
+      jupyter
+    ]))
   ];
 
   # Enable home-manager and git
@@ -63,6 +68,9 @@
       lfs.enable = true;
       userEmail = "snikulin@gmail.com";
       userName = "Sergey Nikulin";
+      extraConfig = {
+        init.defaultBranch = "master";
+      };
     };
     zsh = {
       enable = true;
