@@ -14,19 +14,21 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     # NUR
-    nur.url = github:nix-community/NUR;
+    nur.url = "github:nix-community/NUR";
 
     hardware.url = "github:nixos/nixos-hardware/master";
 
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
 
+    niknvim.url = "github:ixtlanets/nixnvim";
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, ... }@inputs:
     let
       inherit (self) outputs;
       forAllSystems = nixpkgs.lib.genAttrs [
@@ -74,7 +76,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur; };
+                extraSpecialArgs = { inherit outputs nur niknvim; };
                 users.nik.imports = [ ./hosts/x1carbon/home-manager/home.nix ];
               };
             }
@@ -90,7 +92,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur; };
+                extraSpecialArgs = { inherit outputs nur niknvim; };
                 users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
               };
             }
@@ -108,7 +110,7 @@
           {
             home-manager = {
               useUserPackages = true;
-              extraSpecialArgs = { inherit outputs nur; };
+              extraSpecialArgs = { inherit outputs nur niknvim; };
               users.nik.imports = [ ./hosts/m1max/home-manager/home.nix ];
             };
           }
