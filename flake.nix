@@ -82,6 +82,32 @@
             }
           ];
         };
+        x1extreme = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/x1extreme/nixos/configuration.nix
+            hardware.nixosModules.common-cpu-intel
+            hardware.nixosModules.common-gpu-intel
+            hardware.nixosModules.common-gpu-nvidia {
+              hardware.nvidia.prime = {
+                intelBusId = "PCI:0:2:0";
+                nvidiaBusId = "PCI:1:0:0";
+              };
+            }
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-laptop-ssd
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur niknvim; };
+                users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
+              };
+            }
+          ];
+        };
         x13 = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs; };
           modules = [
