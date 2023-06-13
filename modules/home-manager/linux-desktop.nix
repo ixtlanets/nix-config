@@ -17,6 +17,7 @@ in
     prismlauncher
     rofi
     zathura
+    onlyoffice-bin
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
