@@ -15,6 +15,7 @@ in
     nerdfonts
     wl-clipboard
     variety
+    feh
     prismlauncher
     rofi
     zathura
@@ -173,6 +174,12 @@ in
   xresources.extraConfig = builtins.readFile .dotfiles/Xresources;
   xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
   xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
+  xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
+  xdg.configFile."variety/scripts/set_wallpaper" = {
+    text = builtins.readFile scripts/set_wallpaper;
+    executable = true;
+  };
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
 
   home.pointerCursor = {
     name = "Vanilla-DMZ";
