@@ -6,6 +6,7 @@ in
   home.packages = with pkgs; [
     _1password
     _1password-gui
+    browserpass
     git-credential-1password
     telegram-desktop
     obsidian
@@ -76,6 +77,7 @@ in
         { id = "mbmgnelfcpoecdepckhlhegpcehmpmji"; } # SponsorBlock for YouTube - Skip Sponsorships
         { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
         { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
+        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
         {
           id = "dcpihecpambacapedldabdbpakmachpb";
           updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/updates.xml";
