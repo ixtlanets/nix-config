@@ -110,6 +110,15 @@
 
     '';
     };
+    password-store = {
+      enable = true;
+      package = pkgs.pass.withExtensions (exts: [ 
+        exts.pass-otp 
+        exts.pass-audit
+        exts.pass-import
+        exts.pass-genphrase
+      ]);
+    };
   };
 
   # Nicely reload system units when changing configs

@@ -62,6 +62,7 @@ in
       enable = true;
       browsers = [
         "firefox"
+        "chromium"
       ];
     };
     firefox = {
