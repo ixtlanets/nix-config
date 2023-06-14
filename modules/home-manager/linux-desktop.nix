@@ -20,6 +20,8 @@ in
     rofi
     zathura
     onlyoffice-bin
+    brightnessctl
+    pamixer
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -175,16 +177,32 @@ in
   xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
   xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
   xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
-  xdg.configFile."variety/scripts/set_wallpaper" = {
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
+  home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
   };
-  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
-
   home.pointerCursor = {
     name = "Vanilla-DMZ";
     package = pkgs.vanilla-dmz;
     size = 128;
     x11.enable = true;
+  };
+  services.picom = {
+    enable = true;
+    shadow = true;
+    backend = "xr_glx_hybrid";
+    inactiveOpacity = 0.8;
+    vSync = true;
+  };
+  services.polybar = {
+    enable = true;
+    script = "polybar bar &";
+    config = .dotfiles/polybar.ini;
+    package = pkgs.polybar.override {
+      alsaSupport = true;
+      iwSupport = true;
+      githubSupport = true;
+    };
   };
 }

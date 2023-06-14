@@ -125,5 +125,4 @@
   systemd.user.startServices = "sd-switch";
 
   services.syncthing.enable = true;
-  services.syncthing.tray.enable = true;
 }
