@@ -197,12 +197,8 @@ in
   };
   services.polybar = {
     enable = true;
-    script = "polybar bar &";
+    package = pkgs.polybarFull;
+    script = "polybar mainbar-i3 &";
     config = .dotfiles/polybar.ini;
-    package = pkgs.polybar.override {
-      alsaSupport = true;
-      iwSupport = true;
-      githubSupport = true;
-    };
   };
 }
