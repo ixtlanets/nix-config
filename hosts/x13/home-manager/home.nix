@@ -3,6 +3,11 @@
 
 { inputs, outputs, lib, config, pkgs, ... }:
 {
+  home.sessionVariables = {
+    WIFI_INTERFACE = "wlp6s0";
+    HWMON_PATH = "/sys/devices/virtual/thermal/thermal_zone0/hwmon5/temp1_input";
+    BACKLIGHT_CARD = "amdgpu_bl0";
+  };
   # You can import other home-manager modules here
   imports = [
     # If you want to use modules your own flake exports (from modules/home-manager):
@@ -14,7 +19,6 @@
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
     ../../../modules/home-manager/common.nix
-    ../../../modules/home-manager/linux-desktop.nix
   ];
 
   home.packages = with pkgs; [
