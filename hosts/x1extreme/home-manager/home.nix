@@ -3,6 +3,11 @@
 
 { inputs, outputs, lib, config, pkgs, ... }:
 {
+  home.sessionVariables = {
+    WIFI_INTERFACE = "wlp0s20f3";
+    HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
+    BACKLIGHT_CARD = "intel_backlight";
+  };
   # You can import other home-manager modules here
   imports = [
     ../../../modules/home-manager/starship.nix
