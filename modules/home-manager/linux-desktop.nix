@@ -6,6 +6,7 @@ in
   home.packages = with pkgs; [
     _1password
     _1password-gui
+    browserpass
     git-credential-1password
     telegram-desktop
     obsidian
@@ -14,9 +15,13 @@ in
     nerdfonts
     wl-clipboard
     variety
+    feh
     prismlauncher
     rofi
     zathura
+    onlyoffice-bin
+    brightnessctl
+    pamixer
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -61,6 +66,7 @@ in
       enable = true;
       browsers = [
         "firefox"
+        "chromium"
       ];
     };
     firefox = {
@@ -74,6 +80,7 @@ in
         { id = "mbmgnelfcpoecdepckhlhegpcehmpmji"; } # SponsorBlock for YouTube - Skip Sponsorships
         { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
         { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
+        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
         {
           id = "dcpihecpambacapedldabdbpakmachpb";
           updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/updates.xml";
@@ -169,11 +176,29 @@ in
   xresources.extraConfig = builtins.readFile .dotfiles/Xresources;
   xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
   xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
-
+  xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
+  home.file."scripts/set_wallpaper" = {
+    text = builtins.readFile scripts/set_wallpaper;
+    executable = true;
+  };
   home.pointerCursor = {
     name = "Vanilla-DMZ";
     package = pkgs.vanilla-dmz;
     size = 128;
     x11.enable = true;
+  };
+  services.picom = {
+    enable = true;
+    shadow = true;
+    backend = "xr_glx_hybrid";
+    inactiveOpacity = 0.8;
+    vSync = true;
+  };
+  services.polybar = {
+    enable = true;
+    package = pkgs.polybarFull;
+    script = "polybar mainbar-i3 &";
+    config = .dotfiles/polybar.ini;
   };
 }

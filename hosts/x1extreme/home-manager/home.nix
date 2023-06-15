@@ -1,13 +1,8 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{ inputs, outputs, lib, config, pkgs, ... }:
 {
-  home.sessionVariables = {
-    WIFI_INTERFACE = "wlp4s0";
-    HWMON_PATH = "/sys/devices/virtual/thermal/thermal_zone0/hwmon3/temp1_input";
-    BACKLIGHT_CARD = "intel_backlight";
-  };
   # You can import other home-manager modules here
   imports = [
     # If you want to use modules your own flake exports (from modules/home-manager):
@@ -22,6 +17,9 @@
     ../../../modules/home-manager/linux-desktop.nix
   ];
 
+  home.packages = with pkgs; [
+    nvtop
+  ];
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";

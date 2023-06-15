@@ -110,11 +110,19 @@
 
     '';
     };
+    password-store = {
+      enable = true;
+      package = pkgs.pass.withExtensions (exts: [ 
+        exts.pass-otp 
+        exts.pass-audit
+        exts.pass-import
+        exts.pass-genphrase
+      ]);
+    };
   };
 
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
 
   services.syncthing.enable = true;
-  services.syncthing.tray.enable = true;
 }
