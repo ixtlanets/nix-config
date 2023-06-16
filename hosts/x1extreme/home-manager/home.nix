@@ -5,17 +5,16 @@
 {
   # You can import other home-manager modules here
   imports = [
-    # If you want to use modules your own flake exports (from modules/home-manager):
-    # outputs.homeManagerModules.example
-
-    # Or modules exported from other flakes (such as nix-colors):
-    # inputs.nix-colors.homeManagerModules.default
-
-    # You can also split up your configuration and import pieces of it here:
-    # ./nvim.nix
+    ../../../modules/home-manager/starship.nix
+    ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/linux-desktop.nix
   ];
+
+  home = {
+    username = "nik";
+    homeDirectory = "/home/nik";
+  };
 
   home.packages = with pkgs; [
     nvtop
