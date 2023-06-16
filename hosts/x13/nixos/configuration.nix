@@ -22,6 +22,7 @@
       enable = true;
       dpi = 144;
       videoDrivers = [ "amdgpu" ];
+      deviceSection = ''Option "TearFree" "true"'';
     };
     asusd.enable = true;
   };
