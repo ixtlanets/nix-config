@@ -1,0 +1,16 @@
+{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{
+  imports = [
+    ../../../modules/home-manager/starship.nix
+    ../../../modules/home-manager/tmux.nix
+    ../../../modules/home-manager/common.nix
+  ];
+
+  home = {
+    username = "nik";
+    homeDirectory = "/home/nik";
+  };
+
+  # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
+  home.stateVersion = "22.11";
+}
