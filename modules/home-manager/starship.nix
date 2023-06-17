@@ -18,7 +18,6 @@
         "$java"
         "$c"
         "$golang"
-        "$cmd_duration"
         "$status"
         "$character"
       ];
@@ -46,10 +45,6 @@
         format = "[$symbol](fg:red)";
         map_symbol = true;
         disabled = false;
-      };
-      cmd_duration = {
-        min_time = 1000;
-        format = "[$duration ](fg:yellow)";
       };
       character = {
         success_symbol = "[❯](bold purple)";
