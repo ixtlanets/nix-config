@@ -54,7 +54,7 @@
     dock.autohide = true;
     NSGlobalDomain.AppleShowAllExtensions = true;
     NSGlobalDomain.InitialKeyRepeat = 14;
-    NSGlobalDomain.KeyRepeat = 1;
+    NSGlobalDomain.KeyRepeat = 2;
   };
 
   # programms installed by homebrew
