@@ -52,6 +52,14 @@
     finder._FXShowPosixPathInTitle = true;
     finder.CreateDesktop = false;
     dock.autohide = true;
+    dock.mru-spaces = false; # Do not rearrange spaces
+    dock.orientation = "right";
+    dock.show-recents = false;
+    dock.tilesize = 24;
+    dock.wvous-bl-corner = 1; # Disable Hot corner action for bottom left corner
+    dock.wvous-br-corner = 1; # Disable Hot corner action for bottom right corner
+    dock.wvous-tl-corner = 1; # Disable Hot corner action for top left corner
+    dock.wvous-tr-corner = 1; # Disable Hot corner action for top right corner
     NSGlobalDomain.AppleShowAllExtensions = true;
     NSGlobalDomain.InitialKeyRepeat = 14;
     NSGlobalDomain.KeyRepeat = 2;
