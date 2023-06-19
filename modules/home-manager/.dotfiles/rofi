@@ -1,7 +1,7 @@
 configuration {
   dpi: 144;
   font: "Hack 8";
-  modi: "run,drun,window";
+  modi: "run,drun";
   icon-theme: "Oranchelo";
   show-icons: true;
   terminal: "alacritty";

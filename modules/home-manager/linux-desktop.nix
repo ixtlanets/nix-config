@@ -17,11 +17,17 @@ in
     variety
     feh
     prismlauncher
-    rofi
+    rofi-wayland
     zathura
     onlyoffice-bin
     brightnessctl
     pamixer
+    hyprland
+    mako
+    wireplumber
+    xdg-desktop-portal-hyprland
+    libsForQt5.polkit-kde-agent
+    swaybg
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -103,6 +109,31 @@ in
         "battery all".enable = true;
       };
     };
+    waybar = {
+      enable = true;
+      settings = {
+        mainBar = {
+          layer = "top";
+          position = "top";
+          height = 30;
+          output = [
+            "eDP-1"
+          ];
+          modules-left = [ "wlr/workspaces" ];
+          modules-center = [ "hyprland/window" ];
+          modules-right = [ "temperature" "battery" "tray" "pulseaudio" ];
+          "pulseaudio" = {
+            format = "{volume}% {icon}";
+            format-muted = "";
+            scroll-step = 1;
+          };
+          "wlr/workspaces" = {
+            format = "{name}";
+          };
+        };
+
+      };
+    };
   };
 
   dconf.settings = {
@@ -178,6 +209,7 @@ in
   xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
   xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
+  xdg.configFile."hypr/hyprland.conf".text = builtins.readFile .dotfiles/hyprland.conf;
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;

@@ -34,6 +34,7 @@
   programs = {
     zsh.enable = true;
     dconf.enable = true;
+    hyprland.enable = true;
     kdeconnect = {
       # For GSConnect
       enable = true;
@@ -134,4 +135,8 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+
+  # Enable TLP
+  services.power-profiles-daemon.enable = false;
+  services.tlp.enable = true;
 }
