@@ -81,6 +81,12 @@ in
     };
     chromium = {
       enable = true;
+      commandLineArgs = [
+        "--ozone-platform-hint=auto"
+        "--enable-gpu-rasterization"
+        "--enable-zero-copy"
+        "--ozone-platform-hint=wayland"
+      ];
       extensions = [
         { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
         { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
