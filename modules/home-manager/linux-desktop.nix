@@ -27,6 +27,7 @@ in
     wireplumber
     xdg-desktop-portal-hyprland
     libsForQt5.polkit-kde-agent
+    discord
     swaybg
 
     gnomeExtensions.tray-icons-reloaded
@@ -234,4 +235,37 @@ in
     config = .dotfiles/polybar.ini;
   };
   services.network-manager-applet.enable = true;
+  services.dunst = {
+    enable = true;
+    settings = {
+      global = {
+        width = 300;
+        height = 300;
+        offset = "10x10";
+        origin = "top-right";
+        transparency = 10;
+        frame_color = "#8AADF4";
+        separator_color = "frame";
+        font = "Hack Nerd Font 10";
+      };
+      urgency_low = {
+        background = "#24273A";
+        foreground = "#CAD3F5";
+        timeout = 1;
+      };
+
+      urgency_normal = {
+        background = "#24273A";
+        foreground = "#CAD3F5";
+        timeout = 3;
+      };
+
+      urgency_critical = {
+        background = "#24273A";
+        foreground = "#CAD3F5";
+        frame_color = "#F5A97F";
+        timeout = 3;
+      };
+    };
+  };
 }
