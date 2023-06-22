@@ -233,4 +233,5 @@ in
     script = "polybar mainbar-i3 &";
     config = .dotfiles/polybar.ini;
   };
+  services.network-manager-applet.enable = true;
 }
