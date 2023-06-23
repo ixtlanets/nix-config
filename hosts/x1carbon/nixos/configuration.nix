@@ -20,6 +20,7 @@
     xserver = {
       enable = true;
       dpi = 144;
+      videoDrivers = [ "modesetting" ];
     };
   };
 
