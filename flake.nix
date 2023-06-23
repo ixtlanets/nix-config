@@ -72,6 +72,10 @@
             # > Our main nixos configuration file <
             ./hosts/x1carbon/nixos/configuration.nix
             hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
+            hardware.nixosModules.common-cpu-intel
+            hardware.nixosModules.common-gpu-intel
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-laptop-ssd
             home-manager.nixosModules.home-manager
             {
               home-manager = {
