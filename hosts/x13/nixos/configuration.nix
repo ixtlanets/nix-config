@@ -38,6 +38,15 @@
       driSupport = true;
       driSupport32Bit = true;
     };
+    nvidia = {
+      prime = {
+        allowExternalGpu = true;
+        intelBusId = "PCI:8:0:0";
+        nvidiaBusId = "PCI:1:0:0";
+
+      };
+      modesetting.enable = true;
+    };
   };
   system.stateVersion = "22.11"; # Did you read the comment?
 }
