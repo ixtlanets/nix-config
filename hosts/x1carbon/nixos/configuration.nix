@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -20,10 +20,15 @@
     xserver = {
       enable = true;
       dpi = 144;
-      videoDrivers = [ "modesetting" ];
+      videoDrivers = [ "nvidia" ];
     };
   };
-
+  boot.blacklistedKernelModules = [ "nouveau" ];
+# NVIDIA drivers are unfree.
+  nixpkgs.config.allowUnfreePredicate = pkg:
+    builtins.elem (lib.getName pkg) [
+    "nvidia-x11"
+    ];
   hardware = {
     opengl = {
       enable = true;
@@ -34,6 +39,17 @@
       ];
       driSupport = true;
       driSupport32Bit = true;
+    };
+    nvidia = {
+      modesetting.enable = true;
+      open = true;
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+      prime = {
+        allowExternalGpu = true;
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:11:0:0";
+
+      };
     };
   };
   system.stateVersion = "22.11"; # Did you read the comment?

@@ -74,6 +74,12 @@
             hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
             hardware.nixosModules.common-cpu-intel
             hardware.nixosModules.common-gpu-intel
+            hardware.nixosModules.common-gpu-nvidia {
+              hardware.nvidia.prime = {
+                intelBusId = "PCI:0:2:0";
+                nvidiaBusId = "PCI:11:0:0";
+              };
+            }
             hardware.nixosModules.common-pc-laptop
             hardware.nixosModules.common-pc-laptop-ssd
             home-manager.nixosModules.home-manager
