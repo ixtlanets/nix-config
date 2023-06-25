@@ -129,7 +129,7 @@
             hardware.nixosModules.common-gpu-amd
             hardware.nixosModules.common-gpu-nvidia {
               hardware.nvidia.prime = {
-                intelBusId = "PCI:8:0:0";
+                amdgpuBusId = "PCI:56:0:0";
                 nvidiaBusId = "PCI:1:0:0";
               };
             }
