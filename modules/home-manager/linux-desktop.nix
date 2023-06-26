@@ -29,6 +29,7 @@ in
     libsForQt5.polkit-kde-agent
     discord
     swaybg
+    maim # screenshot tool
 
     gnomeExtensions.tray-icons-reloaded
     gnomeExtensions.dash-to-panel
@@ -230,7 +231,7 @@ in
   services.picom = {
     enable = true;
     shadow = true;
-    backend = "xr_glx_hybrid";
+    backend = "glx";
     inactiveOpacity = 0.8;
     vSync = true;
   };

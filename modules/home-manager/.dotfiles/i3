@@ -52,6 +52,9 @@ floating_modifier $mod
 
 bindsym $mod+d exec rofi -show run
 
+# take a screenshot
+bindsym $mod+Shift+s exec maim -s | xclip -selection clipboard -t image/png
+
 # start a terminal
 bindsym $mod+Return exec alacritty
 
@@ -83,7 +86,7 @@ bindsym $mod+Shift+l move right
 #bindsym $mod+Shift+f fullscreen toggle
 
 # change container layout (stacked, tabbed, toggle split)
-bindsym $mod+Shift+s layout stacking
+#bindsym $mod+Shift+s layout stacking
 bindsym $mod+Shift+w layout tabbed
 bindsym $mod+Shift+e layout toggle split
 
