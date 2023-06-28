@@ -21,18 +21,13 @@
     xserver = {
       enable = true;
       dpi = 144;
-      videoDrivers = [ "nvidia" ];
+      videoDrivers = [ "amdgpu" ];
       deviceSection = ''Option "TearFree" "true"'';
     };
     asusd.enable = true;
   };
 
   boot.blacklistedKernelModules = [ "nouveau" ];
-# NVIDIA drivers are unfree.
-  nixpkgs.config.allowUnfreePredicate = pkg:
-    builtins.elem (lib.getName pkg) [
-    "nvidia-x11"
-    ];
   hardware = {
     opengl = {
       enable = true;
@@ -43,17 +38,6 @@
       ];
       driSupport = true;
       driSupport32Bit = true;
-    };
-    nvidia = {
-      modesetting.enable = true;
-      open = true;
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-      prime = {
-        allowExternalGpu = true;
-        amdgpuBusId = "PCI:56:0:0";
-        nvidiaBusId = "PCI:1:0:0";
-
-      };
     };
   };
   system.stateVersion = "22.11"; # Did you read the comment?
