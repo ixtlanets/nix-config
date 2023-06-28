@@ -27,7 +27,7 @@
       };
       asusd.enable = true;
       autorandr = {
-        enable = true;
+        enable = false;
         hooks.postswitch = {
           "polybar" = ''
             killall polybar
