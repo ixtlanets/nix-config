@@ -140,6 +140,27 @@
             }
           ];
         };
+
+        matebook = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/matebook/nixos/configuration.nix
+            hardware.nixosModules.common-cpu-intel
+            hardware.nixosModules.common-gpu-intel
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-laptop-ssd
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur niknvim; };
+                users.nik.imports = [ ./hosts/matebook/home-manager/home.nix ];
+              };
+            }
+          ];
+        };
       };
       darwinConfigurations.m1max = darwin.lib.darwinSystem {
         specialArgs = { inherit inputs outputs darwin; };
