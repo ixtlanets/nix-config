@@ -117,31 +117,6 @@ in
         "battery all".enable = true;
       };
     };
-    waybar = {
-      enable = true;
-      settings = {
-        mainBar = {
-          layer = "top";
-          position = "top";
-          height = 30;
-          output = [
-            "eDP-1"
-          ];
-          modules-left = [ "wlr/workspaces" ];
-          modules-center = [ "hyprland/window" ];
-          modules-right = [ "temperature" "battery" "tray" "pulseaudio" ];
-          "pulseaudio" = {
-            format = "{volume}% {icon}";
-            format-muted = "";
-            scroll-step = 1;
-          };
-          "wlr/workspaces" = {
-            format = "{name}";
-          };
-        };
-
-      };
-    };
   };
 
   dconf.settings = {
