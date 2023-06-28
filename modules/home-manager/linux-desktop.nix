@@ -40,6 +40,17 @@ in
   ];
 
   programs = {
+    emacs = {
+      enable = true;
+      package = pkgs.emacs29;
+      extraPackages = epkgs: [
+        epkgs.emms
+        epkgs.magit
+        epkgs.all-the-icons
+        epkgs.mu4easy
+        epkgs.org
+      ];
+    };
     alacritty = {
       enable = true;
       settings = {
