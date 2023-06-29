@@ -8,6 +8,7 @@ in
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
+    ../../../modules/home-manager/emacs.nix
   ];
 
   nixpkgs = {
