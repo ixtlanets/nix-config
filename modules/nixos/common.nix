@@ -59,6 +59,7 @@
       desktopManager.gnome.enable = true;
       libinput = {
         enable = true;
+        mouse.middleEmulation = false;
         touchpad = {
           tapping = true;
           scrollMethod = "twofinger";
