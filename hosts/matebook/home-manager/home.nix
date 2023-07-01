@@ -21,6 +21,10 @@
   home.packages = with pkgs; [
     nvtop
   ];
+  xresources.properties = {
+    "Xft.dpi" = 192;
+  };
+
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";

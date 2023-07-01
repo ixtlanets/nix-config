@@ -20,7 +20,7 @@
   services = {
     xserver = {
       enable = true;
-      videoDrivers = [ "modeset" ];
+      dpi = 192;
     };
   };
   hardware = {
