@@ -4,6 +4,7 @@
   home.packages = with pkgs; [
     liberation_ttf
     font-awesome
+    swayimg
   ];
   wayland.windowManager.sway = {
     enable = true;
