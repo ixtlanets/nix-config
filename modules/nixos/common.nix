@@ -34,12 +34,6 @@
   programs = {
     zsh.enable = true;
     dconf.enable = true;
-    hyprland.enable = true;
-    kdeconnect = {
-      # For GSConnect
-      enable = true;
-      package = pkgs.gnomeExtensions.gsconnect;
-    };
   };
   
   # Services
@@ -47,16 +41,9 @@
   services = {
     xserver = {
       enable = true;
-      displayManager = {
-        gdm.enable = true;
-        sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 250 30
-        '';
-      };
       windowManager = {
         i3.enable = true;
       };
-      desktopManager.gnome.enable = true;
       libinput = {
         enable = true;
         mouse.middleEmulation = false;
@@ -86,6 +73,7 @@
   };
 
   xdg.portal.enable = true;
+  xdg.portal.wlr.enable = true;
   #xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
   # Enable CUPS to print documents.
@@ -97,6 +85,7 @@
     pulseaudio.enable = false;
   };
   security.rtkit.enable = true;
+  security.polkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -108,7 +97,7 @@
   users.users.nik = {
     isNormalUser = true;
     description = "Sergey Nikulin";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "video" ];
     shell = pkgs.zsh;
   };
 
@@ -120,7 +109,6 @@
   environment.systemPackages = with pkgs; [
     zerotierone
     killall
-    autorandr
     #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #  wget
   ];
@@ -133,6 +121,7 @@
     enable = true;
     enableSSHSupport = true;
   };
+  programs.light.enable = true;
 
   # List services that you want to enable:
 
@@ -142,4 +131,13 @@
   # Enable TLP
   services.power-profiles-daemon.enable = false;
   services.tlp.enable = true;
+
+  # kanshi systemd service
+  systemd.user.services.kanshi = {
+    description = "kanshi daemon";
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = ''${pkgs.kanshi}/bin/kanshi -c kanshi_config_file'';
+    };
+  };
 }
