@@ -35,16 +35,6 @@
       window = {
         border = 2;
       };
-      output = {
-        "eDP-1" = {
-          mode = "3120x2080@90.000Hz";
-          scale = "3";
-        };
-        "DP-1" = {
-          mode = "2560x1440@144.000Hz";
-          scale = "2";
-        };
-      };
       keybindings =
         let
         modifier = config.wayland.windowManager.sway.config.modifier;
@@ -71,10 +61,6 @@
           layer = "top";
           position = "top";
           height = 12;
-          output = [
-            "eDP-1"
-            "DP-1"
-          ];
           modules-left = [ "sway/workspaces" "sway/language" "sway/mode" ];
           modules-center = [ "clock" ];
           modules-right = ["pulseaudio" "temperature" "backlight" "battery" "keyboard-state" "tray"];
@@ -90,7 +76,7 @@
             };
           };
           "sway/language" = {
-            "format"= "{} ";
+            "format"= " {}";
             "min-length" = 5;
             "tooltip"= false;
           };
@@ -105,7 +91,6 @@
           "sway/mode" = {
             "format"= "<span style=\"italic\">{}</span>";
           };
-
           "clock"= {
             "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
             "format" = "{:%a, %d %b, %H:%M}";
@@ -130,35 +115,30 @@
             "on-click" = "pavucontrol";
             "min-length" = 13;
           };
-        };
-        "temperature" = {
-          "critical-threshold" = 90;
-          "format" = "{temperatureC}°C {icon}";
-          "format-icons" = [""  ""  ""  ""  ""];
-          "tooltip" = false;
-        };
-
-        "backlight" = {
-          "format" = "{percent}% {icon}";
-          "format-icons" = ["" ""];
-          "min-length" = 7;
-        };
-
-        "battery" = {
-          "states" = {
-            "warning" = 25;
-            "critical" = 10;
+          temperature = {
+            "critical-threshold" = 90;
+            "format" = "{icon} {temperatureC}°C";
+            "format-icons" = [""  ""  ""  ""  ""];
+            "tooltip" = false;
           };
-          "format" = "{capacity}% {icon}";
-          "format-charging" = "{capacity}% ";
-          "format-plugged" = "{capacity}% ";
-          "format-alt" = "{time} {icon}";
-          "format-icons" = ["" "" "" "" ""];
-        };
-
-        "tray" = {
-          "icon-size" = 12;
-          "spacing" = 5;
+          backlight = {
+            "format" = "{icon} {percent}%";
+            "format-icons" = ["" ""];
+            "min-length" = 7;
+          };
+          battery = {
+            "states" = {
+              "warning" = 25;
+              "critical" = 10;
+            };
+            "format" = "{icon} {capacity}%";
+            "format-alt" = "{icon} {time}: {power} W";
+            "format-icons" = ["" "" "" "" ""];
+          };
+          tray = {
+            "icon-size" = 12;
+            "spacing" = 5;
+          };
         };
       };
       style = builtins.readFile ../../dotfiles/waybar/style.css;

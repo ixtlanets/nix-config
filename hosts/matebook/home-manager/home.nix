@@ -13,6 +13,24 @@
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/sway.nix
   ];
+  wayland.windowManager.sway = {
+    config = {
+      output = {
+        "eDP-1" = {
+          mode = "3120x2080@90.000Hz";
+          scale = "3";
+        };
+        "DP-1" = {
+          mode = "2560x1440@144.000Hz";
+          scale = "1.5";
+        };
+      };
+    };
+  };
+  programs.waybar.settings.mainbar.output = [
+    "eDP-1"
+    "DP-1"
+  ];
 
   home = {
     username = "nik";
