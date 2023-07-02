@@ -5,10 +5,19 @@
     liberation_ttf
     font-awesome
     swayimg
+    gnome.adwaita-icon-theme
+    swaylock
+    swayidle
+    grim # screenshot functionality
+    slurp # screenshot functionality
+    xdg-utils # for opening default programs when clicking links
   ];
   wayland.windowManager.sway = {
     enable = true;
     systemd.enable = true;
+    wrapperFeatures = {
+      gtk = true;
+    };
     config = {
       terminal = "alacritty";
       modifier = "Mod4";
