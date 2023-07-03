@@ -11,6 +11,7 @@
     grim # screenshot functionality
     slurp # screenshot functionality
     xdg-utils # for opening default programs when clicking links
+    glfw-wayland
   ];
   wayland.windowManager.sway = {
     enable = true;
@@ -154,4 +155,8 @@
       style = builtins.readFile ../../dotfiles/waybar/style.css;
     };
   };
+  home.file.".config/electron-flags.conf".text = ''
+--enable-features=WaylandWindowDecorations
+--ozone-platform-hint=auto
+  '';
 }

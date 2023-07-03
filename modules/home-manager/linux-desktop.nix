@@ -37,7 +37,7 @@ in
         env.TERM = "xterm-256color";
         font = {
           normal.family = "Hack Nerd Font";
-          size = 10;
+          size = 16;
         };
       };
     };
@@ -59,6 +59,7 @@ in
         "window.menuBarVisibility" = "toggle";
         "window.titleBarStyle" = "custom";
         "editor.inlineSuggest.enabled" = true;
+        "window.zoomLevel" = 3;
       };
     };
     browserpass = {
