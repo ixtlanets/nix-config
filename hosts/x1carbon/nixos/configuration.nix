@@ -18,7 +18,6 @@
   # Configure keymap in X11
   services = {
     xserver = {
-      enable = lib.mkForce false;
       dpi = 144;
       videoDrivers = [ "nvidia" ];
     };

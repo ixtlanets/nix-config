@@ -2,12 +2,12 @@
 {
 
   home.packages = with pkgs; [
-    liberation_ttf
-    font-awesome
     swayimg
     gnome.adwaita-icon-theme
     swaylock
     swayidle
+    mako
+    rofi-wayland
     grim # screenshot functionality
     slurp # screenshot functionality
     xdg-utils # for opening default programs when clicking links
@@ -154,6 +154,20 @@
       };
       style = builtins.readFile ../../dotfiles/waybar/style.css;
     };
+  };
+  services.mako = {
+    enable = true;
+    borderRadius = 5;
+    defaultTimeout = 3000;
+    extraConfig = ''
+      background-color=#24273a
+      text-color=#cad3f5
+      border-color=#8aadf4
+      progress-color=over #363a4f
+
+      [urgency=high]
+      border-color=#f5a97f
+        '';
   };
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations

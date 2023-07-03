@@ -15,19 +15,18 @@ in
     nerdfonts
     wl-clipboard
     variety
-    feh
     prismlauncher
-    rofi-wayland
     zathura
     onlyoffice-bin
     brightnessctl
     pamixer
-    mako
     wireplumber
     discord
     swaybg
-    maim # screenshot tool
     mpv
+    liberation_ttf
+    font-awesome
+    zoom-us
   ];
 
   programs = {
@@ -37,7 +36,7 @@ in
         env.TERM = "xterm-256color";
         font = {
           normal.family = "Hack Nerd Font";
-          size = 16;
+          size = 10;
         };
       };
     };
@@ -93,37 +92,12 @@ in
         }
       ];
     };
-    i3status = {
-      enable = true;
-
-      general = {
-        colors = true;
-        color_good = "#8C9440";
-        color_bad = "#A54242";
-        color_degraded = "#DE935F";
-      };
-
-      modules = {
-        ipv6.enable = false;
-        "wireless _first_".enable = true;
-        "battery all".enable = true;
-        "volume master" = {
-          position = 1;
-          settings = {
-            format = "♪ %volume";
-            format_muted = "♪ muted (%volume)";
-            device = "pulse:1";
-          };
-        };
-      };
-    };
   };
 
-  xresources.extraConfig = builtins.readFile .dotfiles/Xresources;
-  xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
-  xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
-  xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
-  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
+  xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
+  xdg.configFile."rofi/config.rasi".text = builtins.readFile ../../dotfiles/rofi;
+  xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile ../../dotfiles/quotes.txt;
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
@@ -134,26 +108,5 @@ in
     size = 48;
     x11.enable = true;
   };
-  services.picom = {
-    enable = true;
-    shadow = true;
-    backend = "glx";
-    inactiveOpacity = 0.8;
-    vSync = true;
-  };
   services.network-manager-applet.enable = true;
-  services.mako = {
-    enable = true;
-    borderRadius = 5;
-    defaultTimeout = 3000;
-    extraConfig = ''
-      background-color=#24273a
-      text-color=#cad3f5
-      border-color=#8aadf4
-      progress-color=over #363a4f
-
-      [urgency=high]
-      border-color=#f5a97f
-        '';
-  };
 }
