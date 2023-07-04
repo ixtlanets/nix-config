@@ -58,7 +58,6 @@ in
         "window.menuBarVisibility" = "toggle";
         "window.titleBarStyle" = "custom";
         "editor.inlineSuggest.enabled" = true;
-        "window.zoomLevel" = 3;
       };
     };
     browserpass = {

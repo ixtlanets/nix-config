@@ -13,6 +13,9 @@
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
   ];
+  home.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
   wayland.windowManager.sway = {
     enable = true;
     systemd.enable = true;
