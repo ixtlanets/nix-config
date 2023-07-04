@@ -41,7 +41,7 @@
     nvtop
   ];
   xresources.properties = {
-    "Xft.dpi" = 192;
+    "Xft.dpi" = 144;
   };
 
 

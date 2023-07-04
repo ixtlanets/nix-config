@@ -60,6 +60,7 @@
           "${modifier}+Return" = "exec alacritty";
           "${modifier}+w" = "kill";
           "${modifier}+d" = "exec rofi -show run";
+          "${modifier}+Shift+f" = "floating toggle";
         };
     };
   };
