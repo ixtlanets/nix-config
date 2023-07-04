@@ -18,11 +18,11 @@
       output = {
         "eDP-1" = {
           mode = "3120x2080@90.000Hz";
-          scale = "1.5";
+          scale = "3";
         };
         "DP-1" = {
           mode = "2560x1440@144.000Hz";
-          scale = "1";
+          scale = "2";
         };
       };
     };
