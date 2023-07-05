@@ -28,6 +28,24 @@ in
     };
   };
 
+  targets.darwin.defaults = {
+    NSGlobalDomain.AppleLanguages = ["en-RU" "ru-RU"];
+    NSGlobalDomain.AppleLocale = "en_RU";
+    NSGlobalDomain.AppleMeasurementUnits = "Centimeters";
+    NSGlobalDomain.AppleMetricUnits = true;
+    NSGlobalDomain.AppleTemperatureUnit = "Celsius";
+    NSGlobalDomain.NSAutomaticCapitalizationEnabled = true;
+    NSGlobalDomain.NSAutomaticDashSubstitutionEnabled = false;
+    NSGlobalDomain.NSAutomaticPeriodSubstitutionEnabled = false;
+    NSGlobalDomain.NSAutomaticQuoteSubstitutionEnabled = false;
+    NSGlobalDomain.NSAutomaticSpellingCorrectionEnabled = false;
+    "com.apple.Safari".IncludeDevelopMenu = true;
+    "com.apple.Safari".ShowOverlayStatusBar = true;
+    "com.apple.desktopservices".DSDontWriteNetworkStores = true;
+    "com.apple.desktopservices".DSDontWriteUSBStores = true;
+  };
+  targets.darwin.search = "Google";
+
   home = {
     username = "nik";
     homeDirectory = lib.mkDefault "/Users/nik";
@@ -45,6 +63,7 @@ in
     alacritty = {
       enable = true;
       settings = {
+        env.TERM = "xterm-256color";
         font = {
           normal.family = "Hack Nerd Font";
           size = 16;

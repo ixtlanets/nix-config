@@ -51,6 +51,7 @@
     finder.AppleShowAllExtensions = true;
     finder._FXShowPosixPathInTitle = true;
     finder.CreateDesktop = false;
+    finder.FXEnableExtensionChangeWarning = false;
     dock.autohide = false;
     dock.mru-spaces = false; # Do not rearrange spaces
     dock.orientation = "right";
@@ -63,6 +64,13 @@
     NSGlobalDomain.AppleShowAllExtensions = true;
     NSGlobalDomain.InitialKeyRepeat = 14;
     NSGlobalDomain.KeyRepeat = 2;
+    loginwindow.GuestEnabled = false;
+    menuExtraClock.Show24Hour = true;
+    menuExtraClock.ShowAMPM = false;
+    menuExtraClock.ShowDate = 1;
+    menuExtraClock.ShowDayOfMonth = true;
+    menuExtraClock.ShowDayOfWeek = true;
+    spaces.spans-displays = true; # one space spans across all physical displays
   };
 
   # programms installed by homebrew
