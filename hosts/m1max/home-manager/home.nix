@@ -82,6 +82,7 @@ in
     htop.enable = true;
   };
   home.file.".inputrc".source = ../../../dotfiles/inputrc;
+  home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";
