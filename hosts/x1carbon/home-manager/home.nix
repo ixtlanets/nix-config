@@ -16,6 +16,25 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
+    ../../../modules/home-manager/i3.nix
+  ];
+  wayland.windowManager.sway = {
+    config = {
+      output = {
+        "eDP-1" = {
+          mode = "1920x1080@60.000Hz";
+          scale = "1";
+        };
+        "DP-1" = {
+          mode = "2560x1440@144.000Hz";
+          scale = "1";
+        };
+      };
+    };
+  };
+  programs.waybar.settings.mainbar.output = [
+    "eDP-1"
+    "DP-1"
   ];
 
   home = {
@@ -26,6 +45,9 @@
   home.packages = with pkgs; [
     nvtop
   ];
+  xresources.properties = {
+    "Xft.dpi" = 144;
+  };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";

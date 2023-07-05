@@ -15,42 +15,21 @@ in
     nerdfonts
     wl-clipboard
     variety
-    feh
     prismlauncher
-    rofi-wayland
     zathura
     onlyoffice-bin
     brightnessctl
     pamixer
-    hyprland
-    mako
     wireplumber
-    xdg-desktop-portal-hyprland
-    libsForQt5.polkit-kde-agent
     discord
     swaybg
-    maim # screenshot tool
-
-    gnomeExtensions.tray-icons-reloaded
-    gnomeExtensions.dash-to-panel
-    gnomeExtensions.just-perfection
-    gnomeExtensions.caffeine
-    gnomeExtensions.bluetooth-quick-connect
-    gnomeExtensions.gsconnect # kdeconnect enabled in default.nix
+    mpv
+    liberation_ttf
+    font-awesome
+    zoom-us
   ];
 
   programs = {
-    emacs = {
-      enable = true;
-      package = pkgs.emacs29;
-      extraPackages = epkgs: [
-        epkgs.emms
-        epkgs.magit
-        epkgs.all-the-icons
-        epkgs.mu4easy
-        epkgs.org
-      ];
-    };
     alacritty = {
       enable = true;
       settings = {
@@ -112,98 +91,12 @@ in
         }
       ];
     };
-    i3status = {
-      enable = true;
-
-      general = {
-        colors = true;
-        color_good = "#8C9440";
-        color_bad = "#A54242";
-        color_degraded = "#DE935F";
-      };
-
-      modules = {
-        ipv6.enable = false;
-        "wireless _first_".enable = true;
-        "battery all".enable = true;
-      };
-    };
   };
 
-  dconf.settings = {
-    "org/gnome/desktop/input-sources" = {
-      sources = [ (mkTuple [ "xkb" "us" ]) (mkTuple [ "xkb" "ru" ]) ];
-      xkb-options = [ "grp:win_space_toggle" "grp:win_space_toggle" ];
-    };
-    "org/gnome/desktop/wm/keybindings" = {
-      close = [ "<Super>q" "<Alt>F4" ];
-      maximize = [ "<Super>Up" ];
-      unmaximize = [ "<Super>Down" ];
-      toggle-fullscreen = [ "<Super>f" ];
-      switch-to-workspace-left = [ "<Ctrl><Alt>Left" ];
-      switch-to-workspace-right = [ "<Ctrl><Alt>Right" ];
-      switch-to-workspace-1 = [ "<Ctrl><Alt>1" ];
-      switch-to-workspace-2 = [ "<Ctrl><Alt>2" ];
-      switch-to-workspace-3 = [ "<Ctrl><Alt>3" ];
-      switch-to-workspace-4 = [ "<Ctrl><Alt>4" ];
-      switch-to-workspace-5 = [ "<Ctrl><Alt>5" ];
-      move-to-workspace-left = [ "<Shift><Ctrl><Alt>Left" ];
-      move-to-workspace-right = [ "<Shift><Ctrl><Alt>Right" ];
-      move-to-workspace-1 = [ "<Shift><Ctrl><Alt>1" ];
-      move-to-workspace-2 = [ "<Shift><Ctrl><Alt>2" ];
-      move-to-workspace-3 = [ "<Shift><Ctrl><Alt>3" ];
-      move-to-workspace-4 = [ "<Shift><Ctrl><Alt>4" ];
-      move-to-workspace-5 = [ "<Shift><Ctrl><Alt>5" ];
-    };
-    "org/gnome/settings-daemon/plugins/media-keys" = {
-      custom-keybindings = [
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
-      ];
-    };
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      binding = "<Super>Return";
-      command = "alacritty";
-      name = "open-terminal";
-    };
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
-      binding = "<Super>b";
-      command = "chromium";
-      name = "open-browser";
-    };
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
-      binding = "<Super>e";
-      command = "nautilus";
-      name = "open-file-browser";
-    };
-    "org/gnome/shell" = {
-      favorite-apps = [
-        "chromium-browser.desktop"
-        "firefox.desktop"
-        "Alacritty.desktop"
-        "org.gnome.Nautilus.desktop"
-        "org.telegram.desktop.desktop"
-        "code.desktop"
-      ];
-      disable-user-extensions = false;
-      enabled-extensions = [
-        "trayIconsReloaded@selfmade.pl"
-        "dash-to-panel@jderose9.github.com"
-        "just-perfection-desktop@just-perfection"
-        "caffeine@patapon.info"
-        "bluetooth-quick-connect@bjarosze.gmail.com"
-        "gsconnect@andyholmes.github.io"
-      ];
-    };
-  };
-
-  xresources.extraConfig = builtins.readFile .dotfiles/Xresources;
-  xdg.configFile."i3/config".text = builtins.readFile .dotfiles/i3;
-  xdg.configFile."rofi/config.rasi".text = builtins.readFile .dotfiles/rofi;
-  xdg.configFile."variety/variety.conf".text = builtins.readFile .dotfiles/variety.conf;
-  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile .dotfiles/quotes.txt;
-  xdg.configFile."hypr/hyprland.conf".text = builtins.readFile .dotfiles/hyprland.conf;
+  xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
+  xdg.configFile."rofi/config.rasi".text = builtins.readFile ../../dotfiles/rofi;
+  xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile ../../dotfiles/quotes.txt;
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
@@ -214,51 +107,5 @@ in
     size = 48;
     x11.enable = true;
   };
-  services.picom = {
-    enable = true;
-    shadow = true;
-    backend = "glx";
-    inactiveOpacity = 0.8;
-    vSync = true;
-  };
-  services.polybar = {
-    enable = true;
-    package = pkgs.polybarFull;
-    script = "polybar mainbar-i3 &";
-    config = .dotfiles/polybar.ini;
-  };
   services.network-manager-applet.enable = true;
-  services.dunst = {
-    enable = true;
-    settings = {
-      global = {
-        width = 300;
-        height = 300;
-        offset = "10x10";
-        origin = "top-right";
-        transparency = 10;
-        frame_color = "#8AADF4";
-        separator_color = "frame";
-        font = "Hack Nerd Font 10";
-      };
-      urgency_low = {
-        background = "#24273A";
-        foreground = "#CAD3F5";
-        timeout = 1;
-      };
-
-      urgency_normal = {
-        background = "#24273A";
-        foreground = "#CAD3F5";
-        timeout = 3;
-      };
-
-      urgency_critical = {
-        background = "#24273A";
-        foreground = "#CAD3F5";
-        frame_color = "#F5A97F";
-        timeout = 3;
-      };
-    };
-  };
 }
