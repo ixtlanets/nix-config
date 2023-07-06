@@ -18,6 +18,7 @@
   };
 
   home.packages = with pkgs; [
+    ffmpeg
     niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
@@ -70,6 +71,13 @@
         exts.pass-import
         exts.pass-genphrase
       ]);
+    };
+    yt-dlp = {
+      enable = true;
+      settings = {
+        "output" = "~/Video/YouTube/%(title)s.%(ext)s";
+        "format" = "mp4";
+      };
     };
   };
 }
