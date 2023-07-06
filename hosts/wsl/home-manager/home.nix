@@ -4,7 +4,10 @@
     ../../../modules/home-manager/starship.nix
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
+    ../../../modules/home-manager/emacs.nix
   ];
+
+  fonts.fontconfig.enable = true;
 
   home = {
     username = "nik";
