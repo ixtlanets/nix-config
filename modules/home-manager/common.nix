@@ -19,6 +19,8 @@
 
   home.packages = with pkgs; [
     ffmpeg
+    glow # markdown reader for terminal
+    portal # file transfer
     niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
