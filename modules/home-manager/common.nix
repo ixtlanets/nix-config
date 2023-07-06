@@ -21,6 +21,7 @@
     ffmpeg
     glow # markdown reader for terminal
     portal # file transfer
+    tz # A time zone helper
     niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
