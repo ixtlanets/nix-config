@@ -1,5 +1,10 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 {
+
+  home.packages = with pkgs; [
+    nerdfonts
+    cantarell-fonts
+  ];
   programs = {
     emacs = {
       enable = true;
