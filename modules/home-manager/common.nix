@@ -74,6 +74,9 @@
         exts.pass-import
         exts.pass-genphrase
       ]);
+      settings = {
+        PASSWORD_STORE_DIR = "$HOME/.password-store";
+      };
     };
     yt-dlp = {
       enable = true;
