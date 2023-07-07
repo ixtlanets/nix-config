@@ -21,7 +21,7 @@
   ];
   services.kanshi.profiles = {
     mobile = {
-      exec = "variety --next";
+      exec = "${pkgs.variety}/bin/variety --next";
       outputs = [
         {
           criteria = "eDP-1";
@@ -31,7 +31,7 @@
       ];
     };
     docked = {
-      exec = "variety --next";
+      exec = "${pkgs.variety}/bin/variety --next";
       outputs = [
         {
           criteria = "eDP-1";
