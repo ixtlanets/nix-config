@@ -22,6 +22,8 @@
     glow # markdown reader for terminal
     portal # file transfer
     tz # A time zone helper
+    imagemagick
+    parallel
     niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
