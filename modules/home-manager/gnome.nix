@@ -9,6 +9,7 @@ in
     gnomeExtensions.just-perfection
     gnomeExtensions.caffeine
     gnomeExtensions.bluetooth-quick-connect
+    gnomeExtensions.quick-lang-switch
   ];
   programs = {
     gnome-terminal = {
@@ -96,6 +97,7 @@ in
         "just-perfection-desktop@just-perfection"
         "caffeine@patapon.info"
         "bluetooth-quick-connect@bjarosze.gmail.com"
+        "quick-lang-switch@ankostis.gmail.com"
       ];
     };
   };
