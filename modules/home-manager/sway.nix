@@ -173,6 +173,7 @@
       border-color=#f5a97f
         '';
   };
+  services.network-manager-applet.enable = true;
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations
 --ozone-platform-hint=auto

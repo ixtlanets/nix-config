@@ -36,7 +36,7 @@ in
         env.TERM = "xterm-256color";
         font = {
           normal.family = "Hack Nerd Font";
-          size = 10;
+          size = 14;
         };
       };
     };
@@ -107,5 +107,4 @@ in
     size = 48;
     x11.enable = true;
   };
-  services.network-manager-applet.enable = true;
 }
