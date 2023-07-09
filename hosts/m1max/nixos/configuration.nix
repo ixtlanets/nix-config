@@ -73,6 +73,8 @@
     spaces.spans-displays = true; # one space spans across all physical displays
   };
 
+  security.pam.enableSudoTouchIdAuth = true; # Enable sudo authentication with Touch ID
+
   # programms installed by homebrew
   homebrew = {
     enable = true;
