@@ -17,8 +17,6 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/sway.nix
-    ../../../modules/home-manager/kanshi.nix
   ];
   services.kanshi.profiles = {
     mobile = {
@@ -65,6 +63,12 @@
     "eDP-1"
     "DP-1"
   ];
+
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      text-scaling-factor = 1.3;
+    };
+  };
 
   home = {
     username = "nik";
