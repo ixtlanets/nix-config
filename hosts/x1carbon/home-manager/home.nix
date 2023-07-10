@@ -37,6 +37,12 @@
     "DP-1"
   ];
 
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      text-scaling-factor = 1.3;
+    };
+  };
+
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
