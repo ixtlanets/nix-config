@@ -35,6 +35,16 @@ in
     };
   };
   dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      clock-show-weekday = true;
+      document-font-name = "Cantarell 12";
+      enable-animations = true;
+      font-antialiasing = "grayscale";
+      font-hinting = "slight";
+      font-name = "Cantarell 12";
+      locate-pointer = false;
+      monospace-font-name = "Hack Nerd Font 14";
+    };
     "org/gnome/desktop/input-sources" = {
       sources = [ (mkTuple [ "xkb" "us" ]) (mkTuple [ "xkb" "ru" ]) ];
       xkb-options = [ "grp:win_space_toggle" "grp:win_space_toggle" ];
