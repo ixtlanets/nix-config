@@ -22,6 +22,7 @@
     darwin.inputs.nixpkgs.follows = "nixpkgs";
 
     niknvim.url = "github:ixtlanets/nixnvim";
+    niknvim.inputs.nixpkgs.follows = "nixpkgs";
 
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
