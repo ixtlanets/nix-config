@@ -83,7 +83,6 @@
     masApps = { };
     casks = [
       "raycast"
-      "amethyst"
       "telegram"
       "moonlight"
       "notion"
@@ -94,6 +93,7 @@
       "docker"
       "vmware-fusion"
       "linearmouse"
+      "rectangle"
     ];
     taps = [ "fujiapple852/trippy" ];
     brews = [ "trippy" ];
