@@ -125,6 +125,7 @@
             nur.nixosModules.nur
             # > Our main nixos configuration file <
             ./hosts/x13/nixos/configuration.nix
+            ./modules/nixos/laptop.nix
             hardware.nixosModules.common-cpu-amd
             hardware.nixosModules.common-cpu-amd-pstate
             hardware.nixosModules.common-gpu-amd
