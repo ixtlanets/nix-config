@@ -13,6 +13,9 @@
     username = "nik";
     homeDirectory = "/home/nik";
   };
+  home.sessionVariables = {
+    LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
+  };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";
