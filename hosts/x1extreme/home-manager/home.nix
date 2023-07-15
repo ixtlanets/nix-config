@@ -16,6 +16,7 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
+    ../../../modules/home-manager/gnome.nix
   ];
 
   home = {

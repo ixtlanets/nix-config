@@ -99,6 +99,7 @@
             nur.nixosModules.nur
             # > Our main nixos configuration file <
             ./hosts/x1extreme/nixos/configuration.nix
+            ./modules/nixos/laptop.nix
             hardware.nixosModules.common-cpu-intel
             hardware.nixosModules.common-gpu-intel
             hardware.nixosModules.common-gpu-nvidia {
