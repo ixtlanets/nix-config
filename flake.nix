@@ -164,6 +164,26 @@
             }
           ];
         };
+
+        desktop = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/desktop/nixos/configuration.nix
+            hardware.nixosModules.common-cpu-amd
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-ssd
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur niknvim; };
+                users.nik.imports = [ ./hosts/desktop/home-manager/home.nix ];
+              };
+            }
+          ];
+        };
       };
       darwinConfigurations.m1max = darwin.lib.darwinSystem {
         specialArgs = { inherit inputs outputs darwin; };
