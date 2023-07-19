@@ -6,6 +6,7 @@ in
   home.packages = with pkgs; [
     _1password
     _1password-gui
+    brave
     browserpass
     git-credential-1password
     telegram-desktop
@@ -63,6 +64,7 @@ in
     browserpass = {
       enable = true;
       browsers = [
+        "brave"
         "firefox"
         "chromium"
       ];
