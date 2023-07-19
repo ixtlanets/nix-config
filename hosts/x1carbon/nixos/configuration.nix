@@ -3,8 +3,11 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 { config, pkgs, lib, ... }:
-
 {
+  boot.extraModulePackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
+  environment.systemPackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
+  boot.blacklistedKernelModules = [ "nouveau" ];
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   imports =
     [
@@ -15,6 +18,7 @@
 
   networking.hostName = "x1carbon"; # Define your hostname.
 
+  services.hardware.bolt.enable = true;
   # Configure keymap in X11
   services = {
     xserver = {
@@ -22,32 +26,23 @@
       videoDrivers = [ "nvidia" ];
     };
   };
-  boot.blacklistedKernelModules = [ "nouveau" ];
 # NVIDIA drivers are unfree.
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (lib.getName pkg) [
     "nvidia-x11"
-    ];
+    "nvidia-settings"
+  ];
   hardware = {
     opengl = {
       enable = true;
-      extraPackages = with pkgs; [
-        intel-media-driver
-        vaapiVdpau
-        libvdpau-va-gl
-      ];
       driSupport = true;
       driSupport32Bit = true;
     };
     nvidia = {
       modesetting.enable = true;
-      open = true;
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
       prime = {
+        reverseSync.enable = true;
         allowExternalGpu = true;
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:11:0:0";
-
       };
     };
   };
