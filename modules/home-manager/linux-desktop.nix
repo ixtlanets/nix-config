@@ -88,6 +88,7 @@ in
         { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
         { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
         { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
+        { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution
         {
           id = "dcpihecpambacapedldabdbpakmachpb";
           updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
