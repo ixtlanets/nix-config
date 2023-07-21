@@ -106,7 +106,7 @@
   users.users.nik = {
     isNormalUser = true;
     description = "Sergey Nikulin";
-    extraGroups = [ "networkmanager" "wheel" "video" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
     shell = pkgs.zsh;
   };
 
@@ -136,6 +136,10 @@
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
+
+  # Docker
+
+  virtualisation.docker.enable = true;
 
   services.power-profiles-daemon.enable = true;
 }
