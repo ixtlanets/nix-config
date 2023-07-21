@@ -57,5 +57,10 @@
     # Optionally, you may need to select the appropriate driver version for your specific GPU.
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
+
+  programs.steam = {
+    enable = true;
+    remotePlay.openFirewall = true;
+  };
   system.stateVersion = "22.11"; # Did you read the comment?
 }
