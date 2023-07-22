@@ -7,4 +7,16 @@
     NIX_CONFIG = "experimental-features = nix-command flakes";
     nativeBuildInputs = with pkgs; [ nix home-manager git ];
   };
+  jupyter  = pkgs.mkShell {
+    # Enable experimental features without having to specify the argument
+    NIX_CONFIG = "experimental-features = nix-command flakes";
+    packages = with pkgs; [
+      jupyter
+      python310Packages.pandas
+      python310Packages.pandas-datareader
+      python310Packages.yfinance
+      python310Packages.matplotlib
+      python310Packages.numpy
+    ];
+  };
 }
