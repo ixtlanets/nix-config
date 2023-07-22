@@ -43,6 +43,7 @@ in
     };
     vscode = {
       enable = true;
+      package = pkgs.vscode.fhs;
       extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
         dbaeumer.vscode-eslint
