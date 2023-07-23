@@ -1,6 +1,9 @@
 { config, pkgs, ... }:
 
 {
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.trusted-users = [ "root" "nik" ];
+
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.configurationLimit = 8;
