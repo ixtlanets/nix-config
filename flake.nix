@@ -222,6 +222,24 @@
               }
           ];
         };
+
+
+        vmmac = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/vmmac/nixos/configuration.nix
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur niknvim; };
+                users.nik.imports = [ ./hosts/vmmac/home-manager/home.nix ];
+              };
+            }
+          ];
+        };
       };
       darwinConfigurations.m1max = darwin.lib.darwinSystem {
         specialArgs = { inherit inputs outputs darwin; };
