@@ -100,11 +100,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1687429403,
-        "narHash": "sha256-VNSeQC5yVyWpYYzbEuB9bXhcde89WEkJmYB4iIpk2sY=",
+        "lastModified": 1690500101,
+        "narHash": "sha256-ASNsAJPyzb+MC/ofDncpqi6gznMj3PEfq8Q1ik76UU8=",
         "owner": "ixtlanets",
         "repo": "nixnvim",
-        "rev": "b8d727919e8edc311a53ed666a4327bd5e83e5d2",
+        "rev": "05ed5ffa8e54218dbf97cd170735aa0b0161489d",
         "type": "github"
       },
       "original": {
