@@ -16,6 +16,10 @@
       allowUnfreePredicate = (_: true);
     };
   };
+  
+  home.sessionVariables = {
+    TZ_LIST = "Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office";
+  };
 
   home.packages = with pkgs; [
     ffmpeg
