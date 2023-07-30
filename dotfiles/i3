@@ -15,6 +15,18 @@ new_float pixel 2
 floating_minimum_size 400 x 300
 floating_maximum_size -1 x -1
 focus_follows_mouse no
+smart_borders on
+
+# Predefined workspaces for monitors
+workspace 1 output eDP
+workspace 2 output eDP
+workspace 3 output eDP
+workspace 4 output eDP
+workspace 5 output eDP
+workspace 6 output HDMI-A-0
+workspace 7 output HDMI-A-0
+workspace 8 output HDMI-A-0
+workspace 9 output HDMI-A-0
 
 # Reading colors from resources
 set_from_resource $back			i3wm.background #1D1F21
