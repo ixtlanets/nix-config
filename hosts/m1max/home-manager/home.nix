@@ -101,6 +101,15 @@ in
     htop.enable = true;
   };
   home.file.".inputrc".source = ../../../dotfiles/inputrc;
+  home.file.".config/yabai/yabairc" = {
+    source = ../../../dotfiles/yabairc;
+    executable = true;
+  };
+  home.file.".config/skhd/skhdrc".source = pkgs.substituteAll {
+    src = ../../../dotfiles/skhdrc;
+    inherit (pkgs) alacritty;
+  };
+  
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
