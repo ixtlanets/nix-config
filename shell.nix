@@ -17,6 +17,7 @@
       python310Packages.yfinance
       python310Packages.matplotlib
       python310Packages.numpy
+      python310Packages.tabulate
     ];
   };
 }
