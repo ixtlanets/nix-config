@@ -15,8 +15,13 @@
   };
   home.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
+    NIXOS_OZONE_WL = "1";
   };
 
+  home.packages = with pkgs; [
+    wslu
+    vanilla-dmz
+  ];
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "22.11";
 }
