@@ -8,7 +8,7 @@
   programs = {
     emacs = {
       enable = true;
-      package = pkgs.emacs29;
+      package = pkgs.emacs29-pgtk;
       extraPackages = epkgs: with epkgs; [
         use-package
         general
