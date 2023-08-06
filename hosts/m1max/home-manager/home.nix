@@ -28,12 +28,6 @@ in
     };
   };
 
-  programs = {
-    emacs = {
-      package = lib.mkForce pkgs.emacs29;
-    };
-  };
-
   targets.darwin.defaults = {
     NSGlobalDomain.AppleLanguages = ["en-RU" "ru-RU"];
     NSGlobalDomain.AppleLocale = "en_RU";

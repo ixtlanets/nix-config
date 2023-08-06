@@ -9,6 +9,13 @@
 
   fonts.fontconfig.enable = true;
 
+
+  programs = {
+    emacs = {
+      package = lib.mkForce pkgs.emacs29-pgtk;
+    };
+  };
+
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
