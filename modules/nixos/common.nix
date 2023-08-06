@@ -1,6 +1,36 @@
 { config, pkgs, ... }:
+let
+vpn-script = pkgs.writeShellScriptBin "vpn" ''
+#!/usr/bin/env nix-shell
+# gen dns suffix
+DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
 
-{
+# get list of available exit nodes
+EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+
+
+
+# add 'None' to the list none option
+EXIT_NODES+="\nNone"
+EXIT_NODES=$(echo -e "$EXIT_NODES")
+
+SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+
+# if SELECTED is empty, put None there
+if [[ -z "$SELECTED" ]]; then
+  SELECTED="None"
+fi
+
+#let user select exit node with gum
+EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
+if [[ "$EXIT_NODE" == "None" ]]; then
+  sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+else
+  sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
+fi
+
+'';
+in {
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.trusted-users = [ "root" "nik" ];
 
@@ -124,8 +154,9 @@
   environment.systemPackages = with pkgs; [
     zerotierone
     killall
-    #  vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-    #  wget
+    jq
+    gum
+    vpn-script
   ];
 
 
