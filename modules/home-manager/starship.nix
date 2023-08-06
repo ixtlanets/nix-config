@@ -26,10 +26,10 @@
           "$time"
       ];
       battery = {
-        full_symbol = "";
-        charging_symbol = "";
-        discharging_symbol = "";
-        unknown_symbol = "";
+        full_symbol = "";
+        charging_symbol = "";
+        discharging_symbol = "";
+        unknown_symbol = "";
         format = "[$symbol$percentage]($style)";
       };
       time = {
