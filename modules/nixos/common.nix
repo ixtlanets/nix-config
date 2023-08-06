@@ -179,4 +179,18 @@ in {
   virtualisation.docker.enable = true;
 
   services.power-profiles-daemon.enable = true;
+
+  # Security options
+  security.sudo = {
+    enable = true;
+    execWheelOnly = true;
+    extraRules = [
+      {
+        groups = [ "wheel" ];
+        commands = [
+          { command = "${pkgs.tailscale}/bin/tailscale"; options = [ "SETENV" "NOPASSWD" ]; }
+        ];
+      }
+    ];
+  };
 }
