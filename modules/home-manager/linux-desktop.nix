@@ -77,8 +77,6 @@ in
       enable = true;
       commandLineArgs = [
         "--ozone-platform-hint=auto"
-        "--enable-gpu-rasterization"
-        "--enable-zero-copy"
         "--ozone-platform-hint=wayland"
       ];
       extensions = [
