@@ -148,6 +148,34 @@
           ];
         };
 
+
+        zenbook = nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs; };
+          modules = [
+            nur.nixosModules.nur
+            # > Our main nixos configuration file <
+            ./hosts/zenbook/nixos/configuration.nix
+            ./modules/nixos/laptop.nix
+            hardware.nixosModules.common-cpu-intel
+            hardware.nixosModules.common-gpu-nvidia {
+              hardware.nvidia.prime = {
+                intelBusId = "PCI:0:2:0";
+                nvidiaBusId = "PCI:1:0:0";
+              };
+            }
+            hardware.nixosModules.common-pc-laptop
+            hardware.nixosModules.common-pc-laptop-ssd
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useUserPackages = true;
+                extraSpecialArgs = { inherit outputs nur niknvim; };
+                users.nik.imports = [ ./hosts/zenbook/home-manager/home.nix ];
+              };
+            }
+          ];
+        };
+
         matebook = nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs; };
           modules = [
