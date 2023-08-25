@@ -1,5 +1,5 @@
 configuration {
-  dpi: 144;
+  dpi: DPI;
   font: "Hack 8";
   modi: "run,drun";
   icon-theme: "Oranchelo";
@@ -26,7 +26,7 @@ configuration {
     fg-col2: #ed8796;
     grey: #6e738d;
 
-    width: 600;
+    width: WIDTH;
     font: "JetBrainsMono Nerd Font 14";
 }
 
@@ -36,7 +36,7 @@ element-text, element-icon , mode-switcher {
 }
 
 window {
-    height: 360px;
+    height: HEIGHT;
     border: 3px;
     border-color: @border-col;
     background-color: @bg-col;

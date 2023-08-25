@@ -87,7 +87,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 144; };
                 users.nik.imports = [ ./hosts/x1carbon/home-manager/home.nix ];
               };
             }
@@ -114,7 +114,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 144; };
                 users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
               };
             }
@@ -141,7 +141,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 144; };
                 users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
               };
             }
@@ -169,7 +169,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 192; };
                 users.nik.imports = [ ./hosts/zenbook/home-manager/home.nix ];
               };
             }
@@ -190,7 +190,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 192; };
                 users.nik.imports = [ ./hosts/matebook/home-manager/home.nix ];
               };
             }
@@ -210,7 +210,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim; dpi = 144; };
                 users.nik.imports = [ ./hosts/desktop/home-manager/home.nix ];
               };
             }

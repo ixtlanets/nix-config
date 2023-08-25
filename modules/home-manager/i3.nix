@@ -1,4 +1,8 @@
-{ inputs, outputs, lib, config, pkgs, ... }: 
+{ inputs, outputs, lib, config, pkgs, dpi, ... }: 
+let
+  DPI = builtins.toString dpi;
+  polybar_height = (builtins.toString(dpi * 0.2));
+in
 {
   home.packages = with pkgs; [
     feh
@@ -43,7 +47,7 @@
     enable = true;
     package = pkgs.polybarFull;
     script = "polybar mainbar-i3 &";
-    config = ../../dotfiles/polybar.ini;
+    extraConfig = builtins.replaceStrings ["DPI" "HEIGHT"] [DPI polybar_height] (builtins.readFile ../../dotfiles/polybar.ini);
   };
   services.dunst = {
     enable = true;

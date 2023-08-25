@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, ... }:
+{ inputs, outputs, lib, config, pkgs, dpi, ... }:
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp0s20f3";
@@ -29,7 +29,7 @@
     nvtop
   ];
   xresources.properties = {
-    "Xft.dpi" = 144;
+    "Xft.dpi" = dpi;
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
