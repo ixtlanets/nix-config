@@ -75,7 +75,7 @@ in
     };
     gh = {
       enable = true;
-      enableGitCredentialHelper = true;
+      gitCredentialHelper.enable = true;
     };
     git = {
       enable = true;
