@@ -6,6 +6,7 @@
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp6s0";
     HWMON_PATH = "/sys/devices/virtual/thermal/thermal_zone0/hwmon5/temp1_input";
+    THERMAL_ZONE = "0";
     BACKLIGHT_CARD = "amdgpu_bl0";
   };
   # You can import other home-manager modules here
