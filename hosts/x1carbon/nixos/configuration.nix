@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, dpi, ... }:
 {
   boot.extraModulePackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
   environment.systemPackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
@@ -22,7 +22,7 @@
   # Configure keymap in X11
   services = {
     xserver = {
-      dpi = 144;
+      dpi = dpi;
       videoDrivers = [ "nvidia" ];
     };
   };

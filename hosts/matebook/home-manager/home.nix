@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }: 
 {
   # You can import other home-manager modules here
   imports = [
@@ -69,7 +69,7 @@
     nvtop
   ];
   xresources.properties = {
-    "Xft.dpi" = 144;
+    "Xft.dpi" = dpi;
   };
 
 

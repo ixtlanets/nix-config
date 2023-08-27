@@ -1,8 +1,14 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }: 
 {
+  home.sessionVariables = {
+    WIFI_INTERFACE = "wlo1";
+    HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
+    THERMAL_ZONE = "10";
+    BACKLIGHT_CARD = "intel_backlight";
+  };
   # You can import other home-manager modules here
   imports = [
     ../../../modules/home-manager/starship.nix
@@ -28,7 +34,7 @@
     gnomeExtensions.supergfxctl-gex
   ];
   xresources.properties = {
-    "Xft.dpi" = 192;
+    "Xft.dpi" = dpi;
   };
 
 

@@ -1,6 +1,9 @@
-{ inputs, outputs, lib, config, pkgs, ... }: 
+{ inputs, outputs, lib, config, pkgs, dpi, ... }: 
 let
-  mkTuple = lib.hm.gvariant.mkTuple;
+  DPI = builtins.toString dpi;
+  rofi_width = (builtins.toString(dpi * 5));
+  rofi_height = (builtins.toString(dpi * 3));
+  polybar_height = (builtins.toString(dpi * 0.1666));
 in
 {
   home.packages = with pkgs; [
@@ -97,7 +100,8 @@ in
   };
 
   xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
-  xdg.configFile."rofi/config.rasi".text = builtins.readFile ../../dotfiles/rofi;
+  # read rofi config and replace DPI with dpi
+  xdg.configFile."rofi/config.rasi".text = builtins.replaceStrings ["DPI" "WIDTH" "HEIGHT"] [DPI rofi_width rofi_height] (builtins.readFile ../../dotfiles/rofi);
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile ../../dotfiles/quotes.txt;
   home.file."scripts/set_wallpaper" = {

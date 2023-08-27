@@ -1,4 +1,8 @@
-{ inputs, outputs, lib, config, pkgs, ... }: 
+{ inputs, outputs, lib, config, pkgs, dpi, ... }: 
+let
+  DPI = builtins.toString dpi;
+  polybar_height = (builtins.toString(dpi * 0.2));
+in
 {
   home.packages = with pkgs; [
     feh
@@ -6,32 +10,6 @@
     maim # screenshot tool
   ];
   home.file.".config/i3/config".text = builtins.readFile ../../dotfiles/i3;
-  programs = {
-    i3status = {
-      enable = true;
-
-      general = {
-        colors = true;
-        color_good = "#8C9440";
-        color_bad = "#A54242";
-        color_degraded = "#DE935F";
-      };
-
-      modules = {
-        ipv6.enable = false;
-        "wireless _first_".enable = true;
-        "battery all".enable = true;
-        "volume master" = {
-          position = 1;
-          settings = {
-            format = "♪ %volume";
-            format_muted = "♪ muted (%volume)";
-            device = "pulse:1";
-          };
-        };
-      };
-    };
-  };
   services.picom = {
     enable = true;
     shadow = true;
@@ -43,7 +21,7 @@
     enable = true;
     package = pkgs.polybarFull;
     script = "polybar mainbar-i3 &";
-    config = ../../dotfiles/polybar.ini;
+    extraConfig = builtins.replaceStrings ["DPI" "HEIGHT"] [DPI polybar_height] (builtins.readFile ../../dotfiles/polybar.ini);
   };
   services.dunst = {
     enable = true;
