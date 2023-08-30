@@ -101,10 +101,6 @@ in
     htop.enable = true;
   };
   home.file.".inputrc".source = ../../../dotfiles/inputrc;
-  home.file.".config/yabai/yabairc" = {
-    source = ../../../dotfiles/yabairc;
-    executable = true;
-  };
   home.file.".config/skhd/skhdrc".source = pkgs.substituteAll {
     src = ../../../dotfiles/skhdrc;
     inherit (pkgs) alacritty;
