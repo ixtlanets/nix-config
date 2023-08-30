@@ -1,1 +1,1 @@
-cmd - return : @alacritty@/Applications/Alacritty.app/Contents/MacOS/alacritty
+cmd + shift - return : @alacritty@/Applications/Alacritty.app/Contents/MacOS/alacritty
