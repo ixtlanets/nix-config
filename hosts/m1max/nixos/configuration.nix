@@ -70,7 +70,7 @@
     menuExtraClock.ShowDate = 1;
     menuExtraClock.ShowDayOfMonth = true;
     menuExtraClock.ShowDayOfWeek = true;
-    spaces.spans-displays = true; # one space spans across all physical displays
+    spaces.spans-displays = false; # each physical display has a separate space
   };
 
   security.pam.enableSudoTouchIdAuth = true; # Enable sudo authentication with Touch ID
@@ -82,6 +82,10 @@
     global.brewfile = true;
     masApps = { };
     casks = [
+      "googlechrome"
+      "brave-browser"
+      "firefox-developer-edition"
+      "microsoft-edge"
       "raycast"
       "telegram"
       "moonlight"
