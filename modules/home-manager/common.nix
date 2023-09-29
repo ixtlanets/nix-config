@@ -31,7 +31,7 @@
     niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
-    nodePackages.pnpm
+    bun # better than nodejs and npm
     gam # Google workspace admin cli
     (pkgs.python3.withPackages (p: with p; [
       ipython
