@@ -82,7 +82,6 @@
     global.brewfile = true;
     masApps = { };
     casks = [
-      "googlechrome"
       "brave-browser"
       "firefox-developer-edition"
       "microsoft-edge"
