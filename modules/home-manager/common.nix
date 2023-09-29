@@ -44,6 +44,7 @@
     xdragon
     gnupg
     tabbed
+    pscale
   ];
 
   # Enable home-manager and git
