@@ -7,6 +7,7 @@
       fzy
       cargo
       gcc
+      go
       git
       lazygit
       curl # needed to fetch titles from urls
