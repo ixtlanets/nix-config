@@ -19,6 +19,7 @@
     ../../../modules/home-manager/i3.nix
     ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/email.nix
+    ../../../modules/home-manager/nvim.nix
   ];
   wayland.windowManager.sway = {
     config = {

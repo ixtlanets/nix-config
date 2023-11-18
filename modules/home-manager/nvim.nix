@@ -6,6 +6,7 @@
       ripgrep
       fzy
       cargo
+      gcc
       git
       lazygit
       curl # needed to fetch titles from urls
