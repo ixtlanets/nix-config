@@ -52,7 +52,7 @@
     finder._FXShowPosixPathInTitle = true;
     finder.CreateDesktop = false;
     finder.FXEnableExtensionChangeWarning = false;
-    dock.autohide = true;
+    dock.autohide = false;
     dock.mru-spaces = false; # Do not rearrange spaces
     dock.orientation = "right";
     dock.show-recents = false;
