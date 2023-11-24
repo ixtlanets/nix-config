@@ -56,14 +56,6 @@ in
         github.vscode-pull-request-github
         github.codespaces
       ];
-      userSettings = {
-        "editor.fontFamily" = "'Hack Nerd Font', 'Droid Sans Mono', 'monospace', monospace";
-        "editor.fontSize" = 16;
-        "editor.lineNumbers" = "relative";
-        "window.menuBarVisibility" = "toggle";
-        "window.titleBarStyle" = "custom";
-        "editor.inlineSuggest.enabled" = true;
-      };
     };
     browserpass = {
       enable = true;
