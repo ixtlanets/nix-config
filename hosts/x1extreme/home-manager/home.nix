@@ -18,6 +18,8 @@
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/i3.nix
+    ../../../modules/home-manager/email.nix
+    ../../../modules/home-manager/nvim.nix
   ];
 
   home = {
