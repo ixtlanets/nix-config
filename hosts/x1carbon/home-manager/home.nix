@@ -16,28 +16,56 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/i3.nix
     ../../../modules/home-manager/gnome.nix
+    ../../../modules/home-manager/sway.nix
+    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
+  services.kanshi.profiles = {
+    mobile = {
+      exec = "variety --next";
+      outputs = [
+        {
+          criteria = "eDP-1";
+          mode = "1920x1080@60.000Hz";
+          scale = 1.5;
+        }
+      ];
+    };
+    docked = {
+      exec = "variety --next";
+      outputs = [
+        {
+          criteria = "eDP-1";
+          mode = "1920x1080@60.000Hz";
+          scale = 1.5;
+        }
+        {
+          criteria = "HDMI-A-1";
+          mode = "2560x1440@144.000Hz";
+          scale = 1.5;
+        }
+      ];
+    };
+  };
   wayland.windowManager.sway = {
     config = {
       output = {
         "eDP-1" = {
           mode = "1920x1080@60.000Hz";
-          scale = "1";
+          scale = "1.5";
         };
-        "DP-1" = {
+        "HDMI-A-1" = {
           mode = "2560x1440@144.000Hz";
-          scale = "1";
+          scale = "1.5";
         };
       };
     };
   };
   programs.waybar.settings.mainbar.output = [
     "eDP-1"
-    "DP-1"
+    "HDMI-A-1"
   ];
 
   dconf.settings = {

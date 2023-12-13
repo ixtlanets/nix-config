@@ -23,7 +23,7 @@
       gtk = true;
     };
     config = {
-      terminal = "alacritty";
+      terminal = "\${pkgs.foot}/bin/foot";
       modifier = "Mod4";
       bars = [];
       input = {
@@ -68,6 +68,9 @@
     };
   };
   programs = {
+    foot = {
+      enable = true;
+    };
     waybar = {
       enable = true;
       systemd.enable = true;
@@ -75,7 +78,6 @@
         mainBar = {
           layer = "top";
           position = "top";
-          height = 12;
           modules-left = [ "sway/workspaces" "sway/language" "sway/mode" ];
           modules-center = [ "clock" ];
           modules-right = ["pulseaudio" "temperature" "backlight" "battery" "keyboard-state" "tray"];
@@ -151,8 +153,8 @@
             "format-icons" = ["" "" "" "" ""];
           };
           tray = {
-            "icon-size" = 12;
-            "spacing" = 5;
+            "icon-size" = 10;
+            "spacing" = 4;
           };
         };
       };
