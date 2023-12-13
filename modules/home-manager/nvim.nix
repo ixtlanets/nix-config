@@ -17,6 +17,8 @@
       prisma-engines # ditto for schema.prisma files
       nixpkgs-fmt
       lua-language-server
+      gnumake
+      luajitPackages.jsregexp
       nodePackages.eslint_d # js/ts code formatter and linter
       nodePackages.prettier # ditto
       nodePackages.vscode-langservers-extracted # lsp servers for json, html, css
