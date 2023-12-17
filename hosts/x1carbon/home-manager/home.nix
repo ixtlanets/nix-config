@@ -29,7 +29,7 @@
         {
           criteria = "eDP-1";
           mode = "1920x1080@60.000Hz";
-          scale = 1.5;
+          scale = 1.25;
         }
       ];
     };
@@ -39,7 +39,7 @@
         {
           criteria = "eDP-1";
           mode = "1920x1080@60.000Hz";
-          scale = 1.5;
+          scale = 1.25;
         }
         {
           criteria = "HDMI-A-1";
@@ -54,7 +54,7 @@
       output = {
         "eDP-1" = {
           mode = "1920x1080@60.000Hz";
-          scale = "1.5";
+          scale = "1.25";
         };
         "HDMI-A-1" = {
           mode = "2560x1440@144.000Hz";
@@ -70,7 +70,7 @@
 
   dconf.settings = {
     "org/gnome/desktop/interface" = {
-      text-scaling-factor = 1.3;
+      text-scaling-factor = 1;
     };
   };
 
