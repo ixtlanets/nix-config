@@ -43,6 +43,8 @@ in {
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
+  # binfmt emulation
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" "x86_64-windows" ];
   # Use latest kernel
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
