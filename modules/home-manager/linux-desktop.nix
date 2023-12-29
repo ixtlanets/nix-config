@@ -13,7 +13,9 @@ in
     browserpass
     git-credential-1password
     telegram-desktop
-    obsidian
+    (obsidian.override {
+      electron = pkgs.electron_27;
+    })
     moonlight-qt
     xclip
     nerdfonts
