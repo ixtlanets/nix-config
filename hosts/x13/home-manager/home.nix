@@ -18,7 +18,8 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/i3.nix
+    ../../../modules/home-manager/sway.nix
+    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
@@ -33,7 +34,7 @@
         }
       ];
     };
-    docked = {
+    dockedHome = {
       exec = "${pkgs.variety}/bin/variety --next";
       outputs = [
         {
@@ -48,6 +49,22 @@
         }
       ];
     };
+    dockedSG = {
+      exec = "${pkgs.variety}/bin/variety --next";
+      outputs = [
+        {
+          criteria = "eDP-1";
+          mode = "1920x1200@60.000Hz";
+          scale = 1.5;
+        }
+        {
+          criteria = "DP-1";
+          mode = "3840x2560@60.000Hz";
+          scale = 2.0;
+        }
+      ];
+    };
+
   };
   wayland.windowManager.sway = {
     config = {
@@ -60,17 +77,22 @@
           mode = "2560x1440@144.000Hz";
           scale = "1.5";
         };
+        "DP-2" = {
+          mode = "3840x2560@60.000Hz";
+          scale = "2.0";
+        };
       };
     };
   };
   programs.waybar.settings.mainbar.output = [
     "eDP-1"
     "DP-1"
+    "DP-2"
   ];
 
   dconf.settings = {
     "org/gnome/desktop/interface" = {
-      text-scaling-factor = 1.3;
+      text-scaling-factor = 1.0;
     };
   };
 
