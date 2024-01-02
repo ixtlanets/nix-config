@@ -160,4 +160,8 @@ in {
       };
     };
   };
+
+  home.shellAliases = {
+    gst = "git status";
+  };
 }
