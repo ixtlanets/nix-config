@@ -14,17 +14,19 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/660cdb83-643b-409c-ac1e-cd1000110dde";
+    { device = "/dev/disk/by-uuid/403b4f65-be9b-46b8-a98c-888eb47d4301";
       fsType = "ext4";
     };
 
+  boot.initrd.luks.devices."luks-c01e5666-4773-4d83-a882-7707acb02c75".device = "/dev/disk/by-uuid/c01e5666-4773-4d83-a882-7707acb02c75";
+
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/C484-D745";
+    { device = "/dev/disk/by-uuid/CAE4-E4B8";
       fsType = "vfat";
     };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/fa5ca6c4-9531-4958-a44a-1639aae0a504"; }
+    [ { device = "/dev/disk/by-uuid/940da18b-afb2-4016-a8a3-933d6688fb4a"; }
     ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
@@ -32,9 +34,9 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp0s20f0u1.useDHCP = lib.mkDefault true;
   # networking.interfaces.wlo1.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }
