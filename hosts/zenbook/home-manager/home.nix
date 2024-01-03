@@ -24,6 +24,24 @@
     ../../../modules/home-manager/nvim.nix
   ];
 
+  wayland.windowManager.sway = {
+    config = {
+      output = {
+        "eDP-1" = {
+          mode = "2880x1800@60.000Hz";
+          scale = "2.0";
+        };
+        "HDMI-A-1" = {
+          mode = "2560x1440@144.000Hz";
+          scale = "1.5";
+        };
+        "DP-2" = {
+          mode = "3840x2560@60.000Hz";
+          scale = "2.0";
+        };
+      };
+    };
+  };
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
