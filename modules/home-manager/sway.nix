@@ -60,7 +60,7 @@
           "XF86AudioRaiseVolume" = "exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+";
           "XF86AudioMute" = "exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
           "XF86AudioMicMute" = "exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle";
-          "${modifier}+Return" = "exec alacritty";
+          "${modifier}+Return" = "exec foot";
           "${modifier}+w" = "kill";
           "${modifier}+d" = "exec rofi -show run";
           "${modifier}+Shift+f" = "floating toggle";
@@ -185,4 +185,5 @@ bindswitch --reload --locked lid:off output $laptop enable
 --enable-features=WaylandWindowDecorations
 --ozone-platform-hint=auto
   '';
+  home.file.".config/foot/foot.ini".text = builtins.readFile ../../dotfiles/foot.ini;
 }
