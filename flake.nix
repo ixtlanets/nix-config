@@ -224,8 +224,10 @@
         };
 
 
-        vmmac = nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs; };
+        vmmac = let
+          dpi = 192;
+        in nixpkgs.lib.nixosSystem {
+          specialArgs = { inherit inputs outputs dpi; };
           modules = [
             nur.nixosModules.nur
             # > Our main nixos configuration file <
@@ -234,7 +236,7 @@
             {
               home-manager = {
                 useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim; };
+                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                 users.nik.imports = [ ./hosts/vmmac/home-manager/home.nix ];
               };
             }
