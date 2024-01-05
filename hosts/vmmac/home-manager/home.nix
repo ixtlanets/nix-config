@@ -10,10 +10,9 @@
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
-    ../../../modules/home-manager/linux-desktop.nix
+    ../../../modules/home-manager/vm-desktop.nix
     ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/sway.nix
-    ../../../modules/home-manager/kanshi.nix
+    ../../../modules/home-manager/i3.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
