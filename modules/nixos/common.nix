@@ -72,8 +72,10 @@ in {
     dconf.enable = true;
   };
   
+  # required for  gnome systray
+  services.udev.packages = with pkgs; [ gnome.gnome-settings-daemon ];
+ 
   # Services
-
   services = {
     xserver = {
       enable = true;
