@@ -12,7 +12,6 @@
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
     exec-once = [ "mako"
-      "waybar"
       "variety" ];
     "$mod" = "SUPER";
     input = {
@@ -115,5 +114,9 @@
   };
 
   home.sessionVariables.NIXOS_OZONE_WL = "1";
+  home.file.".config/electron-flags.conf".text = ''
+--enable-features=WaylandWindowDecorations
+--ozone-platform-hint=auto
+  '';
 }
 

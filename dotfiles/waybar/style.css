@@ -51,6 +51,11 @@ window#waybar.hidden {
   color: white;
 }
 
+
+#workspaces button.active {
+  color: white;
+}
+
 #language {
   padding-left: 4px;
   padding-right: 4px;

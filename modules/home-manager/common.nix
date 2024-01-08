@@ -159,6 +159,9 @@ in {
             }) + "/plugins";
       };
     };
+    yazi = {
+      enable = true;
+    };
   };
 
   home.shellAliases = {
