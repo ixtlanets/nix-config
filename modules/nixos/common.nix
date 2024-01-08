@@ -121,7 +121,7 @@ in {
   services.dbus.enable = true;
   xdg.portal.enable = true;
   xdg.portal.wlr.enable = true;
-  #xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  # xdg.portal.extraPortals = [ xdg-desktop-portal-hyprland ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -161,6 +161,7 @@ in {
     gum
     podman-compose
     vpn-script
+    xdg-desktop-portal-hyprland
   ];
 
 

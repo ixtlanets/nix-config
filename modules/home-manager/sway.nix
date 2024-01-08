@@ -1,12 +1,10 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 {
-
   home.packages = with pkgs; [
     swayimg
     gnome.adwaita-icon-theme
     swaylock
     swayidle
-    mako
     rofi-wayland
     grim # screenshot functionality
     slurp # screenshot functionality
@@ -73,19 +71,10 @@ bindswitch --reload --locked lid:off output $laptop enable
     '';
   };
   programs = {
-    foot = {
-      enable = true;
-    };
     waybar = {
-      enable = true;
-      systemd.enable = true;
       settings = {
         mainBar = {
-          layer = "top";
-          position = "top";
           modules-left = [ "sway/workspaces" "sway/language" "sway/mode" ];
-          modules-center = [ "clock" ];
-          modules-right = ["pulseaudio" "temperature" "backlight" "battery" "keyboard-state" "tray"];
 
           "sway/workspaces" = {
             disable-scroll = true;
@@ -102,88 +91,16 @@ bindswitch --reload --locked lid:off output $laptop enable
             "min-length" = 5;
             "tooltip"= false;
           };
-          "keyboard-state" = {
-            "capslock" = true;
-            "format" = "{name} {icon} ";
-            "format-icons" = {
-              "locked" = " ";
-              "unlocked" = "";
-            };
-          };
           "sway/mode" = {
             "format"= "<span style=\"italic\">{}</span>";
           };
-          "clock"= {
-            "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-            "format" = "{:%a, %d %b, %H:%M}";
-          };
-          "pulseaudio" = {
-            "reverse-scrolling" = 1;
-            "format" = "{volume}% {icon} {format_source}";
-            "format-bluetooth" = "{volume}% {icon} {format_source}";
-            "format-bluetooth-muted" = " {icon} {format_source}";
-            "format-muted" = "  {format_source}";
-            "format-source" = "{volume}% ";
-            "format-source-muted" = "";
-            "format-icons" = {
-              "headphone" = "";
-              "hands-free" = "";
-              "headset" = "";
-              "phone" = "";
-              "portable"= "";
-              "car" = "";
-              "default" = ["" "" ""];
-            };
-            "on-click" = "pavucontrol";
-            "min-length" = 13;
-          };
-          temperature = {
-            "critical-threshold" = 90;
-            "format" = "{icon} {temperatureC}°C";
-            "format-icons" = [""  ""  ""  ""  ""];
-            "tooltip" = false;
-          };
-          backlight = {
-            "format" = "{icon} {percent}%";
-            "format-icons" = ["" ""];
-            "min-length" = 7;
-          };
-          battery = {
-            "states" = {
-              "warning" = 25;
-              "critical" = 10;
-            };
-            "format" = "{icon} {capacity}%";
-            "format-alt" = "{icon} {time}: {power} W";
-            "format-icons" = ["" "" "" "" ""];
-          };
-          tray = {
-            "icon-size" = 10;
-            "spacing" = 4;
-          };
         };
       };
-      style = builtins.readFile ../../dotfiles/waybar/style.css;
     };
-  };
-  services.mako = {
-    enable = true;
-    borderRadius = 5;
-    defaultTimeout = 3000;
-    extraConfig = ''
-      background-color=#24273a
-      text-color=#cad3f5
-      border-color=#8aadf4
-      progress-color=over #363a4f
-
-      [urgency=high]
-      border-color=#f5a97f
-        '';
   };
   services.network-manager-applet.enable = true;
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations
 --ozone-platform-hint=auto
   '';
-  home.file.".config/foot/foot.ini".text = builtins.readFile ../../dotfiles/foot.ini;
 }
