@@ -27,6 +27,14 @@
 
       sensitivity = 0;
     };
+
+    animation = [
+      "windowsOut, 1, 2, default, popin 80%"
+        "border, 1, 3, default"
+        "borderangle, 1, 2, default"
+        "fade, 1, 2, default"
+        "workspaces, 1, 2, default"
+    ];
     decoration = {
       rounding = 2;
       blur = {
@@ -41,6 +49,10 @@
       shadow_render_power = 3;
       "col.shadow" = "rgba(1a1a1aee)";
     };
+    bindm = [
+      "$mod, mouse:272, movewindow"
+        "$mod, mouse:273, resizewindow"
+    ];
     bind =
       [
       "$mod+SHIFT, E, exit"

@@ -26,7 +26,13 @@
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
-
+  wayland.windowManager.hyprland.settings = {
+    monitor = [
+      "eDP-1,2880x1800@60.000Hz,auto,2.0"
+        "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
+        "DP-2,3840x2560@60.000Hz,auto,2.0"
+    ];
+  };
   wayland.windowManager.sway = {
     config = {
       output = {
