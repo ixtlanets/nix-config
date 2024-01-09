@@ -40,5 +40,4 @@
       ];
     };
   };
-  home.file.".emacs.d/init.el".source = ../../dotfiles/emacs/init.el;
 }
