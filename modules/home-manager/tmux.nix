@@ -33,6 +33,11 @@
             set -g @dracula-show-left-icon session
             set -g @dracula-day-month true
             set -g @dracula-military-time true
+
+            set -g allow-passthrough on
+
+            set -ga update-environment TERM
+            set -ga update-environment TERM_PROGRAM
             '';
         }
     ];
