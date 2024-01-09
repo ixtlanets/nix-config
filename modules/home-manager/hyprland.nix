@@ -104,8 +104,8 @@
           };
           "hyprland/language" = {
             "format"= " {}";
-            "min-length" = 5;
-            "tooltip"= false;
+            "format-en" = "en";
+            "format-ru" = "ру";
           };
           "hyprland/submap" = {
             "format"= "<span style=\"italic\">{}</span>";

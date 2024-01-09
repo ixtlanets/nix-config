@@ -10,6 +10,7 @@ in
   home.packages = with pkgs; [
       xclip
       nerdfonts
+      monaspace
       wl-clipboard
       variety
       zathura

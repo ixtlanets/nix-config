@@ -22,6 +22,7 @@ in
       moonlight-qt
       xclip
       nerdfonts
+      monaspace
       wl-clipboard
       variety
       prismlauncher
