@@ -14,6 +14,9 @@
     exec-once = [ "mako"
       "variety" ];
     "$mod" = "SUPER";
+    general = {
+      gaps_out = 0;
+    };
     input = {
       kb_layout = "us,ru";
       kb_options = "grp:win_space_toggle";
