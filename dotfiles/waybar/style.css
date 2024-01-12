@@ -21,8 +21,8 @@
 }
 
 #waybar {
-	font-family: 'Monaspace Krypton', sans-serif;
-	font-size: 1.5em;
+	font-family: 'Monaspace Neon', sans-serif;
+	font-size: 0.8em;
 	font-weight: 400;
   color: @base04;
   background: @base01;
@@ -94,7 +94,7 @@
 }
 
 #window {
-  font-size: 0.9em;
+  font-size: 0.7em;
 	font-weight: 400;
 	font-family: sans-serif;
 }
