@@ -69,6 +69,8 @@
         "$mod, L, movefocus, r"
         ",XF86MonBrightnessUp, exec, light -A 10"
         ",XF86MonBrightnessDown, exec, light -U 10"
+        "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
+        "SHIFT ,XF86MonBrightnessDown, exec, light -U 1"
         ",XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"
         ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"
         "SHIFT ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01+"
