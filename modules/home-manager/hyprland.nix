@@ -98,7 +98,8 @@
     waybar = {
       settings = {
         mainBar = {
-          modules-left = [ "hyprland/workspaces" "hyprland/language" "hyprland/mode" ];
+          modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
+          modules-right = ["hyprland/language"];
 
           "hyprland/workspaces" = {
             disable-scroll = true;
