@@ -67,6 +67,7 @@
         "$mod, J, movefocus, d"
         "$mod, K, movefocus, u"
         "$mod, L, movefocus, r"
+        "$mod+SHIFT, S, exec, grim -g \"$(slurp)\" - | wl-copy"
         ",XF86MonBrightnessUp, exec, light -A 10"
         ",XF86MonBrightnessDown, exec, light -U 10"
         "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
