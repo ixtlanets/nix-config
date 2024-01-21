@@ -85,6 +85,7 @@ in {
   # Enable home-manager and git
   programs = {
     home-manager.enable = true;
+    gpg.enable = true;
     bat = {
       enable = true;
     };
@@ -162,6 +163,12 @@ in {
     yazi = {
       enable = true;
     };
+  };
+
+  services.gpg-agent = {
+    enable = true;
+    enableSshSupport = true;
+    pinentryFlavor = "qt"; # Hyprland/Wayland
   };
 
   home.shellAliases = {
