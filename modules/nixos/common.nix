@@ -77,34 +77,6 @@ in {
  
   # Services
   services = {
-    xserver = {
-      enable = true;
-      displayManager = {
-        gdm.enable = true;
-        sessionCommands = ''
-          ${pkgs.xorg.xset}/bin/xset r rate 250 30
-        '';
-      };
-      windowManager = {
-        i3.enable = true;
-      };
-      desktopManager.gnome.enable = true;
-      libinput = {
-        enable = true;
-        mouse.middleEmulation = false;
-        touchpad = {
-          tapping = true;
-          scrollMethod = "twofinger";
-          naturalScrolling = true;                # The correct way of scrolling
-          accelProfile = "adaptive";              # Speed settings
-          #accelSpeed = "-0.5";
-          disableWhileTyping = true;
-        };
-      };
-
-      layout = "us,ru";
-      xkbOptions = "grp:win_space_toggle";
-    };
     tailscale = {
       enable = true;
       useRoutingFeatures = "both";

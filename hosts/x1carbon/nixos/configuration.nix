@@ -19,13 +19,6 @@
   networking.hostName = "x1carbon"; # Define your hostname.
 
   services.hardware.bolt.enable = true;
-  # Configure keymap in X11
-  services = {
-    xserver = {
-      dpi = dpi;
-      videoDrivers = [ "nvidia" ];
-    };
-  };
 # NVIDIA drivers are unfree.
   nixpkgs.config.allowUnfreePredicate = pkg:
     builtins.elem (lib.getName pkg) [
