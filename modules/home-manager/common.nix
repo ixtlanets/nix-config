@@ -165,12 +165,6 @@ in {
     };
   };
 
-  services.gpg-agent = {
-    enable = true;
-    enableSshSupport = true;
-    pinentryFlavor = "qt"; # Hyprland/Wayland
-  };
-
   home.shellAliases = {
     gst = "git status";
   };
