@@ -31,11 +31,11 @@
     };
 
     animation = [
-      "windowsOut, 1, 2, default, popin 80%"
+      "windows, 0, 1, default"
         "border, 1, 3, default"
         "borderangle, 1, 2, default"
         "fade, 1, 2, default"
-        "workspaces, 1, 2, default"
+        "workspaces, 0, 1, default"
     ];
     decoration = {
       rounding = 2;
