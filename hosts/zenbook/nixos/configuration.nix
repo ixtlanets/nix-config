@@ -15,7 +15,8 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
 
-  # Configure keymap in X11
+ services.hardware.bolt.enable = true;
+ # Configure keymap in X11
   services = {
     xserver = {
       enable = true;
