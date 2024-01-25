@@ -17,12 +17,10 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/mako.nix
     ../../../modules/home-manager/foot.nix
-    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
@@ -32,24 +30,6 @@
         "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
         "DP-1,3840x2560@60.000Hz,auto,2.0"
     ];
-  };
-  wayland.windowManager.sway = {
-    config = {
-      output = {
-        "eDP-1" = {
-          mode = "2880x1800@60.000Hz";
-          scale = "2.0";
-        };
-        "HDMI-A-1" = {
-          mode = "2560x1440@144.000Hz";
-          scale = "1.5";
-        };
-        "DP-1" = {
-          mode = "3840x2560@60.000Hz";
-          scale = "2.0";
-        };
-      };
-    };
   };
   home = {
     username = "nik";
