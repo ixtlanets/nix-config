@@ -27,12 +27,13 @@ in
       variety
       prismlauncher
       zathura
-      onlyoffice-bin
+      libreoffice-fresh
       brightnessctl
       pamixer
       wireplumber
       discord
       swaybg
+      swayimg
       mpv
       liberation_ttf
       font-awesome
