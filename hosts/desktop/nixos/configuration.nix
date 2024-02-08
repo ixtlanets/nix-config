@@ -17,13 +17,15 @@
 
   # Configure keymap in X11
   
-    services = {
-      xserver = {
-        enable = true;
-        dpi = dpi;
-      };
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
     };
-
+  };
+  boot.blacklistedKernelModules = [ "nouveau" "iwlwifi" ];
   hardware = {
     opengl = {
       enable = true;
@@ -48,7 +50,7 @@
 
     # Use the open source version of the kernel module
     # Only available on driver 515.43.04+
-    open = true;
+    # open = true;
 
     # Enable the nvidia settings menu
     nvidiaSettings = true;
