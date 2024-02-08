@@ -198,14 +198,14 @@
         };
 
         desktop = let 
-          dpi = 144;
+          dpi = 192;
         in nixpkgs.lib.nixosSystem {
           specialArgs = { inherit inputs outputs dpi; };
           modules = [
             nur.nixosModules.nur
               ./hosts/desktop/nixos/configuration.nix
               hardware.nixosModules.common-cpu-amd
-              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-cpu-amd-pstate
               hardware.nixosModules.common-pc-ssd
               home-manager.nixosModules.home-manager
               {
