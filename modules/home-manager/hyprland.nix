@@ -131,6 +131,7 @@
   };
 
   home.sessionVariables.NIXOS_OZONE_WL = "1";
+  home.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
   home.sessionVariables.ELECTRON_OZONE_PLATFORM_HINT = "auto";
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations
