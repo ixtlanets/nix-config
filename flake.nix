@@ -92,7 +92,10 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/x1carbon/home-manager/home.nix ];
+                  users.nik.imports = [ 
+                    nur.nixosModules.nur
+                    ./hosts/x1carbon/home-manager/home.nix 
+                  ];
                 };
               }
             ];
