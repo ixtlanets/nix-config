@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, dpi, ... }:
+{ inputs, outputs, lib, config, pkgs, dpi, nur, ... }:
 {
   # You can import other home-manager modules here
   imports = [
@@ -23,8 +23,8 @@
 
   wayland.windowManager.hyprland.settings = {
     monitor = [
-        "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
-        "DP-1,3840x2560@60.000Hz,auto,2.0"
+      "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
+      "DP-1,3840x2560@60.000Hz,auto,2.0"
     ];
   };
   dconf.settings = {
