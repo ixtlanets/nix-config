@@ -55,7 +55,7 @@
       );
 
       # Your custom packages and modifications, exported as overlays
-      overlays = import ./overlays { inherit inputs nur; };
+      overlays = import ./overlays { inherit inputs; };
       # Reusable nixos modules you might want to export
       # These are usually stuff you would upstream into nixpkgs
       nixosModules = import ./modules/nixos;
@@ -66,126 +66,137 @@
       # NixOS configuration entrypoint
       # Available through 'nixos-rebuild --flake .#your-hostname'
       nixosConfigurations = {
-        x1carbon = let
-          dpi = 144;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+        x1carbon =
+          let
+            dpi = 144;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
               ./hosts/x1carbon/nixos/configuration.nix
               hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
               hardware.nixosModules.common-cpu-intel
               hardware.nixosModules.common-gpu-intel
-              hardware.nixosModules.common-gpu-nvidia {
+              hardware.nixosModules.common-gpu-nvidia
+              {
                 hardware.nvidia.prime = {
                   intelBusId = "PCI:0:2:0";
                   nvidiaBusId = "PCI:11:0:0";
                 };
               }
-          hardware.nixosModules.common-pc-laptop
-            hardware.nixosModules.common-pc-laptop-ssd
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                users.nik.imports = [ ./hosts/x1carbon/home-manager/home.nix ];
-              };
-            }
-          ];
-        };
-        x1extreme = let 
-          dpi = 144;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-pc-laptop-ssd
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ 
+                    nur.nixosModules.nur
+                    ./hosts/x1carbon/home-manager/home.nix 
+                  ];
+                };
+              }
+            ];
+          };
+        x1extreme =
+          let
+            dpi = 144;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
               ./hosts/x1extreme/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               hardware.nixosModules.common-cpu-intel
               hardware.nixosModules.common-gpu-intel
-              hardware.nixosModules.common-gpu-nvidia {
+              hardware.nixosModules.common-gpu-nvidia
+              {
                 hardware.nvidia.prime = {
                   intelBusId = "PCI:0:2:0";
                   nvidiaBusId = "PCI:9:0:0";
                 };
               }
-          hardware.nixosModules.common-pc-laptop
-            hardware.nixosModules.common-pc-laptop-ssd
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
-              };
-            }
-          ];
-        };
-        x13 = let
-          dpi = 144;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-pc-laptop-ssd
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
+                };
+              }
+            ];
+          };
+        x13 =
+          let
+            dpi = 144;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
               ./hosts/x13/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               hardware.nixosModules.common-cpu-amd
               hardware.nixosModules.common-cpu-amd-pstate
-              hardware.nixosModules.common-gpu-nvidia {
-                hardware.nvidia.prime = {
-                  amdgpuBusId = "PCI:56:0:0";
-                  nvidiaBusId = "PCI:1:0:0";
+              hardware.nixosModules.common-gpu-amd
+              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-pc-laptop-ssd
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
                 };
               }
-          hardware.nixosModules.common-pc-laptop
-            hardware.nixosModules.common-pc-laptop-ssd
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
-              };
-            }
-          ];
-        };
+            ];
+          };
 
 
-        zenbook = let
-          dpi = 192;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+        zenbook =
+          let
+            dpi = 192;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
               ./hosts/zenbook/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               hardware.nixosModules.common-cpu-intel
-              hardware.nixosModules.common-gpu-nvidia {
+              hardware.nixosModules.common-gpu-nvidia
+              {
                 hardware.nvidia.prime = {
                   intelBusId = "PCI:0:2:0";
                   nvidiaBusId = "PCI:1:0:0";
                 };
               }
-          hardware.nixosModules.common-pc-laptop
-            hardware.nixosModules.common-pc-laptop-ssd
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                users.nik.imports = [ ./hosts/zenbook/home-manager/home.nix ];
-              };
-            }
-          ];
-        };
+              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-pc-laptop-ssd
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ ./hosts/zenbook/home-manager/home.nix ];
+                };
+              }
+            ];
+          };
 
-        matebook = let 
-          dpi = 192;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+        matebook =
+          let
+            dpi = 192;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
               ./hosts/matebook/nixos/configuration.nix
               hardware.nixosModules.common-cpu-intel
               hardware.nixosModules.common-gpu-intel
@@ -199,49 +210,55 @@
                   users.nik.imports = [ ./hosts/matebook/home-manager/home.nix ];
                 };
               }
-          ];
-        };
+            ];
+          };
 
-        desktop = let 
-          dpi = 144;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
+        desktop =
+          let
+            dpi = 192;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
               ./hosts/desktop/nixos/configuration.nix
               hardware.nixosModules.common-cpu-amd
-              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-cpu-amd-pstate
               hardware.nixosModules.common-pc-ssd
               home-manager.nixosModules.home-manager
               {
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/desktop/home-manager/home.nix ];
+                  users.nik.imports = [
+                    nur.nixosModules.nur
+                    ./hosts/desktop/home-manager/home.nix
+                  ];
                 };
               }
-          ];
-        };
+            ];
+          };
 
 
-        vmmac = let
-          dpi = 192;
-        in nixpkgs.lib.nixosSystem {
-          specialArgs = { inherit inputs outputs dpi; };
-          modules = [
-            nur.nixosModules.nur
-            # > Our main nixos configuration file <
-            ./hosts/vmmac/nixos/configuration.nix
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useUserPackages = true;
-                extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                users.nik.imports = [ ./hosts/vmmac/home-manager/home.nix ];
-              };
-            }
-          ];
-        };
+        vmmac =
+          let
+            dpi = 192;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
+              # > Our main nixos configuration file <
+              ./hosts/vmmac/nixos/configuration.nix
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ ./hosts/vmmac/home-manager/home.nix ];
+                };
+              }
+            ];
+          };
       };
       darwinConfigurations.m1max = darwin.lib.darwinSystem {
         specialArgs = { inherit inputs outputs darwin; };

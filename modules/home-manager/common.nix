@@ -162,6 +162,196 @@ in {
     };
     yazi = {
       enable = true;
+      settings = {
+        opener = {
+          text = [
+          {
+            exec = "nvim \"$@\"";
+            block = true;
+          }
+          ];
+          pdf = [
+          {
+            exec = "zathura \"$@\"";
+            block = false;
+          }
+          ];
+          office = [
+          {
+            exec = "libreoffice \"$@\"";
+            block = false;
+          }
+          ];
+          image = [
+          {
+            exec = "swayimg \"$@\"";
+            block = false;
+          }
+          ];
+          video = [
+          {
+            exec = "mpv \"$@\"";
+            block = false;
+          }
+          ];
+        };
+        open = {
+          rules = [
+          {
+            name = "*.json";
+            use = "text";
+          }
+          {
+            name = "*.cpp";
+            use = "text";
+          }
+          {
+            name = "*.lua";
+            use = "text";
+          }
+          {
+            name = "*.toml";
+            use = "text";
+          }
+          {
+            name = "*.yaml";
+            use = "text";
+          }
+          {
+            name = "*.c";
+            use = "text";
+          }
+          {
+            name = "*.ts";
+            use = "text";
+          }
+          {
+            name = "*.nix";
+            use = "text";
+          }
+          {
+            name = "*.md";
+            use = "text";
+          }
+          {
+            name = "*.js";
+            use = "text";
+          }
+          {
+            name = "*.jsx";
+            use = "text";
+          }
+          {
+            name = "*.tsx";
+            use = "text";
+          }
+          {
+            name = "*.pdf";
+            use = "pdf";
+          }
+          {
+            name = "*.docx";
+            use = "office";
+          }
+          {
+            name = "*.pptx";
+            use = "office";
+          }
+          {
+            name = "*.xlsx";
+            use = "office";
+          }
+          {
+            name = "*.odt";
+            use = "office";
+          }
+          {
+            name = "*.png";
+            use = "image";
+          }
+          {
+            name = "*.jpg";
+            use = "image";
+          }
+          {
+            name = "*.jpeg";
+            use = "image";
+          }
+          {
+            name = "*.gif";
+            use = "image";
+          }
+          {
+            name = "*.svg";
+            use = "image";
+          }
+          {
+            name = "*.bmp";
+            use = "image";
+          }
+          {
+            name = "*.tiff";
+            use = "image";
+          }
+          {
+            name = "*.tif";
+            use = "image";
+          }
+          {
+            name = "*.webp";
+            use = "image";
+          }
+          {
+            name = "*.heic";
+            use = "image";
+          }
+          {
+            name = "*.heif";
+            use = "image";
+          }
+          {
+            name = "*.mp4";
+            use = "video";
+          }
+          {
+            name = "*.mkv";
+            use = "video";
+          }
+          {
+            name = "*.webm";
+            use = "video";
+          }
+          {
+            name = "*.avi";
+            use = "video";
+          }
+          {
+            name = "*.mov";
+            use = "video";
+          }
+          {
+            name = "*.wmv";
+            use = "video";
+          }
+          {
+            name = "*.flv";
+            use = "video";
+          }
+          {
+            name = "*.m4v";
+            use = "video";
+          }
+          {
+            name = "*.mpg";
+            use = "video";
+          }
+          {
+            name = "*.mpeg";
+            use = "video";
+          }
+          ];
+        };
+      };
     };
   };
 

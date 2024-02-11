@@ -15,16 +15,10 @@
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "x13"; # Define your hostname.
-
+    services.hardware.bolt.enable = true;
   # Configure keymap in X11
   
     services = {
-      xserver = {
-        enable = true;
-        dpi = dpi;
-        videoDrivers = [ "nvidia" ];
-        deviceSection = ''Option "TearFree" "true"'';
-      };
       asusd.enable = true;
     };
 
@@ -35,13 +29,11 @@
       driSupport = true;
       driSupport32Bit = true;
     };
-    nvidia = {
-      modesetting.enable = true;
-    };
   };
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
   };
+  programs.hyprland.enable = true;
   system.stateVersion = "22.11"; # Did you read the comment?
 }

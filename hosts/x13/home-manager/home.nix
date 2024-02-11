@@ -17,12 +17,24 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/sway.nix
+    #../../../modules/home-manager/gnome.nix
+    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/mako.nix
+    ../../../modules/home-manager/foot.nix
     ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
+
+  wayland.windowManager.hyprland.settings = {
+    monitor = [
+      "eDP-1,1920x1200@60.000Hz,auto,1.5"
+        "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
+        "DP-1,3840x2560@60.000Hz,auto,2.0"
+        "DP-2,3840x2560@60.000Hz,auto,2.0"
+    ];
+  };
   services.kanshi.profiles = {
     mobile = {
       exec = "${pkgs.variety}/bin/variety --next";

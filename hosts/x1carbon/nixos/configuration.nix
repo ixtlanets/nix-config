@@ -18,6 +18,16 @@
 
   networking.hostName = "x1carbon"; # Define your hostname.
 
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+    };
+  };
+
+
   services.hardware.bolt.enable = true;
 # NVIDIA drivers are unfree.
   nixpkgs.config.allowUnfreePredicate = pkg:

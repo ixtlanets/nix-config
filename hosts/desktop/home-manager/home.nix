@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, dpi, ... }:
+{ inputs, outputs, lib, config, pkgs, dpi, nur, ... }:
 {
   # You can import other home-manager modules here
   imports = [
@@ -12,13 +12,24 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
+    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/mako.nix
+    ../../../modules/home-manager/foot.nix
+    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
 
+  wayland.windowManager.hyprland.settings = {
+    monitor = [
+      "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
+      "DP-1,3840x2560@60.000Hz,auto,2.0"
+    ];
+  };
   dconf.settings = {
     "org/gnome/desktop/interface" = {
-      text-scaling-factor = 1.3;
+      text-scaling-factor = 2;
     };
   };
 

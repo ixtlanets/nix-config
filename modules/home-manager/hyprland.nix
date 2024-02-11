@@ -20,6 +20,8 @@
     input = {
       kb_layout = "us,ru";
       kb_options = "grp:win_space_toggle";
+      repeat_rate	= 30;
+      repeat_delay = 250;
 
       follow_mouse = 1;
 
@@ -31,11 +33,11 @@
     };
 
     animation = [
-      "windowsOut, 1, 2, default, popin 80%"
+      "windows, 0, 1, default"
         "border, 1, 3, default"
         "borderangle, 1, 2, default"
         "fade, 1, 2, default"
-        "workspaces, 1, 2, default"
+        "workspaces, 0, 1, default"
     ];
     decoration = {
       rounding = 2;
@@ -67,7 +69,7 @@
         "$mod, J, movefocus, d"
         "$mod, K, movefocus, u"
         "$mod, L, movefocus, r"
-        "$mod+SHIFT, S, exec, grim -g \"$(slurp)\" - | wl-copy"
+        "$mod+SHIFT, S, exec, grim -g \"$(slurp -d)\" - | wl-copy"
         ",XF86MonBrightnessUp, exec, light -A 10"
         ",XF86MonBrightnessDown, exec, light -U 10"
         "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
@@ -129,6 +131,7 @@
   };
 
   home.sessionVariables.NIXOS_OZONE_WL = "1";
+  home.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
   home.sessionVariables.ELECTRON_OZONE_PLATFORM_HINT = "auto";
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations
