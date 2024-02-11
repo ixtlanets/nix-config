@@ -80,6 +80,9 @@ in {
     tabbed
     pscale
     tat-script
+    fd # modern find
+    du-dust # modern du
+    speedtest-rs # speedtest
   ];
 
   # Enable home-manager and git
@@ -87,6 +90,15 @@ in {
     home-manager.enable = true;
     gpg.enable = true;
     bat = {
+      enable = true;
+    };
+    ripgrep = {
+      enable = true;
+    };
+    eza = {
+      enable = true;
+    };
+    ncspot = {
       enable = true;
     };
     btop.enable = true;
