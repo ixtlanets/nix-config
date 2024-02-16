@@ -19,6 +19,7 @@
     ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ollama.nix
   ];
 
   wayland.windowManager.hyprland.settings = {
