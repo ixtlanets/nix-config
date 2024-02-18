@@ -183,7 +183,10 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/zenbook/home-manager/home.nix ];
+                  users.nik.imports = [ 
+                    nur.nixosModules.nur
+                    ./hosts/zenbook/home-manager/home.nix 
+                  ];
                 };
               }
             ];
