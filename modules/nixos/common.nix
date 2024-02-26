@@ -70,7 +70,12 @@ in {
   programs = {
     zsh.enable = true;
     dconf.enable = true;
-    nix-ld.enable = true; # required fro vscode-server
+    nix-ld = { # required fro vscode-server
+      enable = true;
+      libraries = with pkgs; [
+        glibc
+      ];
+    };
   };
   
   # required for  gnome systray

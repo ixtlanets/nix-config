@@ -4,8 +4,18 @@ let
   rofi_width = (builtins.toString (dpi * 5));
   rofi_height = (builtins.toString (dpi * 3));
   polybar_height = (builtins.toString (dpi * 0.1666));
+  vscodeServerTarball = fetchTarball {
+    url = "https://github.com/msteen/nixos-vscode-server/tarball/master";
+    sha256 = "0sz8njfxn5bw89n6xhlzsbxkafb6qmnszj4qxy2w0hw2mgmjp829";
+  };
 in
 {
+  imports = [
+    "${vscodeServerTarball}/modules/vscode-server/home.nix"
+  ];
+
+  services.vscode-server.enable = true;
+
   # Obsidian still uses old electron 
   nixpkgs.config.permittedInsecurePackages = [
     "electron-25.9.0"
