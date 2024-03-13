@@ -126,6 +126,9 @@ in {
         expireDuplicatesFirst = true;
         ignoreDups = true;
       };
+      initExtra = ''
+        export PATH="$HOME/.local/bin:$PATH"
+      '';
     };
     fzf = {
       enable = true;
