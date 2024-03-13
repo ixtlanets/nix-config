@@ -6,6 +6,7 @@
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ollama.nix
   ];
 
   fonts.fontconfig.enable = true;
