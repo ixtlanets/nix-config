@@ -7,6 +7,7 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ollama.nix
+    ../../../modules/home-manager/whisper.nix
   ];
 
   fonts.fontconfig.enable = true;
