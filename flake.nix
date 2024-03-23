@@ -156,6 +156,31 @@
               }
             ];
           };
+          um960pro =
+          let
+            dpi = 144;
+          in
+          nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs outputs dpi; };
+            modules = [
+              nur.nixosModules.nur
+              ./hosts/um960pro/nixos/configuration.nix
+              ./modules/nixos/laptop.nix
+              hardware.nixosModules.common-cpu-amd
+              hardware.nixosModules.common-cpu-amd-pstate
+              hardware.nixosModules.common-gpu-amd
+              hardware.nixosModules.common-pc-laptop
+              hardware.nixosModules.common-pc-laptop-ssd
+              home-manager.nixosModules.home-manager
+              {
+                home-manager = {
+                  useUserPackages = true;
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  users.nik.imports = [ ./hosts/um960pro/home-manager/home.nix ];
+                };
+              }
+            ];
+          };
 
 
         zenbook =
