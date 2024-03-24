@@ -6,8 +6,6 @@ let
   polybar_height = (builtins.toString (dpi * 0.1666));
 in
 {
-  services.vscode-server.enable = true;
-
   # Obsidian still uses old electron 
   nixpkgs.config.permittedInsecurePackages = [
     "electron-25.9.0"
