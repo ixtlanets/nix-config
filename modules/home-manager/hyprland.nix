@@ -31,7 +31,9 @@
 
       sensitivity = 0;
     };
-
+    xwayland = {
+      force_zero_scaling = true;
+    };
     animation = [
       "windows, 0, 1, default"
         "border, 1, 3, default"
