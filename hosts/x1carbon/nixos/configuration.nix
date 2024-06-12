@@ -4,9 +4,6 @@
 
 { config, pkgs, lib, dpi, ... }:
 {
-  boot.extraModulePackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
-  environment.systemPackages = [ pkgs.linuxPackages_latest.nvidia_x11 ];
-  boot.blacklistedKernelModules = [ "nouveau" ];
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   imports =
@@ -40,13 +37,6 @@
       enable = true;
       driSupport = true;
       driSupport32Bit = true;
-    };
-    nvidia = {
-      modesetting.enable = true;
-      prime = {
-        reverseSync.enable = true;
-        allowExternalGpu = true;
-      };
     };
   };
 
