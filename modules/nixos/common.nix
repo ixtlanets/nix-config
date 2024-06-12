@@ -98,8 +98,6 @@ in {
 
   services.dbus.enable = true;
   xdg.portal.enable = true;
-  xdg.portal.wlr.enable = true;
-  # xdg.portal.extraPortals = [ xdg-desktop-portal-hyprland ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
