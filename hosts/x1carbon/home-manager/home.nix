@@ -28,7 +28,7 @@
   wayland.windowManager.hyprland.settings = {
     monitor = [
       "eDP-1,1920x1080@60.000Hz,auto,1.25"
-        "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
+        "HDMI-A-1,2560x1440@144.000Hz,auto,1.6"
         "DP-2,3840x2560@60.000Hz,auto,2.0"
     ];
   };
@@ -54,7 +54,7 @@
         {
           criteria = "HDMI-A-1";
           mode = "2560x1440@144.000Hz";
-          scale = 1.5;
+          scale = 1.6;
         }
       ];
     };
@@ -90,7 +90,7 @@
   };
   
   home.packages = with pkgs; [
-    nvtop
+    nvtopPackages.full
   ];
   xresources.properties = {
     "Xft.dpi" = dpi;
