@@ -83,6 +83,8 @@ in {
     fd # modern find
     du-dust # modern du
     speedtest-rs # speedtest
+
+    git-crypt
   ];
 
   # Enable home-manager and git
