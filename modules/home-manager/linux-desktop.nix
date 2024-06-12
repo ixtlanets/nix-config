@@ -6,17 +6,12 @@ let
   polybar_height = (builtins.toString (dpi * 0.1666));
 in
 {
-  # Obsidian still uses old electron 
-  nixpkgs.config.permittedInsecurePackages = [
-    "electron-25.9.0"
-  ];
 
   home.packages = with pkgs; [
     _1password
     _1password-gui
     brave
     browserpass
-    git-credential-1password
     telegram-desktop
     obsidian
     moonlight-qt
@@ -40,16 +35,6 @@ in
     zoom-us
   ];
 
-
-  # apply wayland mode hacks to desktop entries for electron apps
-  xdg.desktopEntries = {
-    obsidian = {
-      name = "Obsidian";
-      terminal = false;
-      icon = "${pkgs.obsidian}/share/icons/hicolor/256x256/apps/obsidian.png";
-      exec = "env OBSIDIAN_USE_WAYLAND=1 obsidian -enable-features=UseOzonePlatform -ozone-platform=wayland";
-    };
-  };
 
   programs = {
     alacritty = {
@@ -117,7 +102,7 @@ in
           tabliss
           clearurls
           dearrow
-          bypass-paywalls-clean
+          #bypass-paywalls-clean
           istilldontcareaboutcookies
           multi-account-containers
         ];
