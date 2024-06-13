@@ -138,6 +138,7 @@ in {
     podman-compose
     vpn-script
     xdg-desktop-portal-hyprland
+    networkmanager-l2tp
   ];
 
 
