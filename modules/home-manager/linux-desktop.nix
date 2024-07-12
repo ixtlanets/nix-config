@@ -43,6 +43,7 @@ in
     liberation_ttf
     font-awesome
     zoom-us
+    zed-editor # code editor writen in Rust
 
     factorio
   ];
