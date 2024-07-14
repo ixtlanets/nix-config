@@ -1,7 +1,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
 {
   home.packages = with pkgs; [
-    gnome.adwaita-icon-theme
+    adwaita-icon-theme
     rofi-wayland
     grim # screenshot functionality
     slurp # screenshot functionality

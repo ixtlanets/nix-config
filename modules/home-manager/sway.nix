@@ -2,7 +2,7 @@
 {
   home.packages = with pkgs; [
     swayimg
-    gnome.adwaita-icon-theme
+    adwaita-icon-theme
     swaylock
     swayidle
     rofi-wayland

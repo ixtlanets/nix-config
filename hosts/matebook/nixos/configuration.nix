@@ -92,8 +92,6 @@
         vaapiVdpau
         libvdpau-va-gl
       ];
-      driSupport = true;
-      driSupport32Bit = true;
     };
   };
   system.stateVersion = "22.11"; # Did you read the comment?
