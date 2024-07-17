@@ -20,6 +20,8 @@
     xserver = {
       enable = true;
       dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
       videoDrivers = [ "nvidia" ];
     };
   };
