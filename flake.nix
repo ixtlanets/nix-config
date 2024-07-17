@@ -103,7 +103,6 @@
               ./hosts/x1extreme/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               hardware.nixosModules.common-cpu-intel
-              hardware.nixosModules.common-gpu-intel
               hardware.nixosModules.common-gpu-nvidia
               {
                 hardware.nvidia.prime = {
@@ -118,7 +117,10 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
+                  users.nik.imports = [ 
+                    nur.nixosModules.nur
+                    ./hosts/x1extreme/home-manager/home.nix 
+                  ];
                 };
               }
             ];

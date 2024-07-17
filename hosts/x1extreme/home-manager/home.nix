@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, dpi, ... }:
+{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }: 
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp0s20f3";
@@ -17,7 +17,11 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/i3.nix
+    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/mako.nix
+    ../../../modules/home-manager/foot.nix
+    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
