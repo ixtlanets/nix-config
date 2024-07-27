@@ -56,7 +56,6 @@ in
     nixpkgs-fmt
     _1password
     _1password-gui
-    git-credential-1password
   ];
 
   programs = {
