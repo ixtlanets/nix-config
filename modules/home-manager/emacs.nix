@@ -15,7 +15,7 @@
         org
         org-bullets
         visual-fill-column
-        mu4easy
+        mu4e
         magit
         evil
         evil-collection
