@@ -23,7 +23,7 @@
       thunderbird.enable = true;
     };
     "zencar" = {
-      address = "sn@zen.car";
+      address = "sn@zencar.tech";
       realName = "Sergey Nikulin";
       flavor = "yandex.com";
       passwordCommand = "pass mail/sn@zen.car";
