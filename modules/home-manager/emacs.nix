@@ -4,6 +4,9 @@
   home.packages = with pkgs; [
     nerdfonts
     cantarell-fonts
+    cmake
+    libvterm
+    libtool
   ];
   programs = {
     emacs = {
