@@ -1,5 +1,10 @@
 set $mod Mod4
 
+# keyboard settings
+
+exec_always --no-startup-id setxkbmap -layout "us,ru" -option "grp:win_space_toggle"
+exec_always --no-startup-id xset r rate 250 30
+
 # Wallpaper manager
 exec --no-startup-id variety
 #----------------------------------------------------------------------
