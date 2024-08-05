@@ -135,12 +135,12 @@ in
           "browser.urlbar.trimURLs" = false;
         };
         search = {
-          default = "searxng";
+          default = "google";
           force = true;
           engines = {
-            "searxng" = {
+            "google" = {
               urls = [{
-                template = "https://searxng.online/search";
+                template = "https://www.google.com/search";
                 params = [
                 { name = "q"; value = "{searchTerms}"; }
                 ];
