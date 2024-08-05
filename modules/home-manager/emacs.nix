@@ -7,6 +7,7 @@
     cmake
     libvterm
     libtool
+    texliveFull
   ];
   programs = {
     emacs = {
@@ -39,6 +40,7 @@
         ivy-prescient
         counsel
         helpful
+        pdf-tools
         hydra
       ];
     };
