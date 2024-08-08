@@ -46,6 +46,7 @@ in
         helpful
         pdf-tools
         hydra
+        vterm
       ];
     };
   };
