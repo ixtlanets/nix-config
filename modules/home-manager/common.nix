@@ -1,5 +1,6 @@
 { inputs, outputs, lib, config, pkgs, niknvim, ... }: 
 let
+  isLinux = pkgs.stdenv.isLinux;
 tat-script = pkgs.writeShellScriptBin "tat" ''
 #!/bin/sh
 #
@@ -77,7 +78,6 @@ in {
     nsxiv
     xdragon
     gnupg
-    tabbed
     pscale
     tat-script
     fd # modern find
@@ -85,7 +85,9 @@ in {
     speedtest-rs # speedtest
 
     git-crypt
-  ];
+  ] ++ (lib.optionals isLinux [
+    tabbed
+  ]);
 
   # Enable home-manager and git
   programs = {

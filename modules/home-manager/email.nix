@@ -1,4 +1,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
+let
+  isLinux = pkgs.stdenv.isLinux;
+in
 {
   home.packages = with pkgs; [
     mu
@@ -20,7 +23,7 @@
       gpg = {
         key = "6EA4E8EBBC9094DDF20B112D539459F1879941F7";
       };
-      thunderbird.enable = true;
+      thunderbird.enable = isLinux;
     };
     "zencar" = {
       address = "sn@zencar.tech";
@@ -34,11 +37,11 @@
       Best wishes,
       Sergey Nikulin
       '';
-      thunderbird.enable = true;
+      thunderbird.enable = isLinux;
     };
   };
   programs.thunderbird = {
-    enable = true;
+    enable = isLinux;
     profiles = {
       "default" = {
         isDefault = true;
@@ -49,7 +52,7 @@
     enable = true;
   };
   services.mbsync = {
-    enable = true;
+    enable = isLinux;
     preExec = "mkdir -p %h/mail";
     postExec = "\${pkgs.mu}/bin/mu index";
   };

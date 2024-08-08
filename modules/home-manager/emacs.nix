@@ -1,14 +1,18 @@
 { inputs, outputs, lib, config, pkgs, ... }:
+let
+  isLinux = pkgs.stdenv.isLinux;
+in
 {
 
   home.packages = with pkgs; [
     nerdfonts
     cantarell-fonts
     cmake
-    libvterm
     libtool
     texliveFull
-  ];
+  ] ++ (lib.optionals isLinux [
+    libvterm
+  ]) ;
   programs = {
     emacs = {
       enable = true;
