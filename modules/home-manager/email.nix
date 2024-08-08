@@ -25,6 +25,21 @@ in
       };
       thunderbird.enable = isLinux;
     };
+    "GR" = {
+      address = "sergey@grishinrobotics.com";
+      realName = "Sergey Nikulin";
+      flavor = "gmail.com";
+      primary = false;
+      passwordCommand = "pass mail/sergey@grishinrobotics.com";
+      mbsync.enable = true;
+      mbsync.create = "maildir";
+      mu.enable = true;
+      signature.text = ''
+      Best wishes,
+      Sergey Nikulin
+      '';
+      thunderbird.enable = isLinux;
+    };
     "zencar" = {
       address = "sn@zencar.tech";
       realName = "Sergey Nikulin";
