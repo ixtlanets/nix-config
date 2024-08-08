@@ -134,6 +134,7 @@ in {
     zerotierone
     killall
     jq
+    unzip
     gum
     podman-compose
     vpn-script
