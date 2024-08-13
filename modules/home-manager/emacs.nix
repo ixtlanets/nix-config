@@ -10,6 +10,7 @@ in
     cmake
     libtool
     texliveFull
+    nil
   ] ++ (lib.optionals isLinux [
     libvterm
   ]) ;
