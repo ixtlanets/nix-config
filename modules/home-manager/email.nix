@@ -1,4 +1,7 @@
 { inputs, outputs, lib, config, pkgs, ... }:
+let
+  isLinux = pkgs.stdenv.isLinux;
+in
 {
   home.packages = with pkgs; [
     mu
@@ -20,10 +23,25 @@
       gpg = {
         key = "6EA4E8EBBC9094DDF20B112D539459F1879941F7";
       };
-      thunderbird.enable = true;
+      thunderbird.enable = isLinux;
+    };
+    "GR" = {
+      address = "sergey@grishinrobotics.com";
+      realName = "Sergey Nikulin";
+      flavor = "gmail.com";
+      primary = false;
+      passwordCommand = "pass mail/sergey@grishinrobotics.com";
+      mbsync.enable = true;
+      mbsync.create = "maildir";
+      mu.enable = true;
+      signature.text = ''
+      Best wishes,
+      Sergey Nikulin
+      '';
+      thunderbird.enable = isLinux;
     };
     "zencar" = {
-      address = "sn@zen.car";
+      address = "sn@zencar.tech";
       realName = "Sergey Nikulin";
       flavor = "yandex.com";
       passwordCommand = "pass mail/sn@zen.car";
@@ -34,11 +52,11 @@
       Best wishes,
       Sergey Nikulin
       '';
-      thunderbird.enable = true;
+      thunderbird.enable = isLinux;
     };
   };
   programs.thunderbird = {
-    enable = true;
+    enable = isLinux;
     profiles = {
       "default" = {
         isDefault = true;
@@ -49,7 +67,7 @@
     enable = true;
   };
   services.mbsync = {
-    enable = true;
+    enable = isLinux;
     preExec = "mkdir -p %h/mail";
     postExec = "\${pkgs.mu}/bin/mu index";
   };

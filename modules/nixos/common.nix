@@ -103,7 +103,6 @@ in {
   services.printing.enable = true;
 
   # Enable sound with pipewire.
-  sound.enable = true;
   hardware = {
     pulseaudio.enable = false;
   };
@@ -134,6 +133,7 @@ in {
     zerotierone
     killall
     jq
+    unzip
     gum
     podman-compose
     vpn-script

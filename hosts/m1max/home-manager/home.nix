@@ -8,6 +8,7 @@ in
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
+    ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
   ];
@@ -56,7 +57,6 @@ in
     nixpkgs-fmt
     _1password
     _1password-gui
-    git-credential-1password
   ];
 
   programs = {

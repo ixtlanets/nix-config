@@ -1,10 +1,19 @@
 { inputs, outputs, lib, config, pkgs, ... }:
+let
+  isLinux = pkgs.stdenv.isLinux;
+in
 {
 
   home.packages = with pkgs; [
     nerdfonts
     cantarell-fonts
-  ];
+    cmake
+    libtool
+    texliveFull
+    nil
+  ] ++ (lib.optionals isLinux [
+    libvterm
+  ]) ;
   programs = {
     emacs = {
       enable = true;
@@ -15,7 +24,7 @@
         org
         org-bullets
         visual-fill-column
-        mu4easy
+        mu4e
         magit
         evil
         evil-collection
@@ -36,7 +45,9 @@
         ivy-prescient
         counsel
         helpful
+        pdf-tools
         hydra
+        vterm
       ];
     };
   };

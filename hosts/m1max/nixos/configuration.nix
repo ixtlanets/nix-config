@@ -27,8 +27,7 @@
   system.keyboard.remapCapsLockToEscape = true;
 
   # Fonts
-  fonts.fontDir.enable = true; # DANGER
-  fonts.fonts = [ (pkgs.nerdfonts.override { fonts = [ 
+  fonts.packages = [ (pkgs.nerdfonts.override { fonts = [ 
     "CascadiaCode"
     "DejaVuSansMono"
     "DroidSansMono"
