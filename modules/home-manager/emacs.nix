@@ -11,6 +11,7 @@ in
     libtool
     texliveFull
     nil
+    graphviz
   ] ++ (lib.optionals isLinux [
     libvterm
   ]) ;
