@@ -33,5 +33,8 @@
     remotePlay.openFirewall = true;
   };
   programs.hyprland.enable = true;
+  environment.systemPackages = [
+    pkgs.xf86_input_wacom
+  ];
   system.stateVersion = "22.11"; # Did you read the comment?
 }
