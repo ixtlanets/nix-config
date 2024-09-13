@@ -110,7 +110,7 @@
 
           "hyprland/workspaces" = {
             all-outputs = true;
-            "persistent_workspaces"= {
+            "persistent-workspaces"= {
               "*"= 5;
             };
           };
