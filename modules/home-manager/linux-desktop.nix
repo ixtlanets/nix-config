@@ -44,6 +44,7 @@ in
     font-awesome
     zoom-us
     zed-editor # code editor writen in Rust
+    microsoft-edge # funny enough it's actually good browser
 
     factorio
   ];
