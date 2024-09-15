@@ -24,9 +24,11 @@
       repeat_delay = 250;
 
       follow_mouse = 1;
+      scroll_factor= 0.5;
 
       touchpad = {
         natural_scroll = "yes";
+        scroll_factor= 0.2;
       };
 
       sensitivity = 0;
