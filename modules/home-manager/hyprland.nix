@@ -63,7 +63,7 @@
     ];
     bind =
       [
-      "$mod+SHIFT, E, exit"
+        "$mod+SHIFT, E, exit"
         "$mod, W, killactive"
         "$mod, F, togglefloating"
         "$mod, B, exec, chromium-browser"
