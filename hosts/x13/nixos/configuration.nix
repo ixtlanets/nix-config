@@ -18,9 +18,16 @@
     services.hardware.bolt.enable = true;
   # Configure keymap in X11
   
-    services = {
-      asusd.enable = true;
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+
     };
+    asusd.enable = true;
+  };
 
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
@@ -33,5 +40,8 @@
     remotePlay.openFirewall = true;
   };
   programs.hyprland.enable = true;
+  environment.systemPackages = [
+    pkgs.xf86_input_wacom
+  ];
   system.stateVersion = "22.11"; # Did you read the comment?
 }

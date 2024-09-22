@@ -44,6 +44,7 @@ in
     font-awesome
     zoom-us
     zed-editor # code editor writen in Rust
+    microsoft-edge # funny enough it's actually good browser
 
     factorio
   ];
@@ -178,7 +179,7 @@ in
       extensions = [
       { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
       { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
-      { id = "mbmgnelfcpoecdepckhlhegpcehmpmji"; } # SponsorBlock for YouTube - Skip Sponsorships
+      { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
       { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
       { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
       { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass

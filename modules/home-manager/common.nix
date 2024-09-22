@@ -131,7 +131,7 @@ in {
         ignoreDups = true;
       };
       initExtra = ''
-        export PATH="$HOME/.local/bin:$PATH"
+        export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
       '';
     };
     fzf = {
@@ -151,7 +151,7 @@ in {
     yt-dlp = {
       enable = true;
       settings = {
-        "output" = "~/Video/YouTube/%(title)s.%(ext)s";
+        "output" = "~/Video/YouTube/%(uploader)s/%(title)s.%(ext)s";
         "format" = "mp4";
       };
     };

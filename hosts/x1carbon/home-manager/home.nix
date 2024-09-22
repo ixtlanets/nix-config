@@ -30,7 +30,7 @@
     monitor = [
       "eDP-1,1920x1080@60.000Hz,auto,1.25"
         "HDMI-A-1,2560x1440@144.000Hz,auto,1.6"
-        "DP-2,3840x2560@60.000Hz,auto,2.0"
+        "DP-1,3840x2560@60.000Hz,auto,2.0"
     ];
   };
   services.kanshi.profiles = {
@@ -39,6 +39,7 @@
       outputs = [
         {
           criteria = "eDP-1";
+          status = "enable";
           mode = "1920x1080@60.000Hz";
           scale = 1.25;
         }
@@ -53,9 +54,23 @@
           scale = 1.25;
         }
         {
-          criteria = "HDMI-A-1";
-          mode = "2560x1440@144.000Hz";
-          scale = 1.6;
+          criteria = "DP-1";
+          mode = "3840x2560@60.000Hz";
+          scale = 2.0;
+        }
+      ];
+    };
+    clamshell = {
+      exec = "variety --next";
+      outputs = [
+        {
+          criteria = "eDP-1";
+          status = "disable";
+        }
+        {
+          criteria = "DP-1";
+          mode = "3840x2560@60.000Hz";
+          scale = 2.0;
         }
       ];
     };
@@ -76,6 +91,7 @@
   };
   programs.waybar.settings.mainbar.output = [
     "eDP-1"
+    "DP-1"
     "HDMI-A-1"
   ];
 

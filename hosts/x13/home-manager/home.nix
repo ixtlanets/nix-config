@@ -17,12 +17,10 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    #../../../modules/home-manager/gnome.nix
+    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
-    ../../../modules/home-manager/mako.nix
     ../../../modules/home-manager/foot.nix
-    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
@@ -78,36 +76,16 @@
     };
 
   };
-  wayland.windowManager.sway = {
-    config = {
-      output = {
-        "eDP-1" = {
-          mode = "1920x1080@60.000Hz";
-          scale = "1.5";
-        };
-        "DP-1" = {
-          mode = "2560x1440@144.000Hz";
-          scale = "1.5";
-        };
-        "DP-2" = {
-          mode = "3840x2560@60.000Hz";
-          scale = "2.0";
-        };
-      };
-    };
-  };
   programs.waybar.settings.mainbar.output = [
     "eDP-1"
     "DP-1"
     "DP-2"
   ];
-
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       text-scaling-factor = 1.0;
     };
   };
-
   home = {
     username = "nik";
     homeDirectory = "/home/nik";

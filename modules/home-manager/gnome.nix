@@ -26,8 +26,6 @@ in
     gnomeExtensions.caffeine
     gnomeExtensions.bluetooth-quick-connect
     gnomeExtensions.quick-lang-switch
-    gnome.gnome-power-manager
-    gnome.networkmanager-l2tp
   ];
   dconf.settings = {
     "org/gnome/desktop/interface" = {

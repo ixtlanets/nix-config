@@ -24,9 +24,11 @@
       repeat_delay = 250;
 
       follow_mouse = 1;
+      scroll_factor= 0.5;
 
       touchpad = {
         natural_scroll = "yes";
+        scroll_factor= 0.2;
       };
 
       sensitivity = 0;
@@ -61,7 +63,7 @@
     ];
     bind =
       [
-      "$mod+SHIFT, E, exit"
+        "$mod+SHIFT, E, exit"
         "$mod, W, killactive"
         "$mod, F, togglefloating"
         "$mod, B, exec, chromium-browser"
@@ -71,6 +73,10 @@
         "$mod, J, movefocus, d"
         "$mod, K, movefocus, u"
         "$mod, L, movefocus, r"
+        "$mod, G, togglegroup"
+        "$mod, T, lockactivegroup, toggle"
+        "$mod+SHIFT, J, changegroupactive, b"
+        "$mod+SHIFT, K, changegroupactive, f"
         "$mod+SHIFT, S, exec, grim -g \"$(slurp -d)\" - | wl-copy"
         ",XF86MonBrightnessUp, exec, light -A 10"
         ",XF86MonBrightnessDown, exec, light -U 10"
@@ -109,13 +115,9 @@
           modules-right = ["hyprland/language"];
 
           "hyprland/workspaces" = {
-            disable-scroll = true;
             all-outputs = true;
-            "persistent_workspaces"= {
-              "1"= [];
-              "2"= [];
-              "3"= [];
-              "4"= [];
+            "persistent-workspaces"= {
+              "*"= 5;
             };
           };
           "hyprland/language" = {
@@ -135,6 +137,7 @@
   home.sessionVariables.NIXOS_OZONE_WL = "1";
   home.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
   home.sessionVariables.ELECTRON_OZONE_PLATFORM_HINT = "auto";
+  services.network-manager-applet.enable = true;
   home.file.".config/electron-flags.conf".text = ''
 --enable-features=WaylandWindowDecorations
 --ozone-platform-hint=auto

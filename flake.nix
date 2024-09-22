@@ -144,8 +144,12 @@
               {
                 home-manager = {
                   useUserPackages = true;
+                  backupFileExtension = "backup";
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/x13/home-manager/home.nix ];
+                  users.nik.imports = [ 
+                    nur.nixosModules.nur
+                    ./hosts/x13/home-manager/home.nix 
+                  ];
                 };
               }
             ];
