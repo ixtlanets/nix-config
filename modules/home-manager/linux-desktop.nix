@@ -4,15 +4,6 @@ let
   rofi_width = (builtins.toString (dpi * 5));
   rofi_height = (builtins.toString (dpi * 3));
   polybar_height = (builtins.toString (dpi * 0.1666));
-
-  token =
-    lib.strings.removeSuffix "\n" (builtins.readFile ../../factorio.token);
-  factorio = pkgs.factorio.override {
-    username = "Ixtlanets";
-    token = token;
-  };
-  factorio_token = builtins.readFile ../../factorio.token;
-
 in
 {
 
@@ -45,8 +36,6 @@ in
     zoom-us
     zed-editor # code editor writen in Rust
     microsoft-edge # funny enough it's actually good browser
-
-    factorio
   ];
 
 
