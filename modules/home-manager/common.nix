@@ -154,29 +154,6 @@ in {
         "format" = "mp4";
       };
     };
-    nnn = {
-      enable = true;
-      bookmarks = {
-        d = "~/Documents";
-        p = "~/pro";
-      };
-      extraPackages = with pkgs; [ ffmpegthumbnailer mediainfo nsxiv xdragon gnupg ];
-      plugins = {
-        mappings = {
-          d = "dragdrop";
-          e = "gpge";
-          r = "imgresize";
-          v = "imgview";
-          p = "preview-tabbed";
-        };
-        src = (pkgs.fetchFromGitHub {
-            owner = "jarun";
-            repo = "nnn";
-            rev = "v4.8";
-            sha256 = "sha256-Hpc8YaJeAzJoEi7aJ6DntH2VLkoR6ToP6tPYn3llR7k=";
-            }) + "/plugins";
-      };
-    };
     yazi = {
       enable = true;
       settings = {
