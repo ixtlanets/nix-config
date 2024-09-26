@@ -17,7 +17,6 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/gnome.nix
-    ../../../modules/home-manager/sway.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/mako.nix
@@ -73,20 +72,6 @@
           scale = 2.0;
         }
       ];
-    };
-  };
-  wayland.windowManager.sway = {
-    config = {
-      output = {
-        "eDP-1" = {
-          mode = "1920x1080@60.000Hz";
-          scale = "1.25";
-        };
-        "HDMI-A-1" = {
-          mode = "2560x1440@144.000Hz";
-          scale = "1.5";
-        };
-      };
     };
   };
   programs.waybar.settings.mainbar.output = [
