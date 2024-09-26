@@ -105,7 +105,6 @@ in
             tabliss
             clearurls
             dearrow
-#bypass-paywalls-clean
             istilldontcareaboutcookies
             multi-account-containers
         ];
