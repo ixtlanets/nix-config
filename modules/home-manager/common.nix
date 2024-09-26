@@ -160,31 +160,31 @@ in {
         opener = {
           text = [
           {
-            exec = "nvim \"$@\"";
+            run = "nvim \"$@\"";
             block = true;
           }
           ];
           pdf = [
           {
-            exec = "zathura \"$@\"";
+            run = "zathura \"$@\"";
             block = false;
           }
           ];
           office = [
           {
-            exec = "libreoffice \"$@\"";
+            run = "libreoffice \"$@\"";
             block = false;
           }
           ];
           image = [
           {
-            exec = "swayimg \"$@\"";
+            run = "swayimg \"$@\"";
             block = false;
           }
           ];
           video = [
           {
-            exec = "mpv \"$@\"";
+            run = "mpv \"$@\"";
             block = false;
           }
           ];
