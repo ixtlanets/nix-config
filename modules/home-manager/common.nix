@@ -63,7 +63,6 @@ in {
     tz # A time zone helper
     imagemagick
     parallel
-    #niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
     bun # better than nodejs and npm
