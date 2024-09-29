@@ -3,8 +3,7 @@
   home.packages = with pkgs; [
     adwaita-icon-theme
     rofi-wayland
-    grim # screenshot functionality
-    slurp # screenshot functionality
+    grimblast # screenshot utility based on grim
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
     polkit-kde-agent
@@ -77,7 +76,7 @@
         "$mod, T, lockactivegroup, toggle"
         "$mod+SHIFT, J, changegroupactive, b"
         "$mod+SHIFT, K, changegroupactive, f"
-        "$mod+SHIFT, S, exec, grim -g \"$(slurp -d)\" - | wl-copy"
+        "$mod+SHIFT, S, exec, grimblast copy area"
         ",XF86MonBrightnessUp, exec, light -A 10"
         ",XF86MonBrightnessDown, exec, light -U 10"
         "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
