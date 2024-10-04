@@ -24,12 +24,15 @@
     niknvim.url = "github:ixtlanets/nixnvim";
     niknvim.inputs.nixpkgs.follows = "nixpkgs";
 
+    catppuccin.url = "github:catppuccin/nix";
+
+
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, catppuccin, ... }@inputs:
     let
       inherit (self) outputs;
       forAllSystems = nixpkgs.lib.genAttrs [
@@ -73,6 +76,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/x1carbon/nixos/configuration.nix
               hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
@@ -86,7 +90,8 @@
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
-                    ./hosts/x1carbon/home-manager/home.nix 
+                    catppuccin.homeManagerModules.catppuccin
+                    ./hosts/x1carbon/home-manager/home.nix
                   ];
                 };
               }
@@ -99,6 +104,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/x1extreme/nixos/configuration.nix
               ./modules/nixos/laptop.nix
@@ -118,7 +124,11 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/x1extreme/home-manager/home.nix ];
+                  users.nik.imports = [
+                    nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
+                    ./hosts/x1extreme/home-manager/home.nix
+                  ];
                 };
               }
             ];
@@ -130,6 +140,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/x13/nixos/configuration.nix
               ./modules/nixos/laptop.nix
@@ -146,6 +157,7 @@
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
                     ./hosts/x13/home-manager/home.nix 
                   ];
                 };
@@ -159,6 +171,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/um960pro/nixos/configuration.nix
               ./modules/nixos/laptop.nix
@@ -174,6 +187,7 @@
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
                     ./hosts/um960pro/home-manager/home.nix
                   ];
                 };
@@ -189,6 +203,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/zenbook/nixos/configuration.nix
               ./modules/nixos/laptop.nix
@@ -209,6 +224,7 @@
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
                     ./hosts/zenbook/home-manager/home.nix 
                   ];
                 };
@@ -223,6 +239,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               ./hosts/matebook/nixos/configuration.nix
               hardware.nixosModules.common-cpu-intel
@@ -234,7 +251,11 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/matebook/home-manager/home.nix ];
+                  users.nik.imports = [
+                    nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
+                    ./hosts/matebook/home-manager/home.nix
+                  ];
                 };
               }
             ];
@@ -247,6 +268,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               ./hosts/desktop/nixos/configuration.nix
               hardware.nixosModules.common-cpu-amd
               hardware.nixosModules.common-cpu-amd-pstate
@@ -258,6 +280,7 @@
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
                   users.nik.imports = [
                     nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
                     ./hosts/desktop/home-manager/home.nix
                   ];
                 };
@@ -273,6 +296,7 @@
           nixpkgs.lib.nixosSystem {
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
+              catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
               # > Our main nixos configuration file <
               ./hosts/vmmac/nixos/configuration.nix
@@ -281,7 +305,11 @@
                 home-manager = {
                   useUserPackages = true;
                   extraSpecialArgs = { inherit outputs nur niknvim dpi; };
-                  users.nik.imports = [ ./hosts/vmmac/home-manager/home.nix ];
+                  users.nik.imports = [
+                    nur.nixosModules.nur
+                    catppuccin.homeManagerModules.catppuccin
+                    ./hosts/vmmac/home-manager/home.nix
+                  ];
                 };
               }
             ];

@@ -16,7 +16,6 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/mako.nix
@@ -25,6 +24,7 @@
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
   ];
+
   wayland.windowManager.hyprland.settings = {
     monitor = [
       "eDP-1,1920x1080@60.000Hz,auto,1.25"
@@ -99,5 +99,5 @@
   };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
-  home.stateVersion = "22.11";
+  home.stateVersion = "24.11";
 }

@@ -4,6 +4,7 @@
     waybar = {
       enable = true;
       systemd.enable = true;
+      catppuccin.enable = true;
       settings = {
         mainBar = {
           layer = "top";

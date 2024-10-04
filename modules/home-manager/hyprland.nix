@@ -7,11 +7,13 @@
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
     polkit-kde-agent
+    pavucontrol # volume control
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
     exec-once = [ "mako"
       "variety" ];
+    exec = ["systemctl --user restart waybar" "systemctl --user restart network-manager-applet"];
     "$mod" = "SUPER";
     general = {
       gaps_out = 0;
