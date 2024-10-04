@@ -82,6 +82,7 @@ in {
     fd # modern find
     du-dust # modern du
     speedtest-rs # speedtest
+    fabric-ai
 
     git-crypt
   ] ++ (lib.optionals isLinux [
