@@ -210,6 +210,7 @@
               hardware.nixosModules.common-cpu-intel
               hardware.nixosModules.common-gpu-nvidia
               {
+                hardware.nvidia.open = false;
                 hardware.nvidia.prime = {
                   intelBusId = "PCI:0:2:0";
                   nvidiaBusId = "PCI:1:0:0";
