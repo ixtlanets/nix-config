@@ -79,7 +79,7 @@ in {
   };
   
   # required for  gnome systray
-  services.udev.packages = with pkgs; [ gnome.gnome-settings-daemon ];
+  services.udev.packages = with pkgs; [ gnome-settings-daemon ];
  
   # Services
   services = {

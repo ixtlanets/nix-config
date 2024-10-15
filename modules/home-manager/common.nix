@@ -63,7 +63,6 @@ in {
     tz # A time zone helper
     imagemagick
     parallel
-    #niknvim.packages."${system}".default
     nixpkgs-fmt
     nodejs
     bun # better than nodejs and npm
@@ -83,6 +82,7 @@ in {
     fd # modern find
     du-dust # modern du
     speedtest-rs # speedtest
+    fabric-ai
 
     git-crypt
   ] ++ (lib.optionals isLinux [
@@ -155,60 +155,37 @@ in {
         "format" = "mp4";
       };
     };
-    nnn = {
-      enable = true;
-      bookmarks = {
-        d = "~/Documents";
-        p = "~/pro";
-      };
-      extraPackages = with pkgs; [ ffmpegthumbnailer mediainfo nsxiv xdragon gnupg ];
-      plugins = {
-        mappings = {
-          d = "dragdrop";
-          e = "gpge";
-          r = "imgresize";
-          v = "imgview";
-          p = "preview-tabbed";
-        };
-        src = (pkgs.fetchFromGitHub {
-            owner = "jarun";
-            repo = "nnn";
-            rev = "v4.8";
-            sha256 = "sha256-Hpc8YaJeAzJoEi7aJ6DntH2VLkoR6ToP6tPYn3llR7k=";
-            }) + "/plugins";
-      };
-    };
     yazi = {
       enable = true;
       settings = {
         opener = {
           text = [
           {
-            exec = "nvim \"$@\"";
+            run = "nvim \"$@\"";
             block = true;
           }
           ];
           pdf = [
           {
-            exec = "zathura \"$@\"";
+            run = "zathura \"$@\"";
             block = false;
           }
           ];
           office = [
           {
-            exec = "libreoffice \"$@\"";
+            run = "libreoffice \"$@\"";
             block = false;
           }
           ];
           image = [
           {
-            exec = "swayimg \"$@\"";
+            run = "swayimg \"$@\"";
             block = false;
           }
           ];
           video = [
           {
-            exec = "mpv \"$@\"";
+            run = "mpv \"$@\"";
             block = false;
           }
           ];

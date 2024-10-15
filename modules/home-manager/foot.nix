@@ -4,7 +4,13 @@
   programs = {
     foot = {
       enable = true;
+      catppuccin.enable = true;
+      settings = {
+        main = {
+          font = "Hack Nerd Font:size=11";
+          dpi-aware = "yes";
+        };
+      };
     };
   };
-home.file.".config/foot/foot.ini".text = builtins.readFile ../../dotfiles/foot.ini;
 }

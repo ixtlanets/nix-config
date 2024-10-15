@@ -4,18 +4,8 @@ let
   rofi_width = (builtins.toString (dpi * 5));
   rofi_height = (builtins.toString (dpi * 3));
   polybar_height = (builtins.toString (dpi * 0.1666));
-
-  token =
-    lib.strings.removeSuffix "\n" (builtins.readFile ../../factorio.token);
-  factorio = pkgs.factorio.override {
-    username = "Ixtlanets";
-    token = token;
-  };
-  factorio_token = builtins.readFile ../../factorio.token;
-
 in
 {
-
 
   home.packages = with pkgs; [
     _1password
@@ -45,14 +35,27 @@ in
     zoom-us
     zed-editor # code editor writen in Rust
     microsoft-edge # funny enough it's actually good browser
-
-    factorio
   ];
 
+  catppuccin.pointerCursor.enable = true;
+  gtk.catppuccin.enable = true;
+  gtk.catppuccin.icon.enable = true;
+  programs.bat.catppuccin.enable = true;
+  programs.btop.catppuccin.enable = true;
+  programs.fzf.catppuccin.enable = true;
+  programs.mpv.catppuccin.enable = true;
+  programs.starship.catppuccin.enable = true;
+  programs.tmux.catppuccin.enable = true;
+  programs.yazi.catppuccin.enable = true;
+  services.dunst.catppuccin.enable = true;
+  services.mako.catppuccin.enable = true;
+  wayland.windowManager.hyprland.catppuccin.enable = true;
+  catppuccin.flavor = "mocha";
 
   programs = {
     alacritty = {
       enable = true;
+      catppuccin.enable = true;
       settings = {
         env.TERM = "xterm-256color";
         font = {
@@ -66,20 +69,20 @@ in
       package = pkgs.vscode.fhs;
       extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
-          dbaeumer.vscode-eslint
-          bbenoist.nix
-          jnoortheen.nix-ide
-          github.copilot
-          github.vscode-pull-request-github
-          github.codespaces
+        dbaeumer.vscode-eslint
+        bbenoist.nix
+        jnoortheen.nix-ide
+        github.copilot
+        github.vscode-pull-request-github
+        github.codespaces
       ];
     };
     browserpass = {
       enable = true;
       browsers = [
         "brave"
-          "firefox"
-          "chromium"
+        "firefox"
+        "chromium"
       ];
     };
     firefox = {
@@ -111,14 +114,13 @@ in
         };
         extensions = with config.nur.repos.rycee.firefox-addons; [
           onepassword-password-manager
-            ublock-origin
-            sponsorblock
-            tabliss
-            clearurls
-            dearrow
-#bypass-paywalls-clean
-            istilldontcareaboutcookies
-            multi-account-containers
+          ublock-origin
+          sponsorblock
+          tabliss
+          clearurls
+          dearrow
+          istilldontcareaboutcookies
+          multi-account-containers
         ];
         settings = {
           "app.normandy.api_url" = "";
@@ -143,7 +145,7 @@ in
               urls = [{
                 template = "https://www.google.com/search";
                 params = [
-                { name = "q"; value = "{searchTerms}"; }
+                  { name = "q"; value = "{searchTerms}"; }
                 ];
               }];
               definedAliases = [ "@s" ];
@@ -152,8 +154,8 @@ in
               urls = [{
                 template = "https://search.nixos.org/packages";
                 params = [
-                { name = "type"; value = "packages"; }
-                { name = "query"; value = "{searchTerms}"; }
+                  { name = "type"; value = "packages"; }
+                  { name = "query"; value = "{searchTerms}"; }
                 ];
               }];
               definedAliases = [ "@n" ];
@@ -162,7 +164,7 @@ in
               urls = [{
                 template = "https://en.wikipedia.org/wiki/Special:Search";
                 params = [
-                { name = "search"; value = "{searchTerms}"; }
+                  { name = "search"; value = "{searchTerms}"; }
                 ];
               }];
               definedAliases = [ "@w" ];
@@ -177,25 +179,25 @@ in
         "--ozone-platform-hint=auto"
       ];
       extensions = [
-      { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
-      { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
-      { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
-      { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
-      { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
-      { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
-      { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
-      { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution
-      { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
-      {
-        id = "dcpihecpambacapedldabdbpakmachpb";
-        updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
-      }
+        { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
+        { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
+        { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
+        { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
+        { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
+        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
+        { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
+        { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution
+        { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
+        {
+          id = "dcpihecpambacapedldabdbpakmachpb";
+          updateUrl = "https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml";
+        }
       ];
     };
   };
 
   xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
-# read rofi config and replace DPI with dpi
+  # read rofi config and replace DPI with dpi
   xdg.configFile."rofi/config.rasi".text = builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ] (builtins.readFile ../../dotfiles/rofi);
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile ../../dotfiles/quotes.txt;
@@ -204,10 +206,10 @@ in
     executable = true;
   };
   home.pointerCursor = {
-    name = "Vanilla-DMZ";
-    package = pkgs.vanilla-dmz;
     size = 32;
-    gtk.enable = true;
     x11.enable = true;
+  };
+  gtk = {
+    enable = true;
   };
 }
