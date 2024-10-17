@@ -16,6 +16,14 @@
   networking.hostName = "x1carbon"; # Define your hostname.
 
 
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.sddm.enable = true;
+      desktopManager.plasma6.enable = true;
+    };
+  };
   services.hardware.bolt.enable = true;
   hardware = {
     graphics = {

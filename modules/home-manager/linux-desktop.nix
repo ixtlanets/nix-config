@@ -38,8 +38,7 @@ in
   ];
 
   catppuccin.pointerCursor.enable = true;
-  gtk.catppuccin.enable = true;
-  gtk.catppuccin.icon.enable = true;
+  qt.style.catppuccin.enable = true;
   programs.bat.catppuccin.enable = true;
   programs.btop.catppuccin.enable = true;
   programs.fzf.catppuccin.enable = true;
