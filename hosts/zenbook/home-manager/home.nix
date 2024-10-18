@@ -18,12 +18,10 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/hyprland.nix
-    ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/mako.nix
     ../../../modules/home-manager/foot.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
-    ../../../modules/home-manager/ollama.nix
   ];
   wayland.windowManager.hyprland.settings = {
     monitor = [
