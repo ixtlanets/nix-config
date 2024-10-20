@@ -7,8 +7,9 @@
       catppuccin.enable = true;
       settings = {
         main = {
-          font = "Hack Nerd Font:size=11";
+          font = "Hack Nerd Font:size=16";
           dpi-aware = "yes";
+          term = "xterm-256color";
         };
       };
     };
