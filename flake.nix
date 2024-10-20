@@ -341,7 +341,7 @@
       # nix-channel --update
       # nix-shell '<home-manager>' -A install
       # after that you can activate configuration
-      # available through 'home-manager --flake .#nik@wsl'
+      # available through 'home-manager --flake .#nik@wsl switch'
       homeConfigurations = {
         "nik@wsl" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
