@@ -204,6 +204,21 @@ in
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
   };
+  home.file.".local/bin/1password" = {
+    text = ''
+    #!/usr/bin/env bash
+    exec ${pkgs._1password-gui}/bin/1password --ozone-platform-hint=auto "$@"
+  '';
+    executable = true;
+  };
+
+  home.file.".local/bin/obsidian" = {
+    text = ''
+    #!/usr/bin/env bash
+    exec ${pkgs.obsidian}/bin/1password --ozone-platform-hint=auto "$@"
+  '';
+    executable = true;
+  };
   home.pointerCursor = {
     size = 32;
     x11.enable = true;
