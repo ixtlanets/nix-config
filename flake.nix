@@ -333,7 +333,15 @@
         ];
       };
       # Standalone home-manager configuration entrypoint
-      # Available through 'home-manager --flake .#your-username@your-hostname'
+      # enable flakes and nix command first.
+      # to do so, you need to put to the /etc/nix/nix.conf
+      # experimental-features = nix-command flakes
+      # you also need to install home-manager standalone
+      # nix-channel --add https://github.com/nix-community/home-manager/archive/master.tar.gz home-manager
+      # nix-channel --update
+      # nix-shell '<home-manager>' -A install
+      # after that you can activate configuration
+      # available through 'home-manager --flake .#nik@wsl'
       homeConfigurations = {
         "nik@wsl" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
