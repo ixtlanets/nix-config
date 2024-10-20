@@ -9,11 +9,9 @@ in
 
   home.packages = with pkgs; [
     _1password
-    _1password-gui
     brave
     browserpass
     telegram-desktop
-    obsidian
     moonlight-qt
     xclip
     nerdfonts
@@ -35,6 +33,17 @@ in
     zoom-us
     zed-editor # code editor writen in Rust
     microsoft-edge # funny enough it's actually good browser
+    (obsidian.overrideAttrs (oldAttrs: {
+      postInstall = ''
+        wrapProgram $out/bin/obsidian --add-flags "--ozone-platform=wayland --enable-wayland-ime"
+      '';
+    }))
+
+    (_1password-gui.overrideAttrs (oldAttrs: {
+      postInstall = ''
+        wrapProgram $out/share/1password/1password --add-flags "--ozone-platform=wayland --enable-wayland-ime"
+      '';
+    }))
   ];
 
   catppuccin.pointerCursor.enable = true;
@@ -204,21 +213,7 @@ in
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
   };
-  home.file.".local/bin/1password" = {
-    text = ''
-    #!/usr/bin/env bash
-    exec ${pkgs._1password-gui}/bin/1password --ozone-platform-hint=auto "$@"
-  '';
-    executable = true;
-  };
 
-  home.file.".local/bin/obsidian" = {
-    text = ''
-    #!/usr/bin/env bash
-    exec ${pkgs.obsidian}/bin/1password --ozone-platform-hint=auto "$@"
-  '';
-    executable = true;
-  };
   home.pointerCursor = {
     size = 32;
     x11.enable = true;
