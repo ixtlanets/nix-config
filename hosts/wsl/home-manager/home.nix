@@ -14,7 +14,7 @@
 
   programs = {
     emacs = {
-      package = lib.mkForce pkgs.emacs29-pgtk;
+      package = lib.mkForce pkgs.emacs29;
     };
   };
 
@@ -33,6 +33,7 @@
   ];
 
   home.packages = with pkgs; [
+    bzip2
     wslu
     vanilla-dmz
   ];
