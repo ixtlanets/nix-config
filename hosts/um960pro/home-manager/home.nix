@@ -25,6 +25,7 @@
   wayland.windowManager.hyprland.settings = {
     monitor = [
         "HDMI-A-1,2560x1440@144Hz,auto,1.6"
+        "DP-1,3840x2560@60Hz,auto,2"
         "DP-2,3840x2560@60Hz,auto,2"
     ];
   };
