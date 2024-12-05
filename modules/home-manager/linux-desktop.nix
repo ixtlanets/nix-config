@@ -215,7 +215,6 @@ in
   };
 
   home.pointerCursor = {
-    size = 32;
     x11.enable = true;
   };
   gtk = {
