@@ -8,20 +8,24 @@ let
 in
 {
   home.packages = with pkgs; [
-      xclip
-      nerdfonts
-      monaspace
-      wl-clipboard
-      variety
-      zathura
-      brightnessctl
-      pamixer
-      wireplumber
-      swaybg
-      mpv
-      liberation_ttf
-      font-awesome
-      ];
+    xclip
+    nerd-fonts.ubuntu
+    nerd-fonts.ubuntu-mono
+    nerd-fonts.ubuntu-sans
+    nerd-fonts.sauce-code-pro
+    nerd-fonts.hack
+    monaspace
+    wl-clipboard
+    variety
+    zathura
+    brightnessctl
+    pamixer
+    wireplumber
+    swaybg
+    mpv
+    liberation_ttf
+    font-awesome
+  ];
 
 
   programs = {

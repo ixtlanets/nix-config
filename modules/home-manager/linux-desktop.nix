@@ -14,7 +14,11 @@ in
     telegram-desktop
     moonlight-qt
     xclip
-    nerdfonts
+    nerd-fonts.ubuntu
+    nerd-fonts.ubuntu-mono
+    nerd-fonts.ubuntu-sans
+    nerd-fonts.sauce-code-pro
+    nerd-fonts.hack
     monaspace
     wl-clipboard
     variety

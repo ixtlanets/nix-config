@@ -5,7 +5,11 @@ in
 {
 
   home.packages = with pkgs; [
-    nerdfonts
+    nerd-fonts.ubuntu
+    nerd-fonts.ubuntu-mono
+    nerd-fonts.ubuntu-sans
+    nerd-fonts.sauce-code-pro
+    nerd-fonts.hack
     cantarell-fonts
     cmake
     libtool
