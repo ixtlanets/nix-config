@@ -20,10 +20,12 @@
     xserver = {
       enable = true;
       dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
     };
+    displayManager.sddm.enable = true;
+    desktopManager.plasma6.enable = true;
   };
+
+  programs.ssh.askPassword = pkgs.lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
   services.hardware.bolt.enable = true;
   
