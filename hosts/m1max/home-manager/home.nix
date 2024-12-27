@@ -55,8 +55,6 @@ in
 
   home.packages = with pkgs; [
     nixpkgs-fmt
-    _1password
-    _1password-gui
   ];
 
   programs = {

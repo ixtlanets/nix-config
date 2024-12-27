@@ -16,7 +16,6 @@
 
   environment = {
     shells = with pkgs; [ bash zsh ];
-    loginShell = pkgs.zsh;
     systemPackages = [ pkgs.coreutils ];
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];
@@ -27,23 +26,13 @@
   system.keyboard.remapCapsLockToEscape = true;
 
   # Fonts
-  fonts.packages = [ (pkgs.nerdfonts.override { fonts = [ 
-    "CascadiaCode"
-    "DejaVuSansMono"
-    "DroidSansMono"
-    "FiraCode"
-    "FiraMono"
-    "Hack"
-    "Inconsolata"
-    "Iosevka"
-    "JetBrainsMono"
-    "Meslo"
-    "Noto"
-    "RobotoMono"
-    "SourceCodePro"
-    "Ubuntu"
-    "UbuntuMono"
-  ]; }) ];
+  fonts.packages = with pkgs; [ 
+    nerd-fonts.ubuntu
+    nerd-fonts.ubuntu-mono
+    nerd-fonts.ubuntu-sans
+    nerd-fonts.sauce-code-pro
+    nerd-fonts.hack
+  ];
 
   # mac defaults
   system.defaults = {
@@ -81,6 +70,8 @@
     global.brewfile = true;
     masApps = { };
     casks = [
+      "1password"
+      "1password-cli"
       "brave-browser"
       "firefox-developer-edition"
       "microsoft-edge"
