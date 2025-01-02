@@ -87,6 +87,7 @@
       "vmware-fusion"
       "linearmouse"
       "rectangle"
+      "ghostty"
     ];
     taps = [ "fujiapple852/trippy" ];
     brews = [ "trippy" ];

@@ -11,6 +11,7 @@ in
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ghostty.nix
   ];
 
   nixpkgs = {
