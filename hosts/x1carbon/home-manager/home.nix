@@ -22,6 +22,7 @@
     ../../../modules/home-manager/foot.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ghostty.nix
   ];
 
   wayland.windowManager.hyprland.settings = {

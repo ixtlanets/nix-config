@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{ inputs, outputs, lib, config, pkgs, niknvim, ghostty, ... }: 
 let
   isLinux = pkgs.stdenv.isLinux;
 tat-script = pkgs.writeShellScriptBin "tat" ''
@@ -86,6 +86,7 @@ in {
 
     git-crypt
   ] ++ (lib.optionals isLinux [
+    ghostty.packages.x86_64-linux.default
     tabbed
   ]);
 
