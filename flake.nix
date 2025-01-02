@@ -26,13 +26,14 @@
 
     catppuccin.url = "github:catppuccin/nix";
 
+    ghostty.url = "github:ghostty-org/ghostty";
 
     # Shameless plug: looking for a way to nixify your themes and make
     # everything match nicely? Try nix-colors!
     # nix-colors.url = "github:misterio77/nix-colors";
   };
 
-  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, catppuccin, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, catppuccin, ghostty, ... }@inputs:
     let
       inherit (self) outputs;
       forAllSystems = nixpkgs.lib.genAttrs [
@@ -74,7 +75,7 @@
             dpi = 144;
           in
           nixpkgs.lib.nixosSystem {
-            specialArgs = { inherit inputs outputs dpi; };
+            specialArgs = { inherit inputs outputs dpi ghostty; };
             modules = [
               catppuccin.nixosModules.catppuccin
               nur.nixosModules.nur
@@ -87,7 +88,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -349,6 +350,14 @@
           modules = [
             # > Our main home-manager configuration file <
             ./hosts/wsl/home-manager/home.nix
+          ];
+        };
+        "nik@ubuntu" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+          extraSpecialArgs = { inherit inputs outputs niknvim; };
+          modules = [
+            # > Our main home-manager configuration file <
+            ./hosts/ubuntu/home-manager/home.nix
           ];
         };
       };
