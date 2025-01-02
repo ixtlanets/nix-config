@@ -352,6 +352,14 @@
             ./hosts/wsl/home-manager/home.nix
           ];
         };
+        "nik@ubuntu" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+          extraSpecialArgs = { inherit inputs outputs niknvim; };
+          modules = [
+            # > Our main home-manager configuration file <
+            ./hosts/ubuntu/home-manager/home.nix
+          ];
+        };
       };
     };
 }

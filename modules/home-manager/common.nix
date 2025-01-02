@@ -1,6 +1,37 @@
 { inputs, outputs, lib, config, pkgs, niknvim, ghostty, ... }: 
 let
   isLinux = pkgs.stdenv.isLinux;
+
+vpn-script = pkgs.writeShellScriptBin "vpn" ''
+#!/usr/bin/env nix-shell
+# gen dns suffix
+DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
+
+# get list of available exit nodes
+EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+
+
+
+# add 'None' to the list none option
+EXIT_NODES+="\nNone"
+EXIT_NODES=$(echo -e "$EXIT_NODES")
+
+SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+
+# if SELECTED is empty, put None there
+if [[ -z "$SELECTED" ]]; then
+  SELECTED="None"
+fi
+
+#let user select exit node with gum
+EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
+if [[ "$EXIT_NODE" == "None" ]]; then
+  sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+else
+  sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
+fi
+
+'';
 tat-script = pkgs.writeShellScriptBin "tat" ''
 #!/bin/sh
 #
@@ -77,6 +108,7 @@ in {
     nsxiv
     xdragon
     gnupg
+    gum
     pscale
     tat-script
     fd # modern find
@@ -87,6 +119,7 @@ in {
     git-crypt
   ] ++ (lib.optionals isLinux [
     ghostty.packages.x86_64-linux.default
+    vpn-script
     tabbed
   ]);
 
