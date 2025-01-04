@@ -6,6 +6,5 @@ font-size = 16
 theme = catppuccin-mocha
 quit-after-last-window-closed = true
 macos-non-native-fullscreen = true
-window-decoration = false
   '';
 }
