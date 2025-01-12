@@ -123,7 +123,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -154,7 +154,7 @@
                 home-manager = {
                   useUserPackages = true;
                   backupFileExtension = "backup";
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -184,7 +184,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -222,7 +222,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [ 
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -251,7 +251,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -278,7 +278,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -305,7 +305,7 @@
               {
                 home-manager = {
                   useUserPackages = true;
-                  extraSpecialArgs = { inherit outputs nur niknvim dpi; };
+                  extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                   users.nik.imports = [
                     nur.nixosModules.nur
                     catppuccin.homeManagerModules.catppuccin
@@ -354,7 +354,7 @@
         };
         "nik@ubuntu" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-          extraSpecialArgs = { inherit inputs outputs niknvim; };
+          extraSpecialArgs = { inherit inputs outputs niknvim ghostty; };
           modules = [
             # > Our main home-manager configuration file <
             ./hosts/ubuntu/home-manager/home.nix
