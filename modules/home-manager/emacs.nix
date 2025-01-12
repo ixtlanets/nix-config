@@ -53,6 +53,8 @@ in
         pdf-tools
         hydra
         vterm
+	vertico
+	marginalia
       ];
     };
   };
