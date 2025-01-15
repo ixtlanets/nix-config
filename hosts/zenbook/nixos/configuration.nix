@@ -7,29 +7,29 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   imports =
     [
-# Include the results of the hardware scan.
-    ./hardware-configuration.nix
+      # Include the results of the hardware scan.
+      ./hardware-configuration.nix
       ../../../modules/nixos/common.nix
     ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
 
-    services = {
-      xserver = {
-        enable = true;
-        dpi = dpi;
-        displayManager.sddm.enable = true;
-        desktopManager.plasma6.enable = true;
-      };
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = false;
+      desktopManager.gnome.enable = true;
     };
+  };
   services.hardware.bolt.enable = true;
   services = {
     asusd.enable = true;
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
-    opengl = {
+    graphics = {
       enable = true;
     };
   };
