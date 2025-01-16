@@ -30,6 +30,10 @@
         "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
         "DP-1,3840x2560@60.000Hz,auto,2.0"
     ];
+    bindl = [
+    ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
+    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 2880x1800@60.000Hz, 0x0, 2\""
+    ];
   };
   home = {
     username = "nik";
