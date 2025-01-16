@@ -30,6 +30,8 @@
 
     disko.url = "github:nix-community/disko/latest";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+
+    nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
   };
 
   outputs = { self, nixpkgs, home-manager, hardware, nur, darwin, niknvim, catppuccin, ghostty, disko, ... }@inputs:
@@ -203,7 +205,6 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
                 ./hosts/zenbook/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
                 disko.nixosModules.disko
@@ -223,9 +224,8 @@
                 {
                   home-manager = {
                     useUserPackages = true;
-                    extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
+                    extraSpecialArgs = { inherit outputs niknvim dpi ghostty; };
                     users.nik.imports = [ 
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/zenbook/home-manager/home.nix 
                     ];

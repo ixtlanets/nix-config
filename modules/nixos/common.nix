@@ -122,6 +122,7 @@ in {
     description = "Sergey Nikulin";
     extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
     shell = pkgs.zsh;
+    initialHashedPassword = "$y$j9T$BqTWVOGlz9SA/HLpKXb0E0$HAp9.7RoQMgTLYhF.nScFDnQKJIDNRGi/Z1ihJX.FP/";
   };
 
   # Allow unfree packages

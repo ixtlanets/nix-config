@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, dpi, nur, ... }:
+{ inputs, outputs, lib, config, pkgs, dpi, ... }:
 let
   DPI = builtins.toString dpi;
   rofi_width = (builtins.toString (dpi * 5));
@@ -124,16 +124,6 @@ in
             id = 4;
           };
         };
-        extensions = with config.nur.repos.rycee.firefox-addons; [
-          onepassword-password-manager
-          ublock-origin
-          sponsorblock
-          tabliss
-          clearurls
-          dearrow
-          istilldontcareaboutcookies
-          multi-account-containers
-        ];
         settings = {
           "app.normandy.api_url" = "";
           "app.normandy.enabled" = false;
