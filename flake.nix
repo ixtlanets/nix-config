@@ -79,7 +79,7 @@
               specialArgs = { inherit inputs outputs dpi ghostty; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 ./hosts/x1carbon/nixos/configuration.nix
                 hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
                 hardware.nixosModules.common-cpu-intel
@@ -91,7 +91,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [ 
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/x1carbon/home-manager/home.nix
                     ];
@@ -107,7 +106,7 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 ./hosts/x1extreme/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
                 hardware.nixosModules.common-cpu-intel
@@ -126,7 +125,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/x1extreme/home-manager/home.nix
                     ];
@@ -142,7 +140,7 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 ./hosts/x13/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
                 hardware.nixosModules.common-cpu-amd
@@ -157,7 +155,6 @@
                     backupFileExtension = "backup";
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [ 
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/x13/home-manager/home.nix 
                     ];
@@ -173,7 +170,7 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 ./hosts/um960pro/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
                 hardware.nixosModules.common-cpu-amd
@@ -187,7 +184,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [ 
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/um960pro/home-manager/home.nix
                     ];
@@ -242,7 +238,7 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 ./hosts/matebook/nixos/configuration.nix
                 hardware.nixosModules.common-cpu-intel
                 hardware.nixosModules.common-gpu-intel
@@ -254,7 +250,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/matebook/home-manager/home.nix
                     ];
@@ -281,7 +276,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/desktop/home-manager/home.nix
                     ];
@@ -299,7 +293,7 @@
               specialArgs = { inherit inputs outputs dpi; };
               modules = [
                 catppuccin.nixosModules.catppuccin
-                nur.nixosModules.nur
+                nur.modules.nixos.default
                 # > Our main nixos configuration file <
                 ./hosts/vmmac/nixos/configuration.nix
                 home-manager.nixosModules.home-manager
@@ -308,7 +302,6 @@
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
                     users.nik.imports = [
-                      nur.nixosModules.nur
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/vmmac/home-manager/home.nix
                     ];
@@ -322,7 +315,7 @@
         system = "aarch64-darwin";
         pkgs = import nixpkgs { system = "aarch64-darwin"; config.allowUnfree = true; };
         modules = [
-          nur.nixosModules.nur
+          nur.modules.nixos.default
           ./hosts/m1max/nixos/configuration.nix
           home-manager.darwinModules.home-manager
           {
