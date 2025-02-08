@@ -195,7 +195,7 @@
 
         zenbook =
           let
-            dpi = 192;
+            dpi = 144;
           in
             nixpkgs.lib.nixosSystem {
               specialArgs = { inherit inputs outputs dpi; };
