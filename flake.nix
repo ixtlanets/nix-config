@@ -315,13 +315,12 @@
         system = "aarch64-darwin";
         pkgs = import nixpkgs { system = "aarch64-darwin"; config.allowUnfree = true; };
         modules = [
-          nur.modules.nixos.default
           ./hosts/m1max/nixos/configuration.nix
           home-manager.darwinModules.home-manager
           {
             home-manager = {
               useUserPackages = true;
-              extraSpecialArgs = { inherit outputs nur niknvim; };
+              extraSpecialArgs = { inherit outputs  niknvim; };
               users.nik.imports = [ ./hosts/m1max/home-manager/home.nix ];
             };
           }
