@@ -27,6 +27,10 @@
       nodePackages.typescript-language-server
       nodePackages.bash-language-server
       nodePackages."@tailwindcss/language-server"
+      lua
+      luajitPackages.luarocks
+      nil
+      nixfmt-rfc-style
   ];
   programs = {
     neovim = {

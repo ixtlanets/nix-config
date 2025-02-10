@@ -1,15 +1,21 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   mkTuple = lib.hm.gvariant.mkTuple;
 in
 {
-  imports = [ 
+  imports = [
     ../../../modules/home-manager/starship.nix
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/email.nix
-    ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
   ];
@@ -32,7 +38,10 @@ in
   };
 
   targets.darwin.defaults = {
-    NSGlobalDomain.AppleLanguages = ["en-RU" "ru-RU"];
+    NSGlobalDomain.AppleLanguages = [
+      "en-RU"
+      "ru-RU"
+    ];
     NSGlobalDomain.AppleLocale = "en_RU";
     NSGlobalDomain.AppleMeasurementUnits = "Centimeters";
     NSGlobalDomain.AppleMetricUnits = true;
@@ -56,6 +65,9 @@ in
 
   home.packages = with pkgs; [
     nixpkgs-fmt
+    ripgrep
+    sqlite
+    wordnet
   ];
 
   programs = {
@@ -105,7 +117,7 @@ in
     src = ../../../dotfiles/skhdrc;
     inherit (pkgs) alacritty;
   };
-  
+
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion

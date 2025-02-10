@@ -115,6 +115,8 @@ in {
     du-dust # modern du
     speedtest-rs # speedtest
     fabric-ai
+    viu # terminal image viewer
+    ast-grep # code structural search
 
     git-crypt
   ] ++ (lib.optionals isLinux [
