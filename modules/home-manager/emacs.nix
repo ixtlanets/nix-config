@@ -69,6 +69,7 @@ in
           vterm
           vertico
           marginalia
+          nix-mode
         ];
     };
   };

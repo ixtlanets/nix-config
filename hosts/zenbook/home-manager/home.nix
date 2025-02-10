@@ -18,16 +18,21 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/hyprland.nix
-    ../../../modules/home-manager/mako.nix
+    ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/foot.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ghostty.nix
   ];
   wayland.windowManager.hyprland.settings = {
     monitor = [
       "eDP-1,2880x1800@60.000Hz,auto,2.0"
         "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
         "DP-1,3840x2560@60.000Hz,auto,2.0"
+    ];
+    bindl = [
+    ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
+    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 2880x1800@60.000Hz, 0x0, 2\""
     ];
   };
   home = {
@@ -38,7 +43,7 @@
   home.packages = with pkgs; [
     asusctl
     supergfxctl
-    nvtop
+    nvtopPackages.full
 
     gnomeExtensions.supergfxctl-gex
   ];

@@ -33,7 +33,7 @@
     ];
     bindl = [
     ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
-    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 1920x1080, 0x0, 1\""
+    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 1920x1080, 0x0, 1.25\""
     ];
   };
   dconf.settings = {
