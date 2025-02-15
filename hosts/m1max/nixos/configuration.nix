@@ -1,7 +1,10 @@
 { config, pkgs, ... }:
 
 {
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   networking.hostName = "m1max"; # Define your hostname.
 
@@ -15,7 +18,10 @@
   };
 
   environment = {
-    shells = with pkgs; [ bash zsh ];
+    shells = with pkgs; [
+      bash
+      zsh
+    ];
     systemPackages = [ pkgs.coreutils ];
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];
@@ -26,7 +32,7 @@
   system.keyboard.remapCapsLockToEscape = true;
 
   # Fonts
-  fonts.packages = with pkgs; [ 
+  fonts.packages = with pkgs; [
     nerd-fonts.ubuntu
     nerd-fonts.ubuntu-mono
     nerd-fonts.ubuntu-sans
@@ -64,7 +70,7 @@
     menuExtraClock.ShowDate = 1;
     menuExtraClock.ShowDayOfMonth = true;
     menuExtraClock.ShowDayOfWeek = true;
-    spaces.spans-displays = false; # each physical display has a separate space
+    spaces.spans-displays = true; # one space spans across all physical displays. aerospace recommend this setting
     universalaccess.reduceMotion = false; # less animations
   };
 
@@ -88,20 +94,21 @@
       "notion"
       "obsidian"
       "scroll-reverser"
-      "istat-menus" 
+      "istat-menus"
       "hammerspoon"
       "docker"
       "vmware-fusion"
       "linearmouse"
       "rectangle"
       "ghostty"
+      "nikitabobko/tap/aerospace"
     ];
-    taps = [ 
+    taps = [
       "fujiapple852/trippy"
       "d12frosted/emacs-plus"
       "LizardByte/homebrew"
     ];
-    brews = [ 
+    brews = [
       "trippy"
       "emacs-plus"
       # "sunshine" it's broken now
