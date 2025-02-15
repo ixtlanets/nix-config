@@ -29,7 +29,7 @@
       nodePackages."@tailwindcss/language-server"
       lua
       luajitPackages.luarocks
-      nil
+      nixd
       nixfmt-rfc-style
   ];
   programs = {
