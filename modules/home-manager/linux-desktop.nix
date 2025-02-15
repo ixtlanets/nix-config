@@ -1,4 +1,4 @@
-{ inputs, outputs, lib, config, pkgs, dpi, ... }:
+{ inputs, outputs, lib, config, pkgs, dpi, ghostty, ... }:
 let
   DPI = builtins.toString dpi;
   rofi_width = (builtins.toString (dpi * 5));
