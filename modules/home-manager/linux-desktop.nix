@@ -48,6 +48,7 @@ in
         wrapProgram $out/share/1password/1password --add-flags "--ozone-platform=wayland --enable-wayland-ime"
       '';
     }))
+    ghostty.packages.x86_64-linux.default
   ];
 
   catppuccin.pointerCursor.enable = true;

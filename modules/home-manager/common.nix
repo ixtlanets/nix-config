@@ -120,7 +120,6 @@ in {
 
     git-crypt
   ] ++ (lib.optionals isLinux [
-    ghostty.packages.x86_64-linux.default
     vpn-script
     tabbed
   ]);
@@ -194,6 +193,9 @@ in {
     yazi = {
       enable = true;
       settings = {
+        manager = {
+          linemode = "size";
+        };
         opener = {
           text = [
           {
