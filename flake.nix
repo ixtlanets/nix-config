@@ -90,7 +90,7 @@
                   home-manager = {
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
-                    users.nik.imports = [ 
+                    users.nik.imports = [
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/x1carbon/home-manager/home.nix
                     ];
@@ -143,6 +143,8 @@
                 nur.modules.nixos.default
                 ./hosts/x13/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
+                disko.nixosModules.disko
+                ./hosts/z13/nixos/disko-config.nix
                 hardware.nixosModules.common-cpu-amd
                 hardware.nixosModules.common-cpu-amd-pstate
                 hardware.nixosModules.common-gpu-amd
@@ -154,9 +156,9 @@
                     useUserPackages = true;
                     backupFileExtension = "backup";
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
-                    users.nik.imports = [ 
+                    users.nik.imports = [
                       catppuccin.homeManagerModules.catppuccin
-                      ./hosts/x13/home-manager/home.nix 
+                      ./hosts/x13/home-manager/home.nix
                     ];
                   };
                 }
@@ -183,7 +185,7 @@
                   home-manager = {
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs nur niknvim dpi ghostty; };
-                    users.nik.imports = [ 
+                    users.nik.imports = [
                       catppuccin.homeManagerModules.catppuccin
                       ./hosts/um960pro/home-manager/home.nix
                     ];
@@ -221,9 +223,9 @@
                   home-manager = {
                     useUserPackages = true;
                     extraSpecialArgs = { inherit outputs niknvim dpi ghostty; };
-                    users.nik.imports = [ 
+                    users.nik.imports = [
                       catppuccin.homeManagerModules.catppuccin
-                      ./hosts/zenbook/home-manager/home.nix 
+                      ./hosts/zenbook/home-manager/home.nix
                     ];
                   };
                 }
