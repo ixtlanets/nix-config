@@ -144,7 +144,7 @@
                 ./hosts/x13/nixos/configuration.nix
                 ./modules/nixos/laptop.nix
                 disko.nixosModules.disko
-                ./hosts/z13/nixos/disko-config.nix
+                ./hosts/x13/nixos/disko-config.nix
                 hardware.nixosModules.common-cpu-amd
                 hardware.nixosModules.common-cpu-amd-pstate
                 hardware.nixosModules.common-gpu-amd
