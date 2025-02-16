@@ -1,4 +1,13 @@
-{ inputs, outputs, lib, config, pkgs, dpi, ghostty, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  dpi,
+  ghostty,
+  ...
+}:
 let
   DPI = builtins.toString dpi;
   rofi_width = (builtins.toString (dpi * 5));
@@ -51,19 +60,8 @@ in
     ghostty.packages.x86_64-linux.default
   ];
 
-  catppuccin.pointerCursor.enable = true;
-  qt.style.catppuccin.enable = true;
-  programs.bat.catppuccin.enable = true;
-  programs.btop.catppuccin.enable = true;
-  programs.fzf.catppuccin.enable = true;
-  programs.mpv.catppuccin.enable = true;
-  programs.starship.catppuccin.enable = true;
-  programs.tmux.catppuccin.enable = true;
-  programs.yazi.catppuccin.enable = true;
-  services.dunst.catppuccin.enable = true;
-  services.mako.catppuccin.enable = true;
-  wayland.windowManager.hyprland.catppuccin.enable = true;
   catppuccin.flavor = "mocha";
+  catppuccin.enable = true;
 
   programs = {
     alacritty = {
@@ -145,31 +143,49 @@ in
           force = true;
           engines = {
             "google" = {
-              urls = [{
-                template = "https://www.google.com/search";
-                params = [
-                  { name = "q"; value = "{searchTerms}"; }
-                ];
-              }];
+              urls = [
+                {
+                  template = "https://www.google.com/search";
+                  params = [
+                    {
+                      name = "q";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
               definedAliases = [ "@s" ];
             };
             "Nix Packages" = {
-              urls = [{
-                template = "https://search.nixos.org/packages";
-                params = [
-                  { name = "type"; value = "packages"; }
-                  { name = "query"; value = "{searchTerms}"; }
-                ];
-              }];
+              urls = [
+                {
+                  template = "https://search.nixos.org/packages";
+                  params = [
+                    {
+                      name = "type";
+                      value = "packages";
+                    }
+                    {
+                      name = "query";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
               definedAliases = [ "@n" ];
             };
             "Wikipedia" = {
-              urls = [{
-                template = "https://en.wikipedia.org/wiki/Special:Search";
-                params = [
-                  { name = "search"; value = "{searchTerms}"; }
-                ];
-              }];
+              urls = [
+                {
+                  template = "https://en.wikipedia.org/wiki/Special:Search";
+                  params = [
+                    {
+                      name = "search";
+                      value = "{searchTerms}";
+                    }
+                  ];
+                }
+              ];
               definedAliases = [ "@w" ];
             };
           };
@@ -201,18 +217,30 @@ in
 
   xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
   # read rofi config and replace DPI with dpi
-  xdg.configFile."rofi/config.rasi".text = builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ] (builtins.readFile ../../dotfiles/rofi);
+  xdg.configFile."rofi/config.rasi".text =
+    builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ]
+      (builtins.readFile ../../dotfiles/rofi);
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
-  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text = builtins.readFile ../../dotfiles/quotes.txt;
+  xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
+    builtins.readFile ../../dotfiles/quotes.txt;
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
   };
 
+  gtk.enable = true;
+  qt.enable = true;
+  qt.style.name = "kvantum";
+  qt.platformTheme.name = "kvantum";
   home.pointerCursor = {
+    name = "Bibata-Original-Ice";
+    package = pkgs.bibata-cursors;
+    gtk.enable = true;
     x11.enable = true;
-  };
-  gtk = {
-    enable = true;
+    x11.defaultCursor = "Bibata-Original-Ice";
+    hyprcursor.enable = true;
+    hyprcursor.size = 32;
+    size = 32;
+
   };
 }

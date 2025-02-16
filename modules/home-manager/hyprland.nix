@@ -18,6 +18,9 @@
     general = {
       gaps_out = 0;
     };
+    env = [
+      "XCURSOR_SIZE,32"
+    ];
     input = {
       kb_layout = "us,ru";
       kb_options = "grp:win_space_toggle";
@@ -189,4 +192,3 @@
 --ozone-platform-hint=auto
   '';
 }
-
