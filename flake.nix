@@ -190,6 +190,7 @@
                   hardware.nixosModules.common-cpu-amd
                   hardware.nixosModules.common-cpu-amd-pstate
                   hardware.nixosModules.common-gpu-amd
+                  hardware.nixosModules.common-gpu-nvidia-disable
                   hardware.nixosModules.common-pc-laptop
                   hardware.nixosModules.common-pc-laptop-ssd
                   home-manager.nixosModules.home-manager
