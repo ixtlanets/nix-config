@@ -18,7 +18,6 @@ in
 
   home.packages = with pkgs; [
     _1password
-    brave
     browserpass
     telegram-desktop
     moonlight-qt
@@ -44,8 +43,6 @@ in
     liberation_ttf
     font-awesome
     zoom-us
-    zed-editor # code editor writen in Rust
-    microsoft-edge # funny enough it's actually good browser
     (obsidian.overrideAttrs (oldAttrs: {
       postInstall = ''
         wrapProgram $out/bin/obsidian --add-flags "--ozone-platform=wayland --enable-wayland-ime"
@@ -62,6 +59,7 @@ in
 
   catppuccin.flavor = "mocha";
   catppuccin.enable = true;
+  catppuccin.nvim.enable = false;
 
   programs = {
     alacritty = {
@@ -73,6 +71,46 @@ in
           normal.family = "Hack Nerd Font";
           size = 14;
         };
+      };
+    };
+    zed-editor = {
+      enable = true;
+      extensions = [
+        "anya"
+        "nix"
+        "caddyfile"
+        "csv"
+        "dart"
+        "dockerfile"
+        "docker-compose"
+        "env"
+        "make"
+        "nginx"
+        "org"
+        "prisma"
+        "ruby"
+        "scss"
+      ];
+      extraPackages = [ pkgs.nixd ];
+      userSettings = {
+        "features" = {
+          "inline_completion_provider" = "zed";
+        };
+        "assistant" = {
+          "default_model" = {
+            "provider" = "zed.dev";
+            "model" = "claude-3-5-sonnet-latest";
+          };
+          "version" = "2";
+        };
+        "relative_line_numbers" = true;
+        "vim_mode" = true;
+        "ui_font_size" = 16;
+        "buffer_font_family" = "Hack Nerd Font Mono";
+        "terminal" = {
+          "font_family" = "Hack Nerd Font Mono";
+        };
+        "buffer_font_size" = 16;
       };
     };
     vscode = {
@@ -239,8 +277,8 @@ in
     x11.enable = true;
     x11.defaultCursor = "Bibata-Original-Ice";
     hyprcursor.enable = true;
-    hyprcursor.size = 32;
-    size = 32;
+    hyprcursor.size = 24;
+    size = 24;
 
   };
 }

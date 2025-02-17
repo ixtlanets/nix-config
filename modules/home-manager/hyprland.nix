@@ -1,4 +1,11 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   home.packages = with pkgs; [
     adwaita-icon-theme
@@ -11,28 +18,33 @@
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
-    exec-once = [ "mako"
-      "variety" ];
-    exec = ["systemctl --user restart waybar" "systemctl --user restart network-manager-applet"];
+    exec-once = [
+      "mako"
+      "variety"
+    ];
+    exec = [
+      "systemctl --user restart waybar"
+      "systemctl --user restart network-manager-applet"
+    ];
     "$mod" = "SUPER";
     general = {
       gaps_out = 0;
     };
     env = [
-      "XCURSOR_SIZE,32"
+      "XCURSOR_SIZE,24"
     ];
     input = {
       kb_layout = "us,ru";
       kb_options = "grp:win_space_toggle";
-      repeat_rate	= 30;
+      repeat_rate = 30;
       repeat_delay = 250;
 
       follow_mouse = 1;
-      scroll_factor= 0.5;
+      scroll_factor = 0.5;
 
       touchpad = {
         natural_scroll = "yes";
-        scroll_factor= 0.2;
+        scroll_factor = 0.2;
       };
 
       sensitivity = 0;
@@ -42,10 +54,10 @@
     };
     animation = [
       "windows, 0, 1, default"
-        "border, 1, 3, default"
-        "borderangle, 1, 2, default"
-        "fade, 1, 2, default"
-        "workspaces, 0, 1, default"
+      "border, 1, 3, default"
+      "borderangle, 1, 2, default"
+      "fade, 1, 2, default"
+      "workspaces, 0, 1, default"
     ];
     decoration = {
       rounding = 2;
@@ -59,7 +71,7 @@
     };
     bindm = [
       "$mod, mouse:272, movewindow"
-        "$mod, mouse:273, resizewindow"
+      "$mod, mouse:273, resizewindow"
     ];
     bind =
       [
@@ -90,43 +102,50 @@
         ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
       ]
       ++ (
-# workspaces
-# binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
-          builtins.concatLists (builtins.genList (
-              x: let
-              ws = let
-              c = (x + 1) / 10;
-              in
-              builtins.toString (x + 1 - (c * 10));
-              in [
+        # workspaces
+        # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
+        builtins.concatLists (
+          builtins.genList (
+            x:
+            let
+              ws =
+                let
+                  c = (x + 1) / 10;
+                in
+                builtins.toString (x + 1 - (c * 10));
+            in
+            [
               "$mod, ${ws}, workspace, ${toString (x + 1)}"
               "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-              ]
-              )
-            10)
-         );
+            ]
+          ) 10
+        )
+      );
   };
 
   programs = {
     waybar = {
       settings = {
         mainBar = {
-          modules-left = [ "hyprland/workspaces" "hyprland/mode" ];
-          modules-right = ["hyprland/language"];
+          modules-left = [
+            "hyprland/workspaces"
+            "hyprland/mode"
+          ];
+          modules-right = [ "hyprland/language" ];
 
           "hyprland/workspaces" = {
             all-outputs = true;
-            "persistent-workspaces"= {
-              "*"= 5;
+            "persistent-workspaces" = {
+              "*" = 5;
             };
           };
           "hyprland/language" = {
-            "format"= " {}";
+            "format" = " {}";
             "format-en" = "en";
             "format-ru" = "ру";
           };
           "hyprland/submap" = {
-            "format"= "<span style=\"italic\">{}</span>";
+            "format" = "<span style=\"italic\">{}</span>";
           };
         };
       };
@@ -188,7 +207,7 @@
     };
   };
   home.file.".config/electron-flags.conf".text = ''
---enable-features=WaylandWindowDecorations
---ozone-platform-hint=auto
+    --enable-features=WaylandWindowDecorations
+    --ozone-platform-hint=auto
   '';
 }
