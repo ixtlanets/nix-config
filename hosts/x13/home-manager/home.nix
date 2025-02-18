@@ -1,7 +1,15 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, dpi, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  dpi,
+  ...
+}:
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp6s0";
@@ -28,9 +36,9 @@
   wayland.windowManager.hyprland.settings = {
     monitor = [
       "eDP-1,1920x1200@60.000Hz,auto,1.5"
-        "HDMI-A-1,2560x1440@144.000Hz,auto,1.5"
-        "DP-1,3840x2560@60.000Hz,auto,2.0"
-        "DP-2,3840x2560@60.000Hz,auto,2.0"
+      "HDMI-A-1,2560x1440@144.000Hz,auto,1.6"
+      "DP-1,3840x2560@60.000Hz,auto,2.0"
+      "DP-2,3840x2560@60.000Hz,auto,2.0"
     ];
   };
   services.kanshi.profiles = {
@@ -55,7 +63,7 @@
         {
           criteria = "DP-1";
           mode = "2560x1440@144.000Hz";
-          scale = 1.5;
+          scale = 1.6;
         }
       ];
     };
