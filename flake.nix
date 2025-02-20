@@ -300,6 +300,9 @@
                   catppuccin.nixosModules.catppuccin
                   nur.modules.nixos.default
                   ./hosts/matebook/nixos/configuration.nix
+                  ./modules/nixos/laptop.nix
+                  disko.nixosModules.disko
+                  ./hosts/matebook/nixos/disko-config.nix
                   hardware.nixosModules.common-cpu-intel
                   hardware.nixosModules.common-gpu-intel
                   hardware.nixosModules.common-pc-laptop
