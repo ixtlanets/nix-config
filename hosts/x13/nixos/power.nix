@@ -14,17 +14,27 @@
   systemd.services.radj = {
     enable = true;
     description = "Ryzen Adj temperature limiter.";
-    serviceConfig.Type = "simple";
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "5s";
+    };
     wantedBy = [ "multi-user.target" ];
     path = with pkgs; [
       coreutils
       ryzenadj
     ];
     script = ''
-      ryzenadj --tctl-temp=55
       while true; do
+        # Check if AC adapter is connected
+        if [ "$(cat /sys/class/power_supply/AC0/online)" -eq "1" ]; then
+            # On AC power
+            ryzenadj --tctl-temp=80 &> /dev/null
+        else
+            # On battery
+            ryzenadj --tctl-temp=55 &> /dev/null
+        fi
         sleep 60
-        ryzenadj --tctl-temp=55 &> /dev/null
       done
     '';
   };
