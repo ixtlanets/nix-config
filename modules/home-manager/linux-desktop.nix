@@ -1,8 +1,4 @@
 {
-  inputs,
-  outputs,
-  lib,
-  config,
   pkgs,
   dpi,
   ghostty,
@@ -12,7 +8,6 @@ let
   DPI = builtins.toString dpi;
   rofi_width = (builtins.toString (dpi * 5));
   rofi_height = (builtins.toString (dpi * 3));
-  polybar_height = (builtins.toString (dpi * 0.1666));
 in
 {
 
@@ -115,16 +110,65 @@ in
     };
     vscode = {
       enable = true;
-      package = pkgs.vscode.fhs;
+      package = (
+        pkgs.vscode.fhs.overrideAttrs (oldAttrs: {
+          postInstall = ''
+            wrapProgram $out/bin/code \
+            --add-flags "--enable-features=UseOzonePlatform" \
+            --add-flags "--ozone-platform=wayland" \
+            --add-flags "--enable-wayland-ime"
+          '';
+        })
+      );
+      enableUpdateCheck = false;
+      mutableExtensionsDir = false;
       extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
         dbaeumer.vscode-eslint
         bbenoist.nix
         jnoortheen.nix-ide
+        vscodevim.vim
         github.copilot
         github.vscode-pull-request-github
         github.codespaces
       ];
+      userSettings = {
+        "editor.lineNumbers" = "relative";
+        "vim.easymotion" = true;
+        "vim.incsearch" = true;
+        "vim.useSystemClipboard" = true;
+        "vim.useCtrlKeys" = true;
+        "vim.hlsearch" = true;
+        "vim.insertModeKeyBindings" = [
+          {
+            before = ["j" "j"];
+            after = ["<Esc>"];
+          }
+        ];
+        "vim.normalModeKeyBindingsNonRecursive" = [
+          {
+            before = ["<leader>" "d"];
+            after = ["d" "d"];
+          }
+          {
+            before = ["<C-n>"];
+            commands = [":nohl"];
+          }
+          {
+            before = ["K"];
+            commands = ["lineBreakInsert"];
+            silent = true;
+          }
+        ];
+        "vim.leader" = "<space>";
+        "vim.handleKeys" = {
+          "<C-a>" = false;
+          "<C-f>" = false;
+        };
+        "extensions.experimental.affinity" = {
+          "vscodevim.vim" = 1;
+        };
+      };
     };
     browserpass = {
       enable = true;
