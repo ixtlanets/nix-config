@@ -1,6 +1,8 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ghostty, ... }: 
+{ inputs, outputs, lib, config, pkgs, niknvim, ghostty, ... }:
 let
   isLinux = pkgs.stdenv.isLinux;
+  gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
+  gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
 
 vpn-script = pkgs.writeShellScriptBin "vpn" ''
 #!/usr/bin/env nix-shell
@@ -82,7 +84,7 @@ in {
       allowUnfreePredicate = (_: true);
     };
   };
-  
+
   home.sessionVariables = {
     TZ_LIST = "Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office";
   };
@@ -174,8 +176,8 @@ in {
     };
     password-store = {
       enable = true;
-      package = pkgs.pass.withExtensions (exts: [ 
-        exts.pass-otp 
+      package = pkgs.pass.withExtensions (exts: [
+        exts.pass-otp
         exts.pass-import
         exts.pass-genphrase
       ]);
@@ -390,5 +392,14 @@ in {
 
   home.shellAliases = {
     gst = "git status";
+  };
+
+  home.activation = {
+    importGpgKeys = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.userEmail}"; then
+      echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
+      echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
+      fi
+    '';
   };
 }

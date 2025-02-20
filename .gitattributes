@@ -1,1 +1,2 @@
 factorio.token filter=git-crypt diff=git-crypt
+secrets/gpg/** filter=git-crypt diff=git-crypt
