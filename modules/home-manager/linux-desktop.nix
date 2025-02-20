@@ -110,16 +110,8 @@ in
     };
     vscode = {
       enable = true;
-      package = (
-        pkgs.vscode.fhs.overrideAttrs (oldAttrs: {
-          postInstall = ''
-            wrapProgram $out/bin/code \
-            --add-flags "--enable-features=UseOzonePlatform" \
-            --add-flags "--ozone-platform=wayland" \
-            --add-flags "--enable-wayland-ime"
-          '';
-        })
-      );
+
+      package = pkgs.vscode.fhsWithPackages (ps: with ps; [ zlib openssl.dev pkg-config ]);
       enableUpdateCheck = false;
       mutableExtensionsDir = false;
       extensions = with pkgs.vscode-extensions; [
@@ -129,11 +121,28 @@ in
         jnoortheen.nix-ide
         vscodevim.vim
         github.copilot
+        github.copilot-chat
         github.vscode-pull-request-github
         github.codespaces
+        ms-python.python
+        ms-azuretools.vscode-docker
+        ms-vscode-remote.remote-ssh
+        editorconfig.editorconfig
+        donjayamanne.githistory
+        eamodio.gitlens
+        # Golang
+        golang.go
+        mkhl.direnv
       ];
       userSettings = {
+        "workbench.colorTheme" = "One Dark Pro";
+        # Git settings
+        "git.enableSmartCommit" = true;
+        "git.confirmSync" = false;
+        "git.autofetch" = true;
+        "git.ignoreLegacyWarning" = true;
         "editor.lineNumbers" = "relative";
+        "editor.fontLigatures" = true;
         "vim.easymotion" = true;
         "vim.incsearch" = true;
         "vim.useSystemClipboard" = true;
