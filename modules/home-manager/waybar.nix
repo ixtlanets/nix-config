@@ -1,16 +1,29 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   programs = {
     waybar = {
       enable = true;
       systemd.enable = true;
-      catppuccin.enable = true;
       settings = {
         mainBar = {
           layer = "top";
           position = "top";
           modules-center = [ "clock" ];
-          modules-right = ["pulseaudio" "temperature" "backlight" "battery" "keyboard-state" "tray"];
+          modules-right = [
+            "pulseaudio"
+            "temperature"
+            "backlight"
+            "battery"
+            "keyboard-state"
+            "tray"
+          ];
 
           "keyboard-state" = {
             "capslock" = true;
@@ -20,7 +33,7 @@
               "unlocked" = "";
             };
           };
-          "clock"= {
+          "clock" = {
             "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
             "format" = "{:%a, %d %b, %H:%M}";
           };
@@ -37,9 +50,13 @@
               "hands-free" = "";
               "headset" = "";
               "phone" = "";
-              "portable"= "";
+              "portable" = "";
               "car" = "";
-              "default" = ["" "" ""];
+              "default" = [
+                ""
+                ""
+                ""
+              ];
             };
             "on-click" = "pavucontrol";
             "min-length" = 13;
@@ -47,12 +64,21 @@
           temperature = {
             "critical-threshold" = 90;
             "format" = "{icon} {temperatureC}°C";
-            "format-icons" = [""  ""  ""  ""  ""];
+            "format-icons" = [
+              ""
+              ""
+              ""
+              ""
+              ""
+            ];
             "tooltip" = false;
           };
           backlight = {
             "format" = "{icon} {percent}%";
-            "format-icons" = ["" ""];
+            "format-icons" = [
+              ""
+              ""
+            ];
             "min-length" = 7;
           };
           battery = {
@@ -62,7 +88,13 @@
             };
             "format" = "{icon} {capacity}%";
             "format-alt" = "{icon} {time}: {power} W";
-            "format-icons" = ["" "" "" "" ""];
+            "format-icons" = [
+              ""
+              ""
+              ""
+              ""
+              ""
+            ];
           };
           tray = {
             "icon-size" = 10;

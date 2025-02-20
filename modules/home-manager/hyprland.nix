@@ -1,8 +1,4 @@
 {
-  inputs,
-  outputs,
-  lib,
-  config,
   pkgs,
   ...
 }:
@@ -69,6 +65,14 @@
       };
 
     };
+    workspace = [
+      "1, monitor:eDP-1, persistent:true"
+      "2, monitor:eDP-1, persistent:true"
+      "3, monitor:eDP-1, persistent:true"
+      "4, monitor:eDP-1, persistent:true"
+      "5, monitor:eDP-1, persistent:true"
+      "10, monitor:eDP-1, persistent:true"
+    ];
     bindm = [
       "$mod, mouse:272, movewindow"
       "$mod, mouse:273, resizewindow"
@@ -129,23 +133,15 @@
         mainBar = {
           modules-left = [
             "hyprland/workspaces"
-            "hyprland/mode"
           ];
           modules-right = [ "hyprland/language" ];
 
           "hyprland/workspaces" = {
-            all-outputs = true;
-            "persistent-workspaces" = {
-              "*" = 5;
-            };
           };
           "hyprland/language" = {
             "format" = " {}";
             "format-en" = "en";
             "format-ru" = "ру";
-          };
-          "hyprland/submap" = {
-            "format" = "<span style=\"italic\">{}</span>";
           };
         };
       };
