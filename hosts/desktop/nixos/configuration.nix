@@ -27,7 +27,7 @@
   };
   boot.blacklistedKernelModules = [ "nouveau" "iwlwifi" ];
   hardware = {
-    opengl = {
+    graphics = {
       enable = true;
     };
   };

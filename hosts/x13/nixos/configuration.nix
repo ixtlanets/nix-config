@@ -40,7 +40,7 @@
 
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
-    opengl = {
+    graphics = {
       enable = true;
     };
   };
