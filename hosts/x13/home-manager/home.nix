@@ -6,6 +6,15 @@
   dpi,
   ...
 }:
+let
+kbd-backlight = pkgs.writeShellScriptBin "kbd-backlight" ''
+    #!/usr/bin/env nix-shell
+    current=$(cat /sys/class/leds/asus::kbd_backlight/brightness)
+    max=3
+    next=$(((current + 1) % (max + 1)))
+    echo $next | tee /sys/class/leds/asus::kbd_backlight/brightness
+  '';
+in
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp6s0";
@@ -40,6 +49,9 @@
     bindl = [
       ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
       ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 1920x1200, 0x0, 1.5\""
+    ];
+    bind = [
+      "ALT, space, exec, kbd-backlight"
     ];
   };
   services.kanshi.settings = [
@@ -137,6 +149,7 @@
     asusctl
     supergfxctl
     nvtop
+    kbd-backlight
   ];
 
   xresources.properties = {
