@@ -401,5 +401,22 @@ in {
       echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
       fi
     '';
+    setupSsh = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      # Create .ssh directory with correct permissions
+      mkdir -p ~/.ssh
+      chmod 700 ~/.ssh
+
+      # Copy and set permissions for private keys
+      cp -f ${../../secrets/ssh/id_rsa} ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+      cp -f ${../../secrets/ssh/id_rsa_1} ~/.ssh/id_rsa_1
+      chmod 600 ~/.ssh/id_rsa_1
+      cp -f ${../../secrets/ssh/startspiritup-firebase-adminsdk-o9eey-c7292ac3f8.json} ~/.ssh/startspiritup-firebase-adminsdk-o9eey-c7292ac3f8.json
+      chmod 600 ~/.ssh/startspiritup-firebase-adminsdk-o9eey-c7292ac3f8.json
+
+      # Copy public keys
+      cp -f ${../../secrets/ssh/id_rsa.pub} ~/.ssh/id_rsa.pub
+      cp -f ${../../secrets/ssh/id_rsa_1.pub} ~/.ssh/id_rsa_1.pub
+    '';
   };
 }
