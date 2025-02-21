@@ -3,6 +3,9 @@
   ...
 }:
 {
+  imports = [
+    ./kbd-backlight.nix
+  ];
   home.packages = with pkgs; [
     adwaita-icon-theme
     rofi-wayland
@@ -104,6 +107,7 @@
         "SHIFT ,XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01-"
         ",XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle"
         ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+        "ALT, space, exec, kbd-backlight toggle"
       ]
       ++ (
         # workspaces
