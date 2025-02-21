@@ -14,6 +14,42 @@ kbd-backlight = pkgs.writeShellScriptBin "kbd-backlight" ''
     next=$(((current + 1) % (max + 1)))
     echo $next | tee /sys/class/leds/asus::kbd_backlight/brightness
   '';
+
+  setup-mobile-workspace = pkgs.writeShellScriptBin "setup-mobile-workspace" ''
+      ${pkgs.variety}/bin/variety --next
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:eDP-1,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 eDP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 eDP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 eDP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 eDP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 eDP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
+    '';
+
+    setup-docked-home-workspace = pkgs.writeShellScriptBin "setup-docked-home-workspace" ''
+      ${pkgs.variety}/bin/variety --next
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-1,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-1
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
+    '';
+
+    setup-docked-sg-workspace = pkgs.writeShellScriptBin "setup-docked-sg-workspace" ''
+      ${pkgs.variety}/bin/variety --next
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-2,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-2
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-2
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-2
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-2
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-2
+      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
+    '';
 in
 {
   home.sessionVariables = {
@@ -65,33 +101,13 @@ in
             scale = 1.5;
           }
         ];
-        exec = [
-          "${pkgs.variety}/bin/variety --next"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:eDP-1,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 eDP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 eDP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 eDP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 eDP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 eDP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1"
-        ];
+        exec = ["setup-mobile-workspace"];
       };
     }
     {
       profile = {
         name = "dockedHome";
-        exec = [
-          "${pkgs.variety}/bin/variety --next"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-1,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-1"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1"
-        ];
+        exec = ["setup-docked-home-workspace"];
         outputs = [
           {
             criteria = "eDP-1";
@@ -109,17 +125,7 @@ in
     {
       profile = {
         name = "dockedSG";
-        exec = [
-          "${pkgs.variety}/bin/variety --next"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-2,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-2"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-2"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-2"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-2"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-2"
-          "${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1"
-        ];
+        exec = ["setup-docked-sg-workspace"];
         outputs = [
           {
             criteria = "eDP-1";
@@ -150,6 +156,9 @@ in
     supergfxctl
     nvtop
     kbd-backlight
+    setup-mobile-workspace
+    setup-docked-home-workspace
+    setup-docked-sg-workspace
   ];
 
   xresources.properties = {
