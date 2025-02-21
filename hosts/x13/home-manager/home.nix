@@ -104,7 +104,6 @@
     asusctl
     supergfxctl
     nvtop
-    kbd-backlight
   ];
 
   xresources.properties = {
