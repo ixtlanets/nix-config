@@ -136,6 +136,7 @@ in
       ];
       userSettings = {
         "workbench.colorTheme" = "One Dark Pro";
+        "window.menuBarVisibility" = "toggle";
         # Git settings
         "git.enableSmartCommit" = true;
         "git.confirmSync" = false;
