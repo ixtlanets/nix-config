@@ -6,51 +6,6 @@
   dpi,
   ...
 }:
-let
-kbd-backlight = pkgs.writeShellScriptBin "kbd-backlight" ''
-    #!/usr/bin/env nix-shell
-    current=$(cat /sys/class/leds/asus::kbd_backlight/brightness)
-    max=3
-    next=$(((current + 1) % (max + 1)))
-    echo $next | tee /sys/class/leds/asus::kbd_backlight/brightness
-  '';
-
-  setup-mobile-workspace = pkgs.writeShellScriptBin "setup-mobile-workspace" ''
-      ${pkgs.variety}/bin/variety --next
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:eDP-1,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 eDP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 eDP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 eDP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 eDP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 eDP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
-    '';
-
-    setup-docked-home-workspace = pkgs.writeShellScriptBin "setup-docked-home-workspace" ''
-      ${pkgs.variety}/bin/variety --next
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-1,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-1
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
-    '';
-
-    setup-docked-sg-workspace = pkgs.writeShellScriptBin "setup-docked-sg-workspace" ''
-      ${pkgs.variety}/bin/variety --next
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:DP-2,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:eDP-1,persistent:true
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 1 DP-2
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 2 DP-2
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 3 DP-2
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 4 DP-2
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 5 DP-2
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 eDP-1
-    '';
-in
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlp6s0";
@@ -86,9 +41,6 @@ in
       ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
       ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 1920x1200, 0x0, 1.5\""
     ];
-    bind = [
-      "ALT, space, exec, kbd-backlight"
-    ];
   };
   services.kanshi.settings = [
     {
@@ -101,13 +53,11 @@ in
             scale = 1.5;
           }
         ];
-        exec = ["setup-mobile-workspace"];
       };
     }
     {
       profile = {
         name = "dockedHome";
-        exec = ["setup-docked-home-workspace"];
         outputs = [
           {
             criteria = "eDP-1";
@@ -125,7 +75,6 @@ in
     {
       profile = {
         name = "dockedSG";
-        exec = ["setup-docked-sg-workspace"];
         outputs = [
           {
             criteria = "eDP-1";
@@ -156,9 +105,6 @@ in
     supergfxctl
     nvtop
     kbd-backlight
-    setup-mobile-workspace
-    setup-docked-home-workspace
-    setup-docked-sg-workspace
   ];
 
   xresources.properties = {

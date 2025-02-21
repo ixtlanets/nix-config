@@ -1,7 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }: 
+{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }:
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlo1";
@@ -17,6 +17,7 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
+    ../../../modules/home-manager/kbd-backlight.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/foot.nix
@@ -39,7 +40,7 @@
     username = "nik";
     homeDirectory = "/home/nik";
   };
-  
+
   home.packages = with pkgs; [
     asusctl
     supergfxctl
