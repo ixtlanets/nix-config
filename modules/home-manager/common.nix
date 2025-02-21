@@ -124,6 +124,7 @@ in {
   ] ++ (lib.optionals isLinux [
     vpn-script
     tabbed
+    openssh
   ]);
 
   # Enable home-manager and git
@@ -417,6 +418,11 @@ in {
       # Copy public keys
       cp -f ${../../secrets/ssh/id_rsa.pub} ~/.ssh/id_rsa.pub
       cp -f ${../../secrets/ssh/id_rsa_1.pub} ~/.ssh/id_rsa_1.pub
+    '';
+    clonePasswordStore = lib.hm.dag.entryAfter ["writeBoundary"] ''
+      if [ ! -d "$HOME/.password-store" ]; then
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store"
+      fi
     '';
   };
 }
