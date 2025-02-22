@@ -121,6 +121,7 @@ in {
     ast-grep # code structural search
 
     git-crypt
+    direnv
   ] ++ (lib.optionals isLinux [
     vpn-script
     tabbed
