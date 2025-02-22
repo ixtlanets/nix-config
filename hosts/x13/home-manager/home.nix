@@ -33,9 +33,6 @@
   wayland.windowManager.hyprland.settings = {
     monitor = [
       "eDP-1,1920x1200@60.000Hz,auto,1.5"
-      "HDMI-A-1,2560x1440@144.000Hz,auto,1.6"
-      "DP-1,3840x2560@60.000Hz,auto,2.0"
-      "DP-2,3840x2560@60.000Hz,auto,2.0"
     ];
     bindl = [
       ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""

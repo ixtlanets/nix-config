@@ -68,6 +68,9 @@
       };
 
     };
+    monitor = [
+      "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
+    ];
     workspace = [
       "1, monitor:eDP-1, persistent:true"
       "2, monitor:eDP-1, persistent:true"
