@@ -1,38 +1,46 @@
-{ config, pkgs, ... }:
+{ inputs, pkgs, ... }:
 let
-vpn-script = pkgs.writeShellScriptBin "vpn" ''
-#!/usr/bin/env nix-shell
-# gen dns suffix
-DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
+  vpn-script = pkgs.writeShellScriptBin "vpn" ''
+    #!/usr/bin/env nix-shell
+    # gen dns suffix
+    DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
 
-# get list of available exit nodes
-EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+    # get list of available exit nodes
+    EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
 
 
 
-# add 'None' to the list none option
-EXIT_NODES+="\nNone"
-EXIT_NODES=$(echo -e "$EXIT_NODES")
+    # add 'None' to the list none option
+    EXIT_NODES+="\nNone"
+    EXIT_NODES=$(echo -e "$EXIT_NODES")
 
-SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+    SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
 
-# if SELECTED is empty, put None there
-if [[ -z "$SELECTED" ]]; then
-  SELECTED="None"
-fi
+    # if SELECTED is empty, put None there
+    if [[ -z "$SELECTED" ]]; then
+      SELECTED="None"
+    fi
 
-#let user select exit node with gum
-EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
-if [[ "$EXIT_NODE" == "None" ]]; then
-  sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
-else
-  sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
-fi
+    #let user select exit node with gum
+    EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
+    if [[ "$EXIT_NODE" == "None" ]]; then
+      sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+    else
+      sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
+    fi
 
-'';
-in {
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.trusted-users = [ "root" "nik" ];
+  '';
+in
+{
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+  nix.settings.trusted-users = [
+    "root"
+    "nik"
+  ];
+  nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
   # Bootloader.
   boot.loader.grub.enable = true;
@@ -70,17 +78,18 @@ in {
   programs = {
     zsh.enable = true;
     dconf.enable = true;
-    nix-ld = { # required fro vscode-server
+    nix-ld = {
+      # required fro vscode-server
       enable = true;
       libraries = with pkgs; [
         glibc
       ];
     };
   };
-  
+
   # required for  gnome systray
   services.udev.packages = with pkgs; [ gnome-settings-daemon ];
- 
+
   # Services
   services = {
     tailscale = {
@@ -94,7 +103,6 @@ in {
       ];
     };
   };
-
 
   services.dbus.enable = true;
   xdg.portal.enable = true;
@@ -120,7 +128,12 @@ in {
   users.users.nik = {
     isNormalUser = true;
     description = "Sergey Nikulin";
-    extraGroups = [ "networkmanager" "wheel" "video" "docker" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "video"
+      "docker"
+    ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keys = [
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC35qP3UeDJNWzN1ux5FY6Mnsj7KLAmRRt254vjz1Ry5SNwdLE1VhVPVnmIufyKWK5/z6g8NiPvFxXzAyKCitpSS6ahYQjKCXS9b5P3C+FPLcwcy1Ge54Fdu1qGzTeElbIm86+MSA1aQgwbzVfHQYl/TLBk7QVTJ5SdQgdBe7w3tt4hkQMhsqTue6FKF0sTF3xMcKf8B/CSmYHgFiVZsiqg+hb8sYBogIc5vsFlNfxg14UMriGh6/wOvNvZIn7IwgGB2tKGCEtS4p9PL7Vd+LHYUgwta2a/KXgH3xQEuCKDwGPJWpE4kkbSr1SNdQuGZP3Ry9Ta5TMIEgQ8n0mAD9lR nik@msi-ubuntu"
@@ -147,7 +160,6 @@ in {
     networkmanager-l2tp
   ];
 
-
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   programs.mtr.enable = true;
@@ -165,9 +177,8 @@ in {
   # Docker
 
   # virtualisation.docker.enable = true;
-  
+
   # Podman
-  
 
   virtualisation = {
     podman = {
@@ -181,7 +192,6 @@ in {
     };
   };
 
-
   services.power-profiles-daemon.enable = true;
 
   # Security options
@@ -192,19 +202,24 @@ in {
       {
         groups = [ "wheel" ];
         commands = [
-          { command = "${pkgs.tailscale}/bin/tailscale"; options = [ "SETENV" "NOPASSWD" ]; }
+          {
+            command = "${pkgs.tailscale}/bin/tailscale";
+            options = [
+              "SETENV"
+              "NOPASSWD"
+            ];
+          }
         ];
       }
     ];
   };
   # Enable hyprlock
-  security.pam.services.hyprlock = {};
+  security.pam.services.hyprlock = { };
 
   # Enable a keyring service and password UI for non-gnome environments
   # https://discourse.nixos.org/t/login-keyring-did-not-get-unlocked-hyprland/40869/8?u=smona
   services.gnome.gnome-keyring.enable = true;
   programs.seahorse.enable = true;
   security.pam.services.gdm-password.enableGnomeKeyring = true;
-
 
 }
