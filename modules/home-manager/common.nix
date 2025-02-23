@@ -1,73 +1,83 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ghostty, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  niknvim,
+  ghostty,
+  ...
+}:
 let
   isLinux = pkgs.stdenv.isLinux;
   gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
   gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
 
-vpn-script = pkgs.writeShellScriptBin "vpn" ''
-#!/usr/bin/env nix-shell
-# gen dns suffix
-DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
+  vpn-script = pkgs.writeShellScriptBin "vpn" ''
+    #!/usr/bin/env nix-shell
+    # gen dns suffix
+    DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
 
-# get list of available exit nodes
-EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+    # get list of available exit nodes
+    EXIT_NODES=$(tailscale status --json | jq '.Peer[] | select(.ExitNodeOption==true) | select(.Online==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
 
 
 
-# add 'None' to the list none option
-EXIT_NODES+="\nNone"
-EXIT_NODES=$(echo -e "$EXIT_NODES")
+    # add 'None' to the list none option
+    EXIT_NODES+="\nNone"
+    EXIT_NODES=$(echo -e "$EXIT_NODES")
 
-SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
+    SELECTED=$(tailscale status --json | jq '.Peer[] | select(.ExitNode==true) | .DNSName' | sed "s/\.$DNS_SUFFIX\.//g" | sed 's/"//g')
 
-# if SELECTED is empty, put None there
-if [[ -z "$SELECTED" ]]; then
-  SELECTED="None"
-fi
-
-#let user select exit node with gum
-EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
-if [[ "$EXIT_NODE" == "None" ]]; then
-  sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
-else
-  sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
-fi
-
-'';
-tat-script = pkgs.writeShellScriptBin "tat" ''
-#!/bin/sh
-#
-# Attach or create tmux session named the same as current directory.
-
-path_name="$(basename "$PWD" | tr . -)"
-session_name=''${1-$path_name}
-
-not_in_tmux() {
-  [ -z "$TMUX" ]
-}
-
-session_exists() {
-  tmux has-session -t "=$session_name"
-}
-
-create_detached_session() {
-  (TMUX="" tmux new-session -Ad -s "$session_name")
-}
-
-create_if_needed_and_attach() {
-  if not_in_tmux; then
-    tmux new-session -As "$session_name"
-  else
-    if ! session_exists; then
-      create_detached_session
+    # if SELECTED is empty, put None there
+    if [[ -z "$SELECTED" ]]; then
+      SELECTED="None"
     fi
-    tmux switch-client -t "$session_name"
-  fi
-}
 
-create_if_needed_and_attach
-'';
-in {
+    #let user select exit node with gum
+    EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
+    if [[ "$EXIT_NODE" == "None" ]]; then
+      sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+    else
+      sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
+    fi
+
+  '';
+  tat-script = pkgs.writeShellScriptBin "tat" ''
+    #!/bin/sh
+    #
+    # Attach or create tmux session named the same as current directory.
+
+    path_name="$(basename "$PWD" | tr . -)"
+    session_name=''${1-$path_name}
+
+    not_in_tmux() {
+      [ -z "$TMUX" ]
+    }
+
+    session_exists() {
+      tmux has-session -t "=$session_name"
+    }
+
+    create_detached_session() {
+      (TMUX="" tmux new-session -Ad -s "$session_name")
+    }
+
+    create_if_needed_and_attach() {
+      if not_in_tmux; then
+        tmux new-session -As "$session_name"
+      else
+        if ! session_exists; then
+          create_detached_session
+        fi
+        tmux switch-client -t "$session_name"
+      fi
+    }
+
+    create_if_needed_and_attach
+  '';
+in
+{
   nixpkgs = {
     # You can add overlays here
     overlays = [
@@ -89,44 +99,51 @@ in {
     TZ_LIST = "Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office";
   };
 
-  home.packages = with pkgs; [
-    ffmpeg
-    glow # markdown reader for terminal
-    portal # file transfer
-    tz # A time zone helper
-    imagemagick
-    parallel
-    nixpkgs-fmt
-    nodejs
-    bun # better than nodejs and npm
-    gam # Google workspace admin cli
-    (pkgs.python3.withPackages (p: with p; [
-      ipython
-      jupyter
-    ]))
-    imgp # fast image resizer
-    ffmpegthumbnailer
-    mediainfo
-    nsxiv
-    xdragon
-    gnupg
-    gum
-    pscale
-    tat-script
-    fd # modern find
-    du-dust # modern du
-    speedtest-rs # speedtest
-    fabric-ai
-    viu # terminal image viewer
-    ast-grep # code structural search
+  home.packages =
+    with pkgs;
+    [
+      ffmpeg
+      glow # markdown reader for terminal
+      portal # file transfer
+      tz # A time zone helper
+      imagemagick
+      parallel
+      nixpkgs-fmt
+      nodejs
+      bun # better than nodejs and npm
+      gam # Google workspace admin cli
+      (pkgs.python3.withPackages (
+        p: with p; [
+          ipython
+          jupyter
+        ]
+      ))
+      imgp # fast image resizer
+      ffmpegthumbnailer
+      mediainfo
+      nsxiv
+      xdragon
+      gnupg
+      gum
+      pscale
+      tat-script
+      fd # modern find
+      du-dust # modern du
+      speedtest-rs # speedtest
+      fabric-ai
+      viu # terminal image viewer
+      ast-grep # code structural search
 
-    git-crypt
-    direnv
-  ] ++ (lib.optionals isLinux [
-    vpn-script
-    tabbed
-    openssh
-  ]);
+      git-crypt
+      git-lfs
+      direnv
+      devenv
+    ]
+    ++ (lib.optionals isLinux [
+      vpn-script
+      tabbed
+      openssh
+    ]);
 
   # Enable home-manager and git
   programs = {
@@ -202,190 +219,190 @@ in {
         };
         opener = {
           text = [
-          {
-            run = "nvim \"$@\"";
-            block = true;
-          }
+            {
+              run = "nvim \"$@\"";
+              block = true;
+            }
           ];
           pdf = [
-          {
-            run = "zathura \"$@\"";
-            block = false;
-          }
+            {
+              run = "zathura \"$@\"";
+              block = false;
+            }
           ];
           office = [
-          {
-            run = "libreoffice \"$@\"";
-            block = false;
-          }
+            {
+              run = "libreoffice \"$@\"";
+              block = false;
+            }
           ];
           image = [
-          {
-            run = "swayimg \"$@\"";
-            block = false;
-          }
+            {
+              run = "swayimg \"$@\"";
+              block = false;
+            }
           ];
           video = [
-          {
-            run = "mpv \"$@\"";
-            block = false;
-          }
+            {
+              run = "mpv \"$@\"";
+              block = false;
+            }
           ];
         };
         open = {
           rules = [
-          {
-            name = "*.json";
-            use = "text";
-          }
-          {
-            name = "*.cpp";
-            use = "text";
-          }
-          {
-            name = "*.lua";
-            use = "text";
-          }
-          {
-            name = "*.toml";
-            use = "text";
-          }
-          {
-            name = "*.yaml";
-            use = "text";
-          }
-          {
-            name = "*.c";
-            use = "text";
-          }
-          {
-            name = "*.ts";
-            use = "text";
-          }
-          {
-            name = "*.nix";
-            use = "text";
-          }
-          {
-            name = "*.md";
-            use = "text";
-          }
-          {
-            name = "*.js";
-            use = "text";
-          }
-          {
-            name = "*.jsx";
-            use = "text";
-          }
-          {
-            name = "*.tsx";
-            use = "text";
-          }
-          {
-            name = "*.pdf";
-            use = "pdf";
-          }
-          {
-            name = "*.docx";
-            use = "office";
-          }
-          {
-            name = "*.pptx";
-            use = "office";
-          }
-          {
-            name = "*.xlsx";
-            use = "office";
-          }
-          {
-            name = "*.odt";
-            use = "office";
-          }
-          {
-            name = "*.png";
-            use = "image";
-          }
-          {
-            name = "*.jpg";
-            use = "image";
-          }
-          {
-            name = "*.jpeg";
-            use = "image";
-          }
-          {
-            name = "*.gif";
-            use = "image";
-          }
-          {
-            name = "*.svg";
-            use = "image";
-          }
-          {
-            name = "*.bmp";
-            use = "image";
-          }
-          {
-            name = "*.tiff";
-            use = "image";
-          }
-          {
-            name = "*.tif";
-            use = "image";
-          }
-          {
-            name = "*.webp";
-            use = "image";
-          }
-          {
-            name = "*.heic";
-            use = "image";
-          }
-          {
-            name = "*.heif";
-            use = "image";
-          }
-          {
-            name = "*.mp4";
-            use = "video";
-          }
-          {
-            name = "*.mkv";
-            use = "video";
-          }
-          {
-            name = "*.webm";
-            use = "video";
-          }
-          {
-            name = "*.avi";
-            use = "video";
-          }
-          {
-            name = "*.mov";
-            use = "video";
-          }
-          {
-            name = "*.wmv";
-            use = "video";
-          }
-          {
-            name = "*.flv";
-            use = "video";
-          }
-          {
-            name = "*.m4v";
-            use = "video";
-          }
-          {
-            name = "*.mpg";
-            use = "video";
-          }
-          {
-            name = "*.mpeg";
-            use = "video";
-          }
+            {
+              name = "*.json";
+              use = "text";
+            }
+            {
+              name = "*.cpp";
+              use = "text";
+            }
+            {
+              name = "*.lua";
+              use = "text";
+            }
+            {
+              name = "*.toml";
+              use = "text";
+            }
+            {
+              name = "*.yaml";
+              use = "text";
+            }
+            {
+              name = "*.c";
+              use = "text";
+            }
+            {
+              name = "*.ts";
+              use = "text";
+            }
+            {
+              name = "*.nix";
+              use = "text";
+            }
+            {
+              name = "*.md";
+              use = "text";
+            }
+            {
+              name = "*.js";
+              use = "text";
+            }
+            {
+              name = "*.jsx";
+              use = "text";
+            }
+            {
+              name = "*.tsx";
+              use = "text";
+            }
+            {
+              name = "*.pdf";
+              use = "pdf";
+            }
+            {
+              name = "*.docx";
+              use = "office";
+            }
+            {
+              name = "*.pptx";
+              use = "office";
+            }
+            {
+              name = "*.xlsx";
+              use = "office";
+            }
+            {
+              name = "*.odt";
+              use = "office";
+            }
+            {
+              name = "*.png";
+              use = "image";
+            }
+            {
+              name = "*.jpg";
+              use = "image";
+            }
+            {
+              name = "*.jpeg";
+              use = "image";
+            }
+            {
+              name = "*.gif";
+              use = "image";
+            }
+            {
+              name = "*.svg";
+              use = "image";
+            }
+            {
+              name = "*.bmp";
+              use = "image";
+            }
+            {
+              name = "*.tiff";
+              use = "image";
+            }
+            {
+              name = "*.tif";
+              use = "image";
+            }
+            {
+              name = "*.webp";
+              use = "image";
+            }
+            {
+              name = "*.heic";
+              use = "image";
+            }
+            {
+              name = "*.heif";
+              use = "image";
+            }
+            {
+              name = "*.mp4";
+              use = "video";
+            }
+            {
+              name = "*.mkv";
+              use = "video";
+            }
+            {
+              name = "*.webm";
+              use = "video";
+            }
+            {
+              name = "*.avi";
+              use = "video";
+            }
+            {
+              name = "*.mov";
+              use = "video";
+            }
+            {
+              name = "*.wmv";
+              use = "video";
+            }
+            {
+              name = "*.flv";
+              use = "video";
+            }
+            {
+              name = "*.m4v";
+              use = "video";
+            }
+            {
+              name = "*.mpg";
+              use = "video";
+            }
+            {
+              name = "*.mpeg";
+              use = "video";
+            }
           ];
         };
       };
@@ -397,13 +414,13 @@ in {
   };
 
   home.activation = {
-    importGpgKeys = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    importGpgKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.userEmail}"; then
       echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
       echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
       fi
     '';
-    setupSsh = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    setupSsh = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       # Create .ssh directory with correct permissions
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
@@ -420,18 +437,18 @@ in {
       cp -f ${../../secrets/ssh/id_rsa.pub} ~/.ssh/id_rsa.pub
       cp -f ${../../secrets/ssh/id_rsa_1.pub} ~/.ssh/id_rsa_1.pub
     '';
-    clonePasswordStore = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    clonePasswordStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "$HOME/.password-store" ]; then
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store"
       fi
     '';
-    cloneOrgStore = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    cloneOrgStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "$HOME/org" ]; then
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/org.git "$HOME/org"
       fi
     '';
-    closeGitProjects = lib.hm.dag.entryAfter ["writeBoundary"] ''
-      if [ -d "$HOME/pro" ]; then
+    closeGitProjects = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      if [ ! -d "$HOME/pro" ]; then
       mkdir -p "$HOME/pro/GR"
       mkdir -p "$HOME/pro/verbatoria"
       mkdir -p "$HOME/pro/loktar"
@@ -449,5 +466,6 @@ in {
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/detector.git "$HOME/pro/loktar/detector"
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@loktar.gitlab.yandexcloud.net:loktar/drone-detector.git "$HOME/pro/loktar/drone-detector"
       fi
+    '';
   };
 }
