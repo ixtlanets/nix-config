@@ -174,10 +174,16 @@ in
         "vim.handleKeys" = {
           "<C-a>" = false;
           "<C-f>" = false;
+          "<C-b>" = false;
+          "<C-p>" = false;
         };
         "extensions.experimental.affinity" = {
           "vscodevim.vim" = 1;
         };
+        "editor.fontFamily" = "Hack Nerd Font";
+        "editor.fontSize" = 16;
+        "terminal.integrated.fontFamily" = "Hack Nerd Font";
+        "terminal.integrated.fontSize" = 16;
       };
     };
     browserpass = {
