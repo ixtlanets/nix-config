@@ -1,4 +1,9 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  lib,
+  ...
+}:
 let
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
     #!/usr/bin/env nix-shell
@@ -56,6 +61,9 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+
+  # disable rpfilter, since it'll be blocking Wireguard traffic
+  networking.firewall.checkReversePath = lib.mkForce false;
 
   # Set your time zone.
   time.timeZone = "Europe/Moscow";
