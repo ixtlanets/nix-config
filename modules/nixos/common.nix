@@ -133,6 +133,7 @@ in
       "wheel"
       "video"
       "docker"
+      "vboxusers"
     ];
     shell = pkgs.zsh;
     openssh.authorizedKeys.keys = [
@@ -181,6 +182,13 @@ in
   # Podman
 
   virtualisation = {
+    # Ebable virtualbox
+    virtualbox.host = {
+      enable = true;
+      enableExtensionPack = true;
+      enableKvm = true;
+      addNetworkInterface = false;
+    };
     podman = {
       enable = true;
 
