@@ -1,7 +1,16 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ inputs, outputs, lib, config, pkgs, niknvim, dpi, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  niknvim,
+  dpi,
+  ...
+}:
 {
   home.sessionVariables = {
     WIFI_INTERFACE = "wlo1";
@@ -18,6 +27,7 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/kbd-backlight.nix
+    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/foot.nix
@@ -30,8 +40,8 @@
       "eDP-1,2880x1800@60.000Hz,auto,2.0"
     ];
     bindl = [
-    ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
-    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 2880x1800@60.000Hz, 0x0, 2\""
+      ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
+      ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 2880x1800@60.000Hz, 0x0, 2\""
     ];
   };
   home = {
@@ -49,7 +59,6 @@
   xresources.properties = {
     "Xft.dpi" = dpi;
   };
-
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "24.11";
