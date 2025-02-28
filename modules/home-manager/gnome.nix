@@ -1,4 +1,8 @@
-{ inputs, outputs, lib, config, pkgs, ... }: 
+{
+  lib,
+  pkgs,
+  ...
+}:
 let
   mkTuple = lib.hm.gvariant.mkTuple;
 in
@@ -26,11 +30,26 @@ in
       show-battery-percentage = true;
     };
     "org/gnome/desktop/input-sources" = {
-      sources = [ (mkTuple [ "xkb" "us" ]) (mkTuple [ "xkb" "ru" ]) ];
-      xkb-options = [ "grp:win_space_toggle" "grp:win_space_toggle" ];
+      sources = [
+        (mkTuple [
+          "xkb"
+          "us"
+        ])
+        (mkTuple [
+          "xkb"
+          "ru"
+        ])
+      ];
+      xkb-options = [
+        "grp:win_space_toggle"
+        "grp:win_space_toggle"
+      ];
     };
     "org/gnome/desktop/wm/keybindings" = {
-      close = [ "<Super>q" "<Alt>F4" ];
+      close = [
+        "<Super>q"
+        "<Alt>F4"
+      ];
       maximize = [ "<Super>Up" ];
       unmaximize = [ "<Super>Down" ];
       toggle-fullscreen = [ "<Super>f" ];
@@ -95,10 +114,15 @@ in
     "org/gnome/shell/world-clocks" = {
       locations = "[<(uint32 2, <('San Francisco', 'KOAK', true, [(0.65832848982162007, -2.133408063190589)], [(0.659296885757089, -2.1366218601153339)])>)>, <(uint32 2, <('New York', 'KNYC', true, [(0.71180344078725644, -1.2909618758762367)], [(0.71059804659265924, -1.2916478949920254)])>)>, <(uint32 2, <('London', 'EGWU', true, [(0.89971722940307675, -0.007272211034407213)], [(0.89884456477707964, -0.0020362232784242244)])>)>]";
     };
+    "org/gnome/desktop/peripherals/keyboard" = {
+      repeat = lib.hm.gvariant.mkUint32 30;
+      delay = lib.hm.gvariant.mkUint32 250;
+      repeat-enabled = true;
+    };
 
   };
   home.file.".config/electron-flags.conf".text = ''
---enable-features=WaylandWindowDecorations
---ozone-platform-hint=auto
+    --enable-features=WaylandWindowDecorations
+    --ozone-platform-hint=auto
   '';
 }
