@@ -27,7 +27,7 @@
     xserver = {
       enable = true;
       dpi = dpi;
-      displayManager.gdm.enable = false;
+      displayManager.gdm.enable = true;
       desktopManager.gnome.enable = true;
     };
   };
