@@ -50,6 +50,7 @@ in
       '';
     }))
     ghostty.packages.x86_64-linux.default
+    warp-terminal # another fancy terminal. with AI features
   ];
 
   catppuccin.flavor = "mocha";
