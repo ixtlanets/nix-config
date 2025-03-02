@@ -138,6 +138,7 @@ in
       git-lfs
       direnv
       devenv
+      marker-pdf
     ]
     ++ (lib.optionals isLinux [
       vpn-script
