@@ -29,7 +29,6 @@
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
-    ../../../modules/home-manager/ollama.nix
   ];
   home = {
     username = "nik";

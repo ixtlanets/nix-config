@@ -36,6 +36,10 @@
   programs.ssh.askPassword = pkgs.lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
   services.hardware.bolt.enable = true;
+  services.ollama = {
+    enable = true;
+    acceleration = "rocm";
+  };
 
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
