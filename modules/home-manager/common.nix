@@ -178,10 +178,14 @@ in
         init.defaultBranch = "master";
       };
     };
+    direnv = {
+      enable = true;
+    };
     zsh = {
       enable = true;
       autosuggestion.enable = true;
       enableCompletion = true;
+      defaultKeymap = "emacs";
       syntaxHighlighting.enable = true;
       history = {
         expireDuplicatesFirst = true;
