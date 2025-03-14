@@ -197,8 +197,6 @@
                 hardware.nvidia = {
                   open = true;
                   prime = {
-                    offload.enable = false;
-                    sync.enable = true;
                     amdgpuBusId = "PCI:56:0:0";
                     nvidiaBusId = "PCI:10:0:0";
                   };
