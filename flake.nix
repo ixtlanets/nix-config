@@ -32,6 +32,8 @@
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
+
+    hyprland.url = "github:hyprwm/Hyprland";
   };
 
   outputs =
@@ -192,11 +194,14 @@
               hardware.nixosModules.common-gpu-amd
               hardware.nixosModules.common-gpu-nvidia
               {
-                hardware.nvidia.prime = {
-                  offload.enable = false;
-                  sync.enable = true;
-                  amdgpuBusId = "PCI:56:0:0";
-                  nvidiaBusId = "PCI:10:0:0";
+                hardware.nvidia = {
+                  open = true;
+                  prime = {
+                    offload.enable = false;
+                    sync.enable = true;
+                    amdgpuBusId = "PCI:56:0:0";
+                    nvidiaBusId = "PCI:10:0:0";
+                  };
                 };
               }
               hardware.nixosModules.common-pc-laptop

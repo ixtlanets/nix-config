@@ -3,7 +3,7 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 {
-  config,
+  inputs,
   pkgs,
   lib,
   dpi,
@@ -49,7 +49,14 @@
     enable = true;
     remotePlay.openFirewall = true;
   };
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    # set the flake package
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    # make sure to also set the portal package, so that they are in sync
+    portalPackage =
+      inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
+  };
   environment.systemPackages = [
     pkgs.xf86_input_wacom
     pkgs.ryzenadj # precisely adjust power settings on Ryzen CPUs

@@ -12,7 +12,6 @@
     grimblast # screenshot utility based on grim
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
-    polkit-kde-agent
     pavucontrol # volume control
   ];
   wayland.windowManager.hyprland.enable = true;
