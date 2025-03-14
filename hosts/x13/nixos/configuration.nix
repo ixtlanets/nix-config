@@ -38,6 +38,9 @@
     asusd.enable = true;
   };
 
+  services.ollama = {
+    enable = true;
+  };
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
     graphics = {
