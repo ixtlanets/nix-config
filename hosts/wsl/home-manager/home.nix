@@ -1,4 +1,7 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../../../modules/home-manager/starship.nix
