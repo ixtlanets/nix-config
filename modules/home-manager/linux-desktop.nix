@@ -1,7 +1,6 @@
 {
   pkgs,
   dpi,
-  ghostty,
   ...
 }:
 let
@@ -12,7 +11,6 @@ in
 {
 
   home.packages = with pkgs; [
-    _1password
     browserpass
     telegram-desktop
     moonlight-qt
@@ -44,12 +42,6 @@ in
       '';
     }))
 
-    (_1password-gui.overrideAttrs (oldAttrs: {
-      postInstall = ''
-        wrapProgram $out/share/1password/1password --add-flags "--ozone-platform=wayland --enable-wayland-ime"
-      '';
-    }))
-    ghostty.packages.x86_64-linux.default
     warp-terminal # another fancy terminal. with AI features
   ];
 

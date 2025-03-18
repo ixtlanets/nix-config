@@ -217,7 +217,13 @@ in
     };
     docker.enable = true;
   };
-  programs.virt-manager.enable = true;
+  programs = {
+    _1password-gui = {
+      enable = true;
+      polkitPolicyOwners = [ "nik" ];
+    };
+    virt-manager.enable = true;
+  };
 
   services.power-profiles-daemon.enable = true;
 
