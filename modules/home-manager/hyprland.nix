@@ -78,6 +78,26 @@
       "5, monitor:eDP-1, persistent:true"
       "10, monitor:eDP-1, persistent:true"
     ];
+    windowrulev2 = [
+      "float, class:^(1Password)$"
+      "stayfocused,title:^(Quick Access — 1Password)$"
+      "dimaround,title:^(Quick Access — 1Password)$"
+      "noanim,title:^(Quick Access — 1Password)$"
+
+      "float, class:^(org.gnome.*)$"
+      "float, class:^(pavucontrol|com.saivert.pwvucontrol)$"
+      # make pop-up file dialogs floating, centred, and pinned
+      "float, title:(Open|Progress|Save File)"
+      "center, title:(Open|Progress|Save File)"
+      "pin, title:(Open|Progress|Save File)"
+      "float, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
+      "center, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
+      "pin, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
+
+      # throw sharing indicators away
+      "workspace special silent, title:^(Firefox — Sharing Indicator)$"
+      "workspace special silent, title:^(.*is sharing (your screen|a window)\.)$"
+    ];
     bindm = [
       "$mod, mouse:272, movewindow"
       "$mod, mouse:273, resizewindow"
@@ -186,9 +206,19 @@
     };
   };
 
-  home.sessionVariables.NIXOS_OZONE_WL = "1";
-  home.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1";
-  home.sessionVariables.ELECTRON_OZONE_PLATFORM_HINT = "auto";
+  home.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    WLR_NO_HARDWARE_CURSORS = "1";
+    _JAVA_AWT_WM_NONREPARENTING = "1";
+    CLUTTER_BACKEND = "wayland";
+    GDK_BACKEND = "wayland";
+    MOZ_ENABLE_WAYLAND = "1";
+    QT_QPA_PLATFORM = "wayland";
+    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
+    SDL_VIDEODRIVER = "wayland";
+    XDG_SESSION_TYPE = "wayland";
+    ELECTRON_OZONE_PLATFORM_HINT = "auto";
+  };
   services.network-manager-applet.enable = true;
   services.hypridle = {
     enable = true;
