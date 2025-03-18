@@ -1,4 +1,7 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../../../modules/home-manager/starship.nix
@@ -6,17 +9,9 @@
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
-    ../../../modules/home-manager/ollama.nix
   ];
 
   fonts.fontconfig.enable = true;
-
-
-  programs = {
-    emacs = {
-      package = lib.mkForce pkgs.emacs29;
-    };
-  };
 
   home = {
     username = "nik";
@@ -37,6 +32,31 @@
     wslu
     vanilla-dmz
   ];
+
+  catppuccin.flavor = "mocha";
+  catppuccin.enable = true;
+  catppuccin.nvim.enable = false;
+
+  gtk.enable = true;
+  gtk.iconTheme = {
+    name = "Papirus-Dark";
+    package = pkgs.catppuccin-papirus-folders.override {
+      flavor = "mocha";
+      accent = "maroon";
+    };
+  };
+  qt.enable = true;
+  qt.style.name = "kvantum";
+  qt.platformTheme.name = "kvantum";
+  home.pointerCursor = {
+    name = "Bibata-Original-Ice";
+    package = pkgs.bibata-cursors;
+    gtk.enable = true;
+    x11.enable = true;
+    x11.defaultCursor = "Bibata-Original-Ice";
+    size = 12; # Since I'm using 200% scaling on my monitor
+
+  };
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "24.11";
 }
