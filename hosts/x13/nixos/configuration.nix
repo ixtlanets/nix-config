@@ -25,18 +25,6 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "x13"; # Define your hostname.
   services.hardware.bolt.enable = true;
-  # Configure keymap in X11
-
-  services = {
-    xserver = {
-      enable = true;
-      dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-
-    };
-    asusd.enable = true;
-  };
 
   services.ollama = {
     enable = true;

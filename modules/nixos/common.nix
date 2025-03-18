@@ -113,7 +113,8 @@ in
   };
 
   services.dbus.enable = true;
-  xdg.portal.enable = true;
+  programs.hyprland.enable = true;
+  xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -166,7 +167,6 @@ in
     gum
     podman-compose
     vpn-script
-    xdg-desktop-portal-hyprland
     networkmanager-l2tp
   ];
 

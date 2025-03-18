@@ -186,7 +186,6 @@
               catppuccin.nixosModules.catppuccin
               nur.modules.nixos.default
               ./hosts/x13/nixos/configuration.nix
-              ./modules/nixos/laptop.nix
               disko.nixosModules.disko
               ./hosts/x13/nixos/disko-config.nix
               hardware.nixosModules.common-cpu-amd

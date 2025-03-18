@@ -119,14 +119,19 @@ in
             ];
             "min-length" = 7;
           };
-          battery = {
-            "states" = {
-              "warning" = 25;
-              "critical" = 10;
+          "battery" = {
+            states = {
+              good = 95;
+              warning = 20;
+              critical = 10;
             };
-            "format" = "{icon} {capacity}%";
-            "format-alt" = "{icon} {time}: {power} W";
-            "format-icons" = [
+            format = "{capacity}% {icon}";
+            format-charging = "{capacity}% ";
+            format-plugged = "";
+            tooltip-format = "{time} ({capacity}%)";
+            format-alt = "{time} {icon} : {power} W";
+            format-full = "";
+            format-icons = [
               ""
               ""
               ""
@@ -140,14 +145,14 @@ in
           };
           "custom/workspace-control" = {
             "exec" = "${pkgs.writeShellScript "workspace-status" ''
-                monitors=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[].name')
-                count=$(echo "$monitors" | wc -l)
-                if [ "$count" -gt 1 ]; then
-                      echo '{"text": "", "class": "multi-monitor"}'
-                    else
-                      echo '{"text": "", "class": "single-monitor"}'
-                    fi
-              ''}";
+              monitors=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[].name')
+              count=$(echo "$monitors" | wc -l)
+              if [ "$count" -gt 1 ]; then
+                    echo '{"text": "", "class": "multi-monitor"}'
+                  else
+                    echo '{"text": "", "class": "single-monitor"}'
+                  fi
+            ''}";
             "return-type" = "json";
             "interval" = 2;
             "on-click" = "${setup-workspace}/bin/setup-workspace";
