@@ -70,11 +70,11 @@
     menuExtraClock.ShowDate = 1;
     menuExtraClock.ShowDayOfMonth = true;
     menuExtraClock.ShowDayOfWeek = true;
-    spaces.spans-displays = true; # one space spans across all physical displays. aerospace recommend this setting
+    spaces.spans-displays = false;
     universalaccess.reduceMotion = false; # less animations
   };
 
-  security.pam.enableSudoTouchIdAuth = true; # Enable sudo authentication with Touch ID
+  security.pam.services.sudo_local.touchIdAuth = true; # Enable sudo authentication with Touch ID
 
   # programms installed by homebrew
   homebrew = {

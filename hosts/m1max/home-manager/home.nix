@@ -117,7 +117,24 @@ in
     src = ../../../dotfiles/skhdrc;
     inherit (pkgs) alacritty;
   };
-
+  programs = {
+    chromium = {
+      enable = true;
+      package = pkgs.brave;
+      extensions = [
+        { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
+        { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
+        { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
+        { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
+        { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
+        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
+        { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
+        { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution
+        { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
+        { id = "edibdbjcniadpccecjdfdjjppcpchdlm"; } # I still don't care about cookies
+      ];
+    };
+  };
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
