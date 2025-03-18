@@ -24,14 +24,13 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "um790pro"; # Define your hostname.
 
-  services = {
-    xserver = {
-      enable = true;
-      dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-    };
-  };
+  # Disable sleep on idle
+  services.logind.extraConfig = ''
+    IdleAction=ignore
+    HandleSuspendKey=ignore
+    HandleHibernateKey=ignore
+    HandleLidSwitch=ignore
+  '';
 
   programs.ssh.askPassword = pkgs.lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
