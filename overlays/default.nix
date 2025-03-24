@@ -8,6 +8,7 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
+    tawm = inputs.tawm.packages.${prev.system}.default;
     # example = prev.example.overrideAttrs (oldAttrs: rec {
     # ...
     # });
@@ -21,4 +22,5 @@
       config.allowUnfree = true;
     };
   };
+
 }

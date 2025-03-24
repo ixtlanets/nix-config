@@ -1,7 +1,15 @@
-{ inputs, outputs, lib, config, pkgs, dpi, ... }: 
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  dpi,
+  ...
+}:
 let
   DPI = builtins.toString dpi;
-  polybar_height = (builtins.toString(dpi * 0.2));
+  polybar_height = (builtins.toString (dpi * 0.2));
 in
 {
   home.packages = with pkgs; [
@@ -12,16 +20,17 @@ in
   home.file.".config/i3/config".text = builtins.readFile ../../dotfiles/i3;
   services.picom = {
     enable = true;
-    shadow = true;
     backend = "glx";
-    inactiveOpacity = 0.8;
+    inactiveOpacity = 0.9;
     vSync = true;
   };
   services.polybar = {
     enable = true;
     package = pkgs.polybarFull;
     script = "polybar mainbar-i3 &";
-    extraConfig = builtins.replaceStrings ["DPI" "HEIGHT"] [DPI polybar_height] (builtins.readFile ../../dotfiles/polybar.ini);
+    extraConfig = builtins.replaceStrings [ "DPI" "HEIGHT" ] [ DPI polybar_height ] (
+      builtins.readFile ../../dotfiles/polybar.ini
+    );
   };
   services.dunst = {
     enable = true;

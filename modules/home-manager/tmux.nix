@@ -7,21 +7,6 @@
   ...
 }:
 {
-  nixpkgs = {
-    overlays = [
-      (final: prev: {
-        tmuxPluginsDracula = final.tmuxPlugins.dracula.overrideAttrs (oldAttrs: {
-          version = "2.2.0";
-          src = pkgs.fetchFromGitHub {
-            owner = "dracula";
-            repo = "tmux";
-            rev = "v2.2.0";
-            sha256 = "9p+KO3/SrASHGtEk8ioW+BnC4cXndYx4FL0T70lKU2w=";
-          };
-        });
-      })
-    ];
-  };
   programs.tmux = {
     enable = true;
     clock24 = true;
@@ -33,7 +18,7 @@
       pkgs.tmuxPlugins.urlview
       pkgs.tmuxPlugins.prefix-highlight
       {
-        plugin = pkgs.tmuxPluginsDracula;
+        plugin = pkgs.tmuxPlugins.dracula;
         extraConfig = ''
           set -g @dracula-show-fahrenheit false
           set -g @dracula-plugins "battery cpu-usage ram-usage time"

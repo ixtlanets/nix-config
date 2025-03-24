@@ -21,7 +21,6 @@ in
     nerd-fonts.sauce-code-pro
     nerd-fonts.hack
     monaspace
-    wl-clipboard
     variety
     prismlauncher
     zathura
@@ -30,19 +29,13 @@ in
     pamixer
     wireplumber
     discord
-    swaybg
-    swayimg
     mpv
     liberation_ttf
     font-awesome
     zoom-us
-    (obsidian.overrideAttrs (oldAttrs: {
-      postInstall = ''
-        wrapProgram $out/bin/obsidian --add-flags "--ozone-platform=wayland --enable-wayland-ime"
-      '';
-    }))
-
+    obsidian
     warp-terminal # another fancy terminal. with AI features
+    wl-clipboard
   ];
 
   catppuccin.flavor = "mocha";
@@ -104,7 +97,13 @@ in
     vscode = {
       enable = true;
 
-      package = pkgs.vscode.fhsWithPackages (ps: with ps; [ zlib openssl.dev pkg-config ]);
+      package = pkgs.vscode.fhsWithPackages (
+        ps: with ps; [
+          zlib
+          openssl.dev
+          pkg-config
+        ]
+      );
       enableUpdateCheck = false;
       mutableExtensionsDir = false;
       extensions = with pkgs.vscode-extensions; [
@@ -144,22 +143,31 @@ in
         "vim.hlsearch" = true;
         "vim.insertModeKeyBindings" = [
           {
-            before = ["j" "j"];
-            after = ["<Esc>"];
+            before = [
+              "j"
+              "j"
+            ];
+            after = [ "<Esc>" ];
           }
         ];
         "vim.normalModeKeyBindingsNonRecursive" = [
           {
-            before = ["<leader>" "d"];
-            after = ["d" "d"];
+            before = [
+              "<leader>"
+              "d"
+            ];
+            after = [
+              "d"
+              "d"
+            ];
           }
           {
-            before = ["<C-n>"];
-            commands = [":nohl"];
+            before = [ "<C-n>" ];
+            commands = [ ":nohl" ];
           }
           {
-            before = ["K"];
-            commands = ["lineBreakInsert"];
+            before = [ "K" ];
+            commands = [ "lineBreakInsert" ];
             silent = true;
           }
         ];
@@ -285,9 +293,6 @@ in
     };
     chromium = {
       enable = true;
-      commandLineArgs = [
-        "--ozone-platform-hint=auto"
-      ];
       extensions = [
         { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
         { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
@@ -337,9 +342,6 @@ in
     gtk.enable = true;
     x11.enable = true;
     x11.defaultCursor = "Bibata-Original-Ice";
-    hyprcursor.enable = true;
-    hyprcursor.size = 24;
-    size = 24;
-
+    size = 32;
   };
 }

@@ -34,6 +34,12 @@
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
 
     hyprland.url = "github:hyprwm/Hyprland";
+
+    plasma-manager = {
+      url = "github:nix-community/plasma-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
   outputs =
@@ -41,6 +47,7 @@
       self,
       nixpkgs,
       home-manager,
+      plasma-manager,
       hardware,
       nur,
       darwin,
@@ -126,6 +133,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/x1carbon/home-manager/home.nix

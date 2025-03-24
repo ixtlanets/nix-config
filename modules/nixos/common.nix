@@ -57,7 +57,7 @@ in
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
   # Use latest kernel
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_zen;
 
   # Enable networking
   networking.networkmanager.enable = true;
@@ -95,8 +95,23 @@ in
     };
   };
 
-  # required for  gnome systray
-  services.udev.packages = with pkgs; [ gnome-settings-daemon ];
+  services = {
+    desktopManager.plasma6.enable = true;
+    displayManager = {
+      sddm = {
+        enable = true;
+        wayland.enable = true;
+        settings = {
+          Theme = {
+            CursorTheme = "Bibata-Modern-Ice";
+          };
+        };
+      };
+    };
+    xserver = {
+      enable = true;
+    };
+  };
 
   # Services
   services = {
@@ -113,7 +128,6 @@ in
   };
 
   services.dbus.enable = true;
-  programs.hyprland.enable = true;
   xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
 
   # Enable CUPS to print documents.
@@ -246,13 +260,5 @@ in
       }
     ];
   };
-  # Enable hyprlock
-  security.pam.services.hyprlock = { };
-
-  # Enable a keyring service and password UI for non-gnome environments
-  # https://discourse.nixos.org/t/login-keyring-did-not-get-unlocked-hyprland/40869/8?u=smona
-  services.gnome.gnome-keyring.enable = true;
-  programs.seahorse.enable = true;
-  security.pam.services.gdm-password.enableGnomeKeyring = true;
 
 }

@@ -19,73 +19,14 @@
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
-    ../../../modules/home-manager/kanshi.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/hyprland.nix
-    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/kde.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
   ];
 
-  wayland.windowManager.hyprland.settings = {
-    monitor = [
-      "eDP-1,1920x1200@60.000Hz,auto,1.5"
-    ];
-    bindl = [
-      ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
-      ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 1920x1200, 0x0, 1.5\""
-    ];
-  };
-  services.kanshi.settings = [
-    {
-      profile = {
-        name = "mobile";
-        outputs = [
-          {
-            criteria = "eDP-1";
-            mode = "1920x1200@60.000Hz";
-            scale = 1.5;
-          }
-        ];
-      };
-    }
-    {
-      profile = {
-        name = "dockedHome";
-        outputs = [
-          {
-            criteria = "eDP-1";
-            mode = "1920x1200@60.000Hz";
-            scale = 1.5;
-          }
-          {
-            criteria = "DP-1";
-            mode = "2560x1440@144.000Hz";
-            scale = 1.6;
-          }
-        ];
-      };
-    }
-    {
-      profile = {
-        name = "dockedSG";
-        outputs = [
-          {
-            criteria = "eDP-1";
-            mode = "1920x1200@60.000Hz";
-            scale = 1.5;
-          }
-          {
-            criteria = "DP-2";
-            mode = "3840x2560@60.000Hz";
-            scale = 2.0;
-          }
-        ];
-      };
-    }
-  ];
   dconf.settings = {
     "org/gnome/desktop/interface" = {
       text-scaling-factor = 1.0;
