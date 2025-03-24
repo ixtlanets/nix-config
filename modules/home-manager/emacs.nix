@@ -35,7 +35,7 @@ in
   programs = {
     emacs = {
       enable = true;
-      package = pkgs.emacs;
+      package = pkgs.emacs-pgtk;
       extraPackages =
         epkgs: with epkgs; [
           use-package
