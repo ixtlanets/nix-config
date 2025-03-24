@@ -17,14 +17,6 @@
 
   # Configure keymap in X11
   
-  services = {
-    xserver = {
-      enable = true;
-      dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-    };
-  };
   boot.blacklistedKernelModules = [ "nouveau" "iwlwifi" ];
   hardware = {
     graphics = {

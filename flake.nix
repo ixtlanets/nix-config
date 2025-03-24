@@ -176,6 +176,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/x1extreme/home-manager/home.nix
@@ -225,6 +226,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/x13/home-manager/home.nix
@@ -264,6 +266,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/um960pro/home-manager/home.nix
@@ -301,6 +304,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/zenbook/home-manager/home.nix
@@ -340,6 +344,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/matebook/home-manager/home.nix
@@ -374,6 +379,7 @@
                       ghostty
                       ;
                   };
+                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeManagerModules.catppuccin
                     ./hosts/desktop/home-manager/home.nix
@@ -383,38 +389,6 @@
             ];
           };
 
-        vmmac =
-          let
-            dpi = 192;
-          in
-          nixpkgs.lib.nixosSystem {
-            specialArgs = { inherit inputs outputs dpi; };
-            modules = [
-              catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
-              # > Our main nixos configuration file <
-              ./hosts/vmmac/nixos/configuration.nix
-              home-manager.nixosModules.home-manager
-              {
-                home-manager = {
-                  useUserPackages = true;
-                  extraSpecialArgs = {
-                    inherit
-                      outputs
-                      nur
-                      niknvim
-                      dpi
-                      ghostty
-                      ;
-                  };
-                  users.nik.imports = [
-                    catppuccin.homeManagerModules.catppuccin
-                    ./hosts/vmmac/home-manager/home.nix
-                  ];
-                };
-              }
-            ];
-          };
       };
       darwinConfigurations.m1max = darwin.lib.darwinSystem {
         specialArgs = { inherit inputs outputs darwin; };

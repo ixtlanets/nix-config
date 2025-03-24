@@ -23,14 +23,6 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
 
-  services = {
-    xserver = {
-      enable = true;
-      dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-    };
-  };
   services.hardware.bolt.enable = true;
   services = {
     asusd.enable = true;

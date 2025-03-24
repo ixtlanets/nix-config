@@ -11,18 +11,8 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/sway.nix
-    ../../../modules/home-manager/kanshi.nix
+    ../../../modules/home-manager/kde.nix
   ];
-  wayland.windowManager.hyprland.settings = {
-    monitor = [
-      "eDP-1,3120x2080@90.000Hz,auto,3.0"
-    ];
-    bindl = [
-    ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
-    ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, ,3120x2080@90.000Hz, 0x0, 3\""
-    ];
-  };
 
   home = {
     username = "nik";
