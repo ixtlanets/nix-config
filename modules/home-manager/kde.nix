@@ -202,6 +202,7 @@
 
       kwin = {
         "Expose" = "Meta+,";
+        "Overview" = "Meta+;";
         "Window Close" = "Meta+W";
         "Window Maximize" = "Meta+Up";
         "Show Desktop" = "Meta+Down";
