@@ -2,6 +2,9 @@
 {
   home.stateVersion = "24.11";
 
+  home.packages = with pkgs; [
+    rofi-wayland
+  ];
   programs.plasma = {
     enable = true;
 
@@ -9,7 +12,7 @@
     # Some high-level settings:
     #
     workspace = {
-      clickItemTo = "open"; # If you liked the click-to-open default from plasma 5
+      clickItemTo = "select"; # clicking item selects it
       lookAndFeel = "org.kde.breezedark.desktop";
       cursor = {
         theme = "Bibata-Modern-Ice";
@@ -27,10 +30,17 @@
       repeatRate = 30;
     };
 
-    hotkeys.commands."launch-konsole" = {
-      name = "Launch Terminal";
-      key = "Meta+Shift+Return";
-      command = "konsole";
+    hotkeys.commands = {
+      "launch-konsole" = {
+        name = "Launch Terminal";
+        key = "Meta+Shift+Return";
+        command = "alacritty";
+      };
+      "rofi" = {
+        name = "Rofi";
+        key = "Meta+D";
+        command = "rofi -show run";
+      };
     };
 
     fonts = {
@@ -59,19 +69,17 @@
               };
             };
           }
-          # Adding configuration to the widgets can also for example be used to
-          # pin apps to the task-manager, which this example illustrates by
-          # pinning dolphin and konsole to the task-manager by default with widget-specific options.
           {
-            iconTasks = {
-              launchers = [
-                "applications:org.kde.dolphin.desktop"
-                "applications:org.kde.konsole.desktop"
-              ];
+            name = "org.kde.plasma.pager";
+            config = {
+              General = {
+                displayedText = "Number";
+              };
             };
           }
           # If no configuration is needed, specifying only the name of the
           # widget will add them with the default configuration.
+          "org.kde.plasma.icontasks"
           "org.kde.plasma.marginsseparator"
           # If you need configuration for your widget, instead of specifying the
           # the keys and values directly using the config attribute as shown
@@ -99,31 +107,22 @@
             digitalClock = {
               calendar.firstDayOfWeek = "monday";
               time.format = "24h";
+              timeZone = {
+                selected = [
+                  "Local"
+                  "Europe/Moscow"
+                  "Europe/London"
+                  "America/New_York"
+                  "America/Los_Angeles"
+                ];
+                lastSelected = "Local";
+                changeOnScroll = true;
+                format = "city";
+              };
             };
           }
         ];
-      }
-    ];
-
-    window-rules = [
-      {
-        description = "Dolphin";
-        match = {
-          window-class = {
-            value = "dolphin";
-            type = "substring";
-          };
-          window-types = [ "normal" ];
-        };
-        apply = {
-          noborder = {
-            value = true;
-            apply = "force";
-          };
-          # `apply` defaults to "apply-initially"
-          maximizehoriz = true;
-          maximizevert = true;
-        };
+        height = 32;
       }
     ];
 
@@ -169,8 +168,31 @@
         ];
       };
 
+      plasmashell = {
+        "activate task manager entry 1" = [ ];
+        "activate task manager entry 2" = [ ];
+        "activate task manager entry 3" = [ ];
+        "activate task manager entry 4" = [ ];
+        "activate task manager entry 5" = [ ];
+        "activate task manager entry 6" = [ ];
+        "activate task manager entry 7" = [ ];
+        "activate task manager entry 8" = [ ];
+        "activate task manager entry 9" = [ ];
+        "activate task manager entry 10" = [ ];
+      };
+
       kwin = {
         "Expose" = "Meta+,";
+        "Window Close" = "Meta+W";
+        "Window Maximize" = "Meta+Up";
+        "Show Desktop" = "Meta+Down";
+        "Switch to Desktop 1" = "Meta+1";
+        "Switch to Desktop 2" = "Meta+2";
+        "Switch to Desktop 3" = "Meta+3";
+        "Switch to Desktop 4" = "Meta+4";
+        "Switch to Desktop 5" = "Meta+5";
+        "Switch One Desktop to the Left" = "Meta+Ctrl+Left";
+        "Switch One Desktop to the Right" = "Meta+Ctrl+Right";
       };
     };
 
@@ -185,6 +207,7 @@
         # Forces kde to not change this value (even through the settings app).
         immutable = true;
       };
+      kdeglobals."KDE"."AnimationDurationFactor" = 0;
       kscreenlockerrc = {
         Greeter.WallpaperPlugin = "org.kde.potd";
         # To use nested groups use / as a separator. In the below example,
