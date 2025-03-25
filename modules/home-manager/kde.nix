@@ -214,6 +214,9 @@
         "Switch One Desktop to the Left" = "Meta+Ctrl+Left";
         "Switch One Desktop to the Right" = "Meta+Ctrl+Right";
       };
+      ksmserver = {
+        "Log Out" = "Meta+Shift+E";
+      };
     };
 
     #
