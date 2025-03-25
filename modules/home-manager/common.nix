@@ -443,12 +443,12 @@ in
     '';
     clonePasswordStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "$HOME/.password-store" ]; then
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store"
       fi
     '';
     cloneOrgStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if [ ! -d "$HOME/org" ]; then
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/org.git "$HOME/org"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/org.git "$HOME/org"
       fi
     '';
     closeGitProjects = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -456,19 +456,19 @@ in
       mkdir -p "$HOME/pro/GR"
       mkdir -p "$HOME/pro/verbatoria"
       mkdir -p "$HOME/pro/loktar"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-cbhelper.git "$HOME/pro/GR/gr-cbhelper"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-crunchbase-scraper.git "$HOME/pro/GR/gr-crunchbase-scraper"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-firestore.git "$HOME/pro/GR/gr-firestore"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-processor.git "$HOME/pro/GR/gr-processor"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-startups-sight.git "$HOME/pro/GR/gr-startups-sight"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria-webapp.git "$HOME/pro/verbatoria/verbatoria-webapp"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_backend.git "$HOME/pro/verbatoria/verbatoria_backend"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_frontend.git "$HOME/pro/verbatoria/verbatoria_frontend"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_full.git "$HOME/pro/verbatoria/verbatoria_full"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_go.git "$HOME/pro/verbatoria/verbatoria_go"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/detector.git "$HOME/pro/loktar/detector"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:$PATH" ${pkgs.git}/bin/git clone git@loktar.gitlab.yandexcloud.net:loktar/drone-detector.git "$HOME/pro/loktar/drone-detector"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-cbhelper.git "$HOME/pro/GR/gr-cbhelper"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-crunchbase-scraper.git "$HOME/pro/GR/gr-crunchbase-scraper"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-firestore.git "$HOME/pro/GR/gr-firestore"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-processor.git "$HOME/pro/GR/gr-processor"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-startups-sight.git "$HOME/pro/GR/gr-startups-sight"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria-webapp.git "$HOME/pro/verbatoria/verbatoria-webapp"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_backend.git "$HOME/pro/verbatoria/verbatoria_backend"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_frontend.git "$HOME/pro/verbatoria/verbatoria_frontend"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_full.git "$HOME/pro/verbatoria/verbatoria_full"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_go.git "$HOME/pro/verbatoria/verbatoria_go"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/detector.git "$HOME/pro/loktar/detector"
+      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@loktar.gitlab.yandexcloud.net:loktar/drone-detector.git "$HOME/pro/loktar/drone-detector"
       fi
     '';
   };
