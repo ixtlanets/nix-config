@@ -130,20 +130,35 @@
       AC = {
         powerButtonAction = "lockScreen";
         autoSuspend = {
-          action = "shutDown";
-          idleTimeout = 1000;
+          action = "nothing";
         };
         turnOffDisplay = {
           idleTimeout = 1000;
           idleTimeoutWhenLocked = "immediately";
         };
+        powerProfile = "performance";
       };
       battery = {
         powerButtonAction = "sleep";
         whenSleepingEnter = "standbyThenHibernate";
+        autoSuspend = {
+          action = "sleep";
+          idleTimeout = 600;
+        };
+        turnOffDisplay = {
+          idleTimeout = 300;
+          idleTimeoutWhenLocked = "immediately";
+        };
+        powerProfile = "balanced";
       };
       lowBattery = {
         whenLaptopLidClosed = "hibernate";
+        powerProfile = "powerSaving";
+        dimDisplay.enable = true;
+        turnOffDisplay = {
+          idleTimeout = 120;
+          idleTimeoutWhenLocked = "immediately";
+        };
       };
     };
 
