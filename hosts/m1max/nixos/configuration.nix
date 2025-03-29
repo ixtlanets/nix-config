@@ -101,7 +101,6 @@
       "linearmouse"
       "rectangle"
       "ghostty"
-      "nikitabobko/tap/aerospace"
     ];
     taps = [
       "fujiapple852/trippy"
