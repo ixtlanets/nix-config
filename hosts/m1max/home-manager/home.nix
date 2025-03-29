@@ -17,7 +17,6 @@ in
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
-    ../../../modules/home-manager/ghostty.nix
   ];
 
   nixpkgs = {
@@ -117,6 +116,14 @@ in
     src = ../../../dotfiles/skhdrc;
     inherit (pkgs) alacritty;
   };
+  home.file.".config/ghostty/config".text = ''
+    font-family = "Hack Nerd Font"
+    font-size = 16
+    theme = catppuccin-mocha
+    quit-after-last-window-closed = true
+    macos-non-native-fullscreen = true
+    macos-option-as-alt = true
+  '';
   programs = {
     chromium = {
       enable = true;
