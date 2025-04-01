@@ -242,6 +242,8 @@
         # Provider will be added to [Greeter][Wallpaper][org.kde.potd][General].
         "Greeter/Wallpaper/org.kde.potd/General".Provider = "bing";
       };
+
+      plasmarc."OSD"."kbdLayoutChangedEnabled" = false;
     };
   };
 }
