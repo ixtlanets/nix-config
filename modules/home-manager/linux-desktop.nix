@@ -127,7 +127,6 @@ in
         mkhl.direnv
       ];
       userSettings = {
-        "workbench.colorTheme" = "One Dark Pro";
         "window.menuBarVisibility" = "toggle";
         # Git settings
         "git.enableSmartCommit" = true;
