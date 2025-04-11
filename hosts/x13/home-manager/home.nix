@@ -40,7 +40,7 @@
   home.packages = with pkgs; [
     asusctl
     supergfxctl
-    nvtop
+    nvtopPackages.full
   ];
 
   xresources.properties = {
