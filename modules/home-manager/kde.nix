@@ -137,6 +137,7 @@
 
     powerdevil = {
       AC = {
+        whenLaptopLidClosed = "doNothing";
         powerButtonAction = "lockScreen";
         autoSuspend = {
           action = "nothing";
@@ -148,6 +149,7 @@
         powerProfile = "performance";
       };
       battery = {
+        whenLaptopLidClosed = "sleep";
         powerButtonAction = "sleep";
         whenSleepingEnter = "standbyThenHibernate";
         autoSuspend = {
