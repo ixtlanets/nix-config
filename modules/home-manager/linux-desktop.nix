@@ -105,7 +105,7 @@ in
         ]
       );
       enableUpdateCheck = false;
-      mutableExtensionsDir = false;
+      mutableExtensionsDir = true;
       extensions = with pkgs.vscode-extensions; [
         catppuccin.catppuccin-vsc
         dbaeumer.vscode-eslint
