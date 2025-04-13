@@ -41,6 +41,11 @@
         key = "Meta+D";
         command = "rofi -show run";
       };
+      "kbd-backlight" = {
+        name = "kbd-backlight";
+        key = "Alt+Space";
+        command = "kbd-backlight toggle";
+      };
     };
 
     fonts = {
