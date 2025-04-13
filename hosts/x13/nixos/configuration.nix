@@ -30,6 +30,32 @@
     enable = true;
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
+  boot.kernelParams = [
+    "amdgpu.gpu_recovery=1"
+    "mem_sleep_default=deep"
+    "pcie_aspm.policy=powersupersave"
+  ];
+
+  services = {
+    asusd = {
+      enable = true;
+      enableUserService = true;
+    };
+
+    supergfxd.enable = true;
+
+    udev = {
+      extraHwdb = ''
+        # Fixes mic mute button
+        evdev:name:*:dmi:bvn*:bvr*:bd*:svnASUS*:pn*:*
+        KEYBOARD_KEY_ff31007c=f20
+      '';
+    };
+  };
+
+  #flow devices are 2 in 1 laptops
+  hardware.sensor.iio.enable = true;
+
   hardware = {
     graphics = {
       enable = true;
