@@ -59,6 +59,11 @@
   hardware = {
     graphics = {
       enable = true;
+      extraPackages = with pkgs; [
+        intel-media-driver
+        vaapiVdpau
+        libvdpau-va-gl
+      ];
     };
   };
   hardware.cpu.amd.ryzen-smu.enable = true; # ryzenadj need it to read info from CPU
