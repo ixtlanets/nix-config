@@ -130,6 +130,7 @@ in
     };
   };
 
+  services.fwupd.enable = true;
   services.dbus.enable = true;
   xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
 
