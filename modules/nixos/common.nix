@@ -56,6 +56,9 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.efi.efiSysMountPoint = "/boot/efi";
 
+  # enable power managment
+  powerManagement.enable = true;
+
   # Use latest kernel
   boot.kernelPackages = pkgs.linuxPackages_zen;
 
