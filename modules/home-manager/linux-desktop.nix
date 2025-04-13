@@ -41,11 +41,11 @@ in
   catppuccin.flavor = "mocha";
   catppuccin.enable = true;
   catppuccin.nvim.enable = false;
+  catppuccin.alacritty.enable = true;
 
   programs = {
     alacritty = {
       enable = true;
-      catppuccin.enable = true;
       settings = {
         env.TERM = "xterm-256color";
         font = {
@@ -104,87 +104,90 @@ in
           pkg-config
         ]
       );
-      enableUpdateCheck = false;
-      mutableExtensionsDir = true;
-      extensions = with pkgs.vscode-extensions; [
-        catppuccin.catppuccin-vsc
-        dbaeumer.vscode-eslint
-        bbenoist.nix
-        jnoortheen.nix-ide
-        vscodevim.vim
-        github.copilot
-        github.copilot-chat
-        github.vscode-pull-request-github
-        github.codespaces
-        ms-python.python
-        ms-azuretools.vscode-docker
-        ms-vscode-remote.remote-ssh
-        editorconfig.editorconfig
-        donjayamanne.githistory
-        eamodio.gitlens
-        # Golang
-        golang.go
-        mkhl.direnv
-      ];
-      userSettings = {
-        "window.menuBarVisibility" = "toggle";
-        # Git settings
-        "git.enableSmartCommit" = true;
-        "git.confirmSync" = false;
-        "git.autofetch" = true;
-        "git.ignoreLegacyWarning" = true;
-        "editor.lineNumbers" = "relative";
-        "editor.fontLigatures" = true;
-        "vim.easymotion" = true;
-        "vim.incsearch" = true;
-        "vim.useSystemClipboard" = true;
-        "vim.useCtrlKeys" = true;
-        "vim.hlsearch" = true;
-        "vim.insertModeKeyBindings" = [
-          {
-            before = [
-              "j"
-              "j"
-            ];
-            after = [ "<Esc>" ];
-          }
+      profiles.default = {
+        enableUpdateCheck = false;
+        extensions = with pkgs.vscode-extensions; [
+          catppuccin.catppuccin-vsc
+          dbaeumer.vscode-eslint
+          bbenoist.nix
+          jnoortheen.nix-ide
+          vscodevim.vim
+          github.copilot
+          github.copilot-chat
+          github.vscode-pull-request-github
+          github.codespaces
+          ms-python.python
+          ms-azuretools.vscode-docker
+          ms-vscode-remote.remote-ssh
+          editorconfig.editorconfig
+          donjayamanne.githistory
+          eamodio.gitlens
+          # Golang
+          golang.go
+          mkhl.direnv
         ];
-        "vim.normalModeKeyBindingsNonRecursive" = [
-          {
-            before = [
-              "<leader>"
-              "d"
-            ];
-            after = [
-              "d"
-              "d"
-            ];
-          }
-          {
-            before = [ "<C-n>" ];
-            commands = [ ":nohl" ];
-          }
-          {
-            before = [ "K" ];
-            commands = [ "lineBreakInsert" ];
-            silent = true;
-          }
-        ];
-        "vim.leader" = "<space>";
-        "vim.handleKeys" = {
-          "<C-a>" = false;
-          "<C-f>" = false;
-          "<C-b>" = false;
-          "<C-p>" = false;
+        userSettings = {
+          "window.menuBarVisibility" = "toggle";
+          # Git settings
+          "git.enableSmartCommit" = true;
+          "git.confirmSync" = false;
+          "git.autofetch" = true;
+          "git.ignoreLegacyWarning" = true;
+          "editor.lineNumbers" = "relative";
+          "editor.fontLigatures" = true;
+          "vim.easymotion" = true;
+          "vim.incsearch" = true;
+          "vim.useSystemClipboard" = true;
+          "vim.useCtrlKeys" = true;
+          "vim.hlsearch" = true;
+          "vim.insertModeKeyBindings" = [
+            {
+              before = [
+                "j"
+                "j"
+              ];
+              after = [ "<Esc>" ];
+            }
+          ];
+          "vim.normalModeKeyBindingsNonRecursive" = [
+            {
+              before = [
+                "<leader>"
+                "d"
+              ];
+              after = [
+                "d"
+                "d"
+              ];
+            }
+            {
+              before = [ "<C-n>" ];
+              commands = [ ":nohl" ];
+            }
+            {
+              before = [ "K" ];
+              commands = [ "lineBreakInsert" ];
+              silent = true;
+            }
+          ];
+          "vim.leader" = "<space>";
+          "vim.handleKeys" = {
+            "<C-a>" = false;
+            "<C-f>" = false;
+            "<C-b>" = false;
+            "<C-p>" = false;
+          };
+          "extensions.experimental.affinity" = {
+            "vscodevim.vim" = 1;
+          };
+          "editor.fontFamily" = "Hack Nerd Font";
+          "editor.fontSize" = 16;
+          "terminal.integrated.fontFamily" = "Hack Nerd Font";
+          "terminal.integrated.fontSize" = 16;
+  "github.copilot.nextEditSuggestions.enabled" = true;
         };
-        "extensions.experimental.affinity" = {
-          "vscodevim.vim" = 1;
-        };
-        "editor.fontFamily" = "Hack Nerd Font";
-        "editor.fontSize" = 16;
-        "terminal.integrated.fontFamily" = "Hack Nerd Font";
-        "terminal.integrated.fontSize" = 16;
       };
+      mutableExtensionsDir = true;
     };
     browserpass = {
       enable = true;

@@ -97,24 +97,8 @@ in
       ];
     };
   };
-
-  services = {
-    desktopManager.plasma6.enable = true;
-    displayManager = {
-      sddm = {
-        enable = true;
-        wayland.enable = true;
-        settings = {
-          Theme = {
-            CursorTheme = "Bibata-Modern-Ice";
-          };
-        };
-      };
-    };
-    xserver = {
-      enable = true;
-    };
-  };
+  services.xserver.desktopManager.gnome.enable = true;
+  services.xserver.displayManager.gdm.enable = true;
 
   # Services
   services = {
@@ -128,28 +112,22 @@ in
         "88503383901a34c1"
       ];
     };
+    fwupd.enable = true;
+    dbus.enable = true;
+    pipewire = {
+      enable = true;
+      alsa.enable = true;
+      alsa.support32Bit = true;
+      pulse.enable = true;
+    };
+    blueman.enable = true;
+    printing.enable = true;
   };
 
-  services.fwupd.enable = true;
-  services.dbus.enable = true;
   xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
-
   # Enable sound with pipewire.
-  hardware = {
-    pulseaudio.enable = false;
-  };
-  security.rtkit.enable = true;
-  security.polkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
-  services.blueman.enable = true;
+  services.pulseaudio.enable = false;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.nik = {
