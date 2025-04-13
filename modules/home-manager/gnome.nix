@@ -12,7 +12,6 @@ in
   };
   home.packages = with pkgs; [
     gnomeExtensions.appindicator
-    gnomeExtensions.just-perfection
     gnomeExtensions.caffeine
     gnomeExtensions.bluetooth-quick-connect
     gnomeExtensions.quick-lang-switch
@@ -67,12 +66,14 @@ in
       move-to-workspace-3 = [ "<Shift><Ctrl><Alt>3" ];
       move-to-workspace-4 = [ "<Shift><Ctrl><Alt>4" ];
       move-to-workspace-5 = [ "<Shift><Ctrl><Alt>5" ];
+      activate-window-menu = []; # Disable Alt+Space for window menu
     };
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
         "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
         "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
         "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
+        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
       ];
     };
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
@@ -89,6 +90,11 @@ in
       binding = "<Super>e";
       command = "nautilus";
       name = "open-file-browser";
+    };
+    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
+      binding = "<Alt>space";
+      command = "kbd-backlight toggle";
+      name = "toggle-keyboard-backlight";
     };
     "org/gnome/shell" = {
       favorite-apps = [
