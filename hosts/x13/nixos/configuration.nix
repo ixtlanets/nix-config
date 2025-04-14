@@ -26,6 +26,9 @@
   networking.hostName = "x13"; # Define your hostname.
   services.hardware.bolt.enable = true;
 
+  programs.hyprland.enable = true;
+  programs.hyprland.portalPackage = pkgs.xdg-desktop-portal-hyprland;
+
   services.ollama = {
     enable = true;
   };
