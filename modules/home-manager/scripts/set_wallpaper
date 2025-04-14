@@ -50,6 +50,7 @@ detect_desktop() {
     *"trinity"*) echo "trinity" ;;
     *"fluxbox"*) echo "fluxbox" ;;
     *"sway"*) echo "sway" ;;
+    *"hyprland"*) echo "hyprland" ;;
     *"enlightenment"* | *"moksha"*) echo "enlightenment" ;;
     *) echo "$XDG_CURRENT_DESKTOP" | tr '[:upper:]' '[:lower:]' ;;
     esac
@@ -249,6 +250,19 @@ elif [ "$DE" == "sway" ]; then
     swaymsg output "*" bg "$WP" fill 2>/dev/null
   fi
 
+elif [ "$DE" == "hyprland" ]; then
+  # If swaybg is available, use it as prevents system freeze.
+  # See https://github.com/swaywm/sway/issues/5606
+  if command -v "swaybg" >/dev/null 2>&1; then
+    # Grey background flicker is prevented by killing old swaybg process after new one.
+    # See https://github.com/swaywm/swaybg/issues/17#issuecomment-851680720
+    PID=$(pidof swaybg)
+    swaybg -i "$WP" -m fill &
+    if [ -n "$PID" ]; then
+      sleep 1
+      kill "$PID" 2>/dev/null
+    fi
+  fi
 elif [ "$DE" == "trinity" ]; then
   # trinity
   # The 4 refers to display mode 4; valid ones are 1-8
