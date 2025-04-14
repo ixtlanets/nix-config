@@ -2,6 +2,77 @@
   pkgs,
   ...
 }:
+let
+  # Define the script to toggle floating mode for the entire workspace
+  toggleFloatWorkspaceScript = pkgs.writeShellApplication {
+    name = "toggle-float-workspace";
+    # List packages needed by the script at runtime
+    runtimeInputs = with pkgs; [
+      bash
+      jq
+      hyprland
+    ];
+    text = ''
+      #!${pkgs.bash}/bin/bash
+      # Dependencies (jq, hyprctl) are made available via runtimeInputs
+
+      # Get current workspace ID
+      # $() is usually fine, Nix doesn't typically try to interpret it
+      ws_id=$(hyprctl activeworkspace -j | jq '.id')
+      # Escape shell variables used in the script logic with $
+      if [ -z "$ws_id" ] || [ "$ws_id" == "null" ]; then
+          echo "Error: Could not determine active workspace ID." >&2
+          exit 1
+      fi
+
+      # Define a state file path in /tmp
+      # ''${ws_id} correctly uses the Nix variable `ws_id` from the outer scope
+      # $state_file uses the shell variable defined below
+      state_file="/tmp/hypr_float_ws_''${ws_id}.state"
+
+      if [ -f "$state_file" ]; then
+        # === Switch back to TILING ===
+        # Escape shell variable $ws_id used in echo
+        echo "Workspace $ws_id: Switching to tiling mode."
+        # Use Nix variable ws_id in the keyword command
+        hyprctl keyword workspace "''${ws_id},defaultFloat:false" > /dev/null
+
+        # Pass the *value* of the shell variable $ws_id to jq's variable WSID.
+        # The $WSID inside the jq script '. ... $WSID ...' is interpreted by jq itself.
+        hyprctl clients -j | jq -r --argjson WSID "$ws_id" \
+          '.[] | select(.workspace.id == $WSID and .floating == true) | .address' |
+        while read -r addr; do
+          # Escape shell variable $addr used in bash regex and hyprctl command
+          if [[ "$addr" =~ ^0x[a-fA-F0-9]+$ ]]; then
+            hyprctl dispatch togglefloating address:"$addr" > /dev/null
+          fi
+        done
+
+        # Escape shell variable $state_file used with rm
+        rm "$state_file"
+      else
+        # === Switch to FLOATING ===
+        # Escape shell variable $ws_id used in echo
+        echo "Workspace $ws_id: Switching to floating mode."
+        # Use Nix variable ws_id in the keyword command
+        hyprctl keyword workspace "''${ws_id},defaultFloat:true" > /dev/null
+
+        # Pass the *value* of the shell variable $ws_id to jq's variable WSID
+        hyprctl clients -j | jq -r --argjson WSID "$ws_id" \
+          '.[] | select(.workspace.id == $WSID and .floating == false) | .address' |
+        while read -r addr; do
+          # Escape shell variable $addr used in bash regex and hyprctl command
+           if [[ "$addr" =~ ^0x[a-fA-F0-9]+$ ]]; then
+            hyprctl dispatch togglefloating address:"$addr" > /dev/null
+           fi
+        done
+
+        # Escape shell variable $state_file used with touch
+        touch "$state_file"
+      fi
+    '';
+  };
+in
 {
   imports = [
     ./kbd-backlight.nix
@@ -13,12 +84,15 @@
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
     pavucontrol # volume control
+    swaybg # to set wallpaper
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
     exec-once = [
       "mako"
       "variety"
+      # Clean up any stale state files on login/reload
+      "find /tmp -name 'hypr_float_ws_*.state' -delete"
     ];
     exec = [
       "systemctl --user restart waybar"
@@ -27,6 +101,7 @@
     "$mod" = "SUPER";
     general = {
       gaps_out = 0;
+      layout = "master"; # Explicitly set default layout
     };
     env = [
       "XCURSOR_SIZE,24"
@@ -71,6 +146,7 @@
       "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
     ];
     workspace = [
+      # Ensure no conflicting defaultFloat rules here unless intended statically
       "1, monitor:eDP-1, persistent:true"
       "2, monitor:eDP-1, persistent:true"
       "3, monitor:eDP-1, persistent:true"
@@ -90,9 +166,9 @@
       "float, title:(Open|Progress|Save File)"
       "center, title:(Open|Progress|Save File)"
       "pin, title:(Open|Progress|Save File)"
-      "float, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
-      "center, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
-      "pin, class:^(code)$, initialTitle:^((?!Visual Studio Code).)*$"
+      "float, class:^(code)$, initialTitle:^(Visual Studio Code)$"
+      "center, class:^(code)$, initialTitle:^(Visual Studio Code)$"
+      "pin, class:^(code)$, initialTitle:^(Visual Studio Code)$"
 
       # throw sharing indicators away
       "workspace special silent, title:^(Firefox — Sharing Indicator)$"
@@ -107,8 +183,9 @@
         "$mod+SHIFT, E, exit"
         "$mod, W, killactive"
         "$mod, F, togglefloating"
+        "$mod SHIFT, F, exec, ${toggleFloatWorkspaceScript}/bin/toggle-float-workspace"
         "$mod, B, exec, chromium-browser"
-        "$mod, Return, exec, ghostty"
+        "$mod, Return, exec, alacritty"
         "$mod, D, exec, rofi -show run"
         "$mod, H, movefocus, l"
         "$mod, J, movefocus, d"
@@ -197,51 +274,71 @@
           inner_color = "rgb(91, 96, 120)";
           outer_color = "rgb(24, 25, 38)";
           outline_thickness = 5;
-          placeholder_text = ''
-            <span foreground="##cad3f5">Password...</span>
-          '';
+          placeholder_text = ''<span foreground="##cad3f5">Password...</span>'';
           shadow_passes = 2;
+          halign = "center";
+          valign = "center";
+        }
+      ];
+      label = [
+        {
+          text = "cmd[update:1000] echo \"<span foreground='##cad3f5' size='60pt'>$(date '+%H:%M')</span>\"";
+          position = "0, 80";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "cmd[update:1000] echo \"<span foreground='##cad3f5' size='20pt'>$(date '+%A, %d %B %Y')</span>\"";
+          position = "0, 10";
+          halign = "center";
+          valign = "center";
         }
       ];
     };
   };
 
   home.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-    WLR_NO_HARDWARE_CURSORS = "1";
-    _JAVA_AWT_WM_NONREPARENTING = "1";
+    NIXOS_OZONE_WL = "1"; # For Electron/Chromium Wayland support
+    WLR_NO_HARDWARE_CURSORS = "1"; # Optional: Fix cursor issues on some hardware
+    _JAVA_AWT_WM_NONREPARENTING = "1"; # For Java Swing apps
     CLUTTER_BACKEND = "wayland";
-    GDK_BACKEND = "wayland";
-    MOZ_ENABLE_WAYLAND = "1";
-    QT_QPA_PLATFORM = "wayland";
-    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
-    SDL_VIDEODRIVER = "wayland";
-    XDG_SESSION_TYPE = "wayland";
-    ELECTRON_OZONE_PLATFORM_HINT = "auto";
+    GDK_BACKEND = "wayland"; # Already often default, keep if needed
+    MOZ_ENABLE_WAYLAND = "1"; # Firefox Wayland
+    QT_QPA_PLATFORM = "wayland;xcb"; # Prefer Wayland for Qt, fallback to X11
+    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1"; # Use server-side decorations for Qt
+    SDL_VIDEODRIVER = "wayland"; # SDL2 Wayland
+    XDG_SESSION_TYPE = "wayland"; # Usually set by display manager/login
+    ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Let Electron auto-detect Wayland
   };
+
+  # Services
   services.network-manager-applet.enable = true;
   services.hypridle = {
     enable = true;
     settings = {
       general = {
-        after_sleep_cmd = "hyprctl dispatch dpms on";
-        ignore_dbus_inhibit = false;
-        lock_cmd = "hyprlock";
+        # before_sleep_cmd = "loginctl lock-session"; # Example: lock before sleep
+        after_sleep_cmd = "hyprctl dispatch dpms on"; # Wake up monitors after sleep
+        ignore_dbus_inhibit = false; # Respect apps requestion inhibition (e.g. video players)
+        lock_cmd = "pidof hyprlock || hyprlock"; # Lock command, ensure only one instance runs
       };
 
       listener = [
         {
-          timeout = 900;
-          on-timeout = "hyprlock";
+          timeout = 900; # 15 minutes
+          on-timeout = "pidof hyprlock || hyprlock"; # Lock screen
+          # on-resume = "notify-send 'Welcome back!'"; # Example resume action
         }
         {
-          timeout = 1200;
-          on-timeout = "hyprctl dispatch dpms off";
-          on-resume = "hyprctl dispatch dpms on";
+          timeout = 1200; # 20 minutes
+          on-timeout = "hyprctl dispatch dpms off"; # Turn off displays
+          on-resume = "hyprctl dispatch dpms on"; # Turn displays back on
         }
       ];
     };
   };
+
+  # Electron Flags File
   home.file.".config/electron-flags.conf".text = ''
     --enable-features=WaylandWindowDecorations
     --ozone-platform-hint=auto

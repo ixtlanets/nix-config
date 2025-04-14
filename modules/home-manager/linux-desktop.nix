@@ -184,7 +184,7 @@ in
           "editor.fontSize" = 16;
           "terminal.integrated.fontFamily" = "Hack Nerd Font";
           "terminal.integrated.fontSize" = 16;
-  "github.copilot.nextEditSuggestions.enabled" = true;
+          "github.copilot.nextEditSuggestions.enabled" = true;
         };
       };
       mutableExtensionsDir = true;
@@ -345,6 +345,6 @@ in
     gtk.enable = true;
     x11.enable = true;
     x11.defaultCursor = "Bibata-Original-Ice";
-    size = 32;
+    size = 24;
   };
 }
