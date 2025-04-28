@@ -127,6 +127,9 @@ in
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
 
+  hardware.bluetooth.enable = true; # enables support for Bluetooth
+  hardware.bluetooth.powerOnBoot = true; # powers up the default Bluetooth controller on boot
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.nik = {
     isNormalUser = true;
