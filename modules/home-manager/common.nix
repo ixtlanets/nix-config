@@ -122,7 +122,6 @@ in
       ffmpegthumbnailer
       mediainfo
       nsxiv
-      xdragon
       gnupg
       gum
       pscale
@@ -139,6 +138,7 @@ in
       devenv
     ]
     ++ (lib.optionals isLinux [
+      xdragon
       vpn-script
       tabbed
       openssh
