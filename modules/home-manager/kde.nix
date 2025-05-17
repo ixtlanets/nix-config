@@ -5,6 +5,10 @@
   home.packages = with pkgs; [
     rofi-wayland
   ];
+  home.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    XCURSOR_SIZE = "24";
+  };
   programs.plasma = {
     enable = true;
 
@@ -16,7 +20,7 @@
       lookAndFeel = "org.kde.breezedark.desktop";
       cursor = {
         theme = "Bibata-Modern-Ice";
-        size = 32;
+        size = 24;
       };
       iconTheme = "Papirus-Dark";
     };
