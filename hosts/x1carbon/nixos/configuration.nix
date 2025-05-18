@@ -24,6 +24,14 @@
   networking.hostName = "x1carbon"; # Define your hostname.
 
   services.hardware.bolt.enable = true;
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+    };
+  };
 
   hardware = {
     graphics = {

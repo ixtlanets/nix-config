@@ -25,7 +25,7 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/kde.nix
+    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix

@@ -15,6 +15,7 @@ in
     gnomeExtensions.caffeine
     gnomeExtensions.bluetooth-quick-connect
     gnomeExtensions.quick-lang-switch
+    gnomeExtensions.dash-to-panel
   ];
   dconf.settings = {
     "org/gnome/desktop/interface" = {
@@ -98,9 +99,8 @@ in
     };
     "org/gnome/shell" = {
       favorite-apps = [
-        "chromium-browser.desktop"
-        "firefox.desktop"
-        "org.gnome.Terminal.desktop"
+        "brave-browser.desktop"
+        "Alacritty.desktop"
         "org.gnome.Nautilus.desktop"
         "org.telegram.desktop.desktop"
         "code.desktop"
@@ -112,6 +112,7 @@ in
         "caffeine@patapon.info"
         "bluetooth-quick-connect@bjarosze.gmail.com"
         "quick-lang-switch@ankostis.gmail.com"
+        "dash-to-panel@jderose9.github.com"
       ];
     };
     "org/gnome/clocks" = {
