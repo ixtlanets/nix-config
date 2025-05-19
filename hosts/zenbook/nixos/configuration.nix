@@ -25,6 +25,14 @@
 
   services.hardware.bolt.enable = true;
   services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+    };
+  };
+  services = {
     asusd.enable = true;
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
