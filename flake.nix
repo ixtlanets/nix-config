@@ -289,7 +289,16 @@
                   disko.nixosModules.disko
                   ./hosts/zenbook/nixos/disko-config.nix
                   hardware.nixosModules.common-cpu-intel
-                  hardware.nixosModules.common-gpu-nvidia-disable
+                  hardware.nixosModules.common-gpu-nvidia
+                  {
+                    hardware.nvidia = {
+                      open = true;
+                      prime = {
+                        intelBusId = "PCI:0:2:0";
+                        nvidiaBusId = "PCI:1:0:0";
+                      };
+                    };
+                  }
                   hardware.nixosModules.common-pc-laptop
                   hardware.nixosModules.common-pc-laptop-ssd
                   home-manager.nixosModules.home-manager
