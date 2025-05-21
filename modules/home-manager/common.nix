@@ -136,6 +136,7 @@ in
       git-crypt
       git-lfs
       devenv
+      _1password-cli
     ]
     ++ (lib.optionals isLinux [
       xdragon
