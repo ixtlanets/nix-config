@@ -9,6 +9,7 @@ in
 {
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
+    XCURSOR_SIZE = "24";
   };
   home.packages = with pkgs; [
     gnomeExtensions.appindicator
@@ -67,7 +68,7 @@ in
       move-to-workspace-3 = [ "<Shift><Ctrl><Alt>3" ];
       move-to-workspace-4 = [ "<Shift><Ctrl><Alt>4" ];
       move-to-workspace-5 = [ "<Shift><Ctrl><Alt>5" ];
-      activate-window-menu = []; # Disable Alt+Space for window menu
+      activate-window-menu = [ ]; # Disable Alt+Space for window menu
     };
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
