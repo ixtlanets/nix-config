@@ -143,6 +143,7 @@ in
       vpn-script
       tabbed
       openssh
+      swayimg
     ]);
 
   # Enable home-manager and git
@@ -222,6 +223,13 @@ in
           linemode = "size";
         };
         opener = {
+          wallpaper = [
+            {
+              #  `$@` expands to the absolute path(s) of the selected file(s)
+              run   = "variety --set-wallpaper \"$@\"";
+              block = false;         # don’t block yazi while the command runs
+            }
+          ];
           text = [
             {
               run = "nvim \"$@\"";
@@ -329,11 +337,11 @@ in
             }
             {
               name = "*.jpg";
-              use = "image";
+              use = "wallpaper";
             }
             {
               name = "*.jpeg";
-              use = "image";
+              use = "wallpaper";
             }
             {
               name = "*.gif";
