@@ -6,16 +6,16 @@
 }:
 let
   op-fzf = pkgs.writeShellScriptBin "1p" ''
-#!/usr/bin/env nix-shell
-      set -euo pipefail
+    #!/usr/bin/env nix-shell
+          set -euo pipefail
 
-      id=$(op item list --format=json \
-        | jq -r '.[] | "\(.id)\t\(.title)"' \
-        | fzf --with-nth=2 --prompt="1Password > " \
-        | cut -f1) || exit 1
+          id=$(op item list --format=json \
+            | jq -r '.[] | "\(.id)\t\(.title)"' \
+            | fzf --with-nth=2 --prompt="1Password > " \
+            | cut -f1) || exit 1
 
-      op item get "$id" --reveal
-'';
+          op item get "$id" --reveal
+  '';
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
     #!/usr/bin/env nix-shell
     # gen dns suffix
