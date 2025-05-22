@@ -191,7 +191,7 @@ in
         expireDuplicatesFirst = true;
         ignoreDups = true;
       };
-      initExtra = ''
+      initContent = ''
         export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
       '';
     };
