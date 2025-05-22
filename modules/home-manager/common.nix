@@ -226,8 +226,8 @@ in
           wallpaper = [
             {
               #  `$@` expands to the absolute path(s) of the selected file(s)
-              run   = "variety --set-wallpaper \"$@\"";
-              block = false;         # don’t block yazi while the command runs
+              run = "variety --set-wallpaper \"$@\"";
+              block = false; # don’t block yazi while the command runs
             }
           ];
           text = [
