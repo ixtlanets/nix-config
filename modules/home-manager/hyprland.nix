@@ -264,36 +264,6 @@ in
       background = {
         color = "rgba(25, 20, 50, 1.0)";
       };
-      input-field = [
-        {
-          size = "200, 50";
-          position = "0, -80";
-          dots_center = true;
-          fade_on_empty = false;
-          font_color = "rgb(202, 211, 245)";
-          inner_color = "rgb(91, 96, 120)";
-          outer_color = "rgb(24, 25, 38)";
-          outline_thickness = 5;
-          placeholder_text = ''<span foreground="##cad3f5">Password...</span>'';
-          shadow_passes = 2;
-          halign = "center";
-          valign = "center";
-        }
-      ];
-      label = [
-        {
-          text = "cmd[update:1000] echo \"<span foreground='##cad3f5' size='60pt'>$(date '+%H:%M')</span>\"";
-          position = "0, 80";
-          halign = "center";
-          valign = "center";
-        }
-        {
-          text = "cmd[update:1000] echo \"<span foreground='##cad3f5' size='20pt'>$(date '+%A, %d %B %Y')</span>\"";
-          position = "0, 10";
-          halign = "center";
-          valign = "center";
-        }
-      ];
     };
   };
 
