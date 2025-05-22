@@ -96,6 +96,41 @@ in
     LC_TELEPHONE = "ru_RU.UTF-8";
     LC_TIME = "en_GB.UTF-8";
   };
+  nixpkgs.config.joypixels.acceptLicense = true;
+
+  fonts = {
+    packages = with pkgs; [
+      cascadia-code
+      dejavu_fonts
+      emacs-all-the-icons-fonts
+      joypixels
+      fira-code
+      fira-mono
+      font-awesome
+
+      noto-fonts-emoji
+      roboto
+      source-code-pro
+      source-sans-pro
+      source-serif-pro
+      twemoji-color-font
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.fantasque-sans-mono
+      nerd-fonts.iosevka
+      nerd-fonts.victor-mono
+    ];
+    fontconfig = {
+      hinting.autohint = true;
+      antialias = true;
+      allowBitmaps = true;
+      useEmbeddedBitmaps = true;
+      defaultFonts = {
+        monospace = [ "JetBrains Mono" ];
+        sansSerif = [ "Roboto" ];
+        serif = [ "Source Serif Pro" ];
+      };
+    };
+  };
 
   programs = {
     zsh.enable = true;
