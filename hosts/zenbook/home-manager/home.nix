@@ -44,7 +44,7 @@
     supergfxctl
     nvtopPackages.full
 
-    gnomeExtensions.supergfxctl-gex
+    gnomeExtensions.gpu-supergfxctl-switch
   ];
   xresources.properties = {
     "Xft.dpi" = dpi;
