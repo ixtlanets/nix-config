@@ -130,6 +130,7 @@ in
       du-dust # modern du
       speedtest-rs # speedtest
       fabric-ai
+      codex # AI coding agent by OpenAI
       viu # terminal image viewer
       ast-grep # code structural search
 
