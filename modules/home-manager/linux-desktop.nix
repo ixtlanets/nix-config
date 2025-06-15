@@ -291,19 +291,6 @@ in
             };
           };
         };
-        extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-          ublock-origin
-          onepassword
-          sponsorblock
-          tracking-token-stripper
-          return-youtube-dislike
-          browserpass
-          dearrow
-          youtube-auto-hd
-          tabliss
-          i-still-dont-care-about-cookies
-          bypass-paywalls-clean
-        ];
       };
     };
     chromium = {
