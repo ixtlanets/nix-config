@@ -25,9 +25,14 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "x13"; # Define your hostname.
   services.hardware.bolt.enable = true;
-
-  programs.hyprland.enable = true;
-  programs.hyprland.portalPackage = pkgs.xdg-desktop-portal-hyprland;
+  services = {
+    xserver = {
+      enable = true;
+      dpi = dpi;
+      displayManager.gdm.enable = true;
+      desktopManager.gnome.enable = true;
+    };
+  };
 
   services.ollama = {
     enable = true;
