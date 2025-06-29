@@ -39,7 +39,7 @@
     nerd-fonts.sauce-code-pro
     nerd-fonts.hack
   ];
-
+  system.primaryUser = "nik";
   # mac defaults
   system.defaults = {
     finder.AppleShowAllExtensions = true;
