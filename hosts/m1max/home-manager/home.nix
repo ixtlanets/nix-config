@@ -112,10 +112,6 @@ in
     htop.enable = true;
   };
   home.file.".inputrc".source = ../../../dotfiles/inputrc;
-  home.file.".config/skhd/skhdrc".source = pkgs.substituteAll {
-    src = ../../../dotfiles/skhdrc;
-    inherit (pkgs) alacritty;
-  };
   home.file.".config/ghostty/config".text = ''
     font-family = "Hack Nerd Font"
     font-size = 16
