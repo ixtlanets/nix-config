@@ -26,6 +26,11 @@
   services.ollama = {
     enable = true;
   };
+  services.xserver = {
+    enable = true;
+    displayManager.gdm.enable = true;
+    desktopManager.gnome.enable = true;
+  };
   services.hardware.bolt.enable = true;
   services = {
     asusd.enable = true;
