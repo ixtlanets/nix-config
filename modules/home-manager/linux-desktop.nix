@@ -34,7 +34,6 @@ in
     font-awesome
     zoom-us
     obsidian
-    warp-terminal # another fancy terminal. with AI features
     wl-clipboard
   ];
 
