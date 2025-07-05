@@ -167,7 +167,15 @@ in
     printing.enable = true;
   };
 
-  xdg.portal.extraPortals = with pkgs; [ xdg-desktop-portal-gtk ];
+  xdg.portal = {
+    enable = true;
+    xdgOpenUsePortal = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-hyprland
+    ];
+    config.common.default = "*";
+  };
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
