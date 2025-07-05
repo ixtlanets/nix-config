@@ -122,6 +122,11 @@ in
 
       sensitivity = 0;
     };
+    group = {
+      groupbar = {
+        font_size = 14;
+      };
+    };
     xwayland = {
       force_zero_scaling = true;
     };
