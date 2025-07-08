@@ -138,6 +138,7 @@ in
       git-lfs
       devenv
       _1password-cli
+      sshuttle # VPN over ssh
     ]
     ++ (lib.optionals isLinux [
       xdragon
