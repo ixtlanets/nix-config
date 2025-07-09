@@ -121,7 +121,7 @@ in
     macos-option-as-alt = true
   '';
   programs = {
-    brabe = {
+    brave = {
       enable = true;
       extensions = [
         { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
