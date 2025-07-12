@@ -2,16 +2,26 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, dpi, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  dpi,
+  ...
+}:
 
 {
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  imports =
-    [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../../../modules/nixos/common.nix
-    ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../../../modules/nixos/common.nix
+    ../../../modules/nixos/hyprland.nix
+    ../../../modules/nixos/nautilus.nix
+  ];
 
   networking.hostName = "x1extreme"; # Define your hostname.
 
@@ -27,10 +37,11 @@
   };
 
   boot.blacklistedKernelModules = [ "nouveau" ];
-# NVIDIA drivers are unfree.
-  nixpkgs.config.allowUnfreePredicate = pkg:
+  # NVIDIA drivers are unfree.
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
     builtins.elem (lib.getName pkg) [
-    "nvidia-x11"
+      "nvidia-x11"
     ];
   hardware = {
     graphics = {

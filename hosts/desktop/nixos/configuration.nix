@@ -2,36 +2,47 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, dpi, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  dpi,
+  ...
+}:
 
 {
-  imports =
-    [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../../../modules/nixos/common.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+    ../../../modules/nixos/common.nix
+    ../../../modules/nixos/hyprland.nix
+    ../../../modules/nixos/nautilus.nix
+  ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "desktop"; # Define your hostname.
 
   # Configure keymap in X11
-  
-  boot.blacklistedKernelModules = [ "nouveau" "iwlwifi" ];
+
+  boot.blacklistedKernelModules = [
+    "nouveau"
+    "iwlwifi"
+  ];
   hardware = {
     graphics = {
       enable = true;
     };
   };
   # NVIDIA drivers are unfree.
-  nixpkgs.config.allowUnfreePredicate = pkg:
+  nixpkgs.config.allowUnfreePredicate =
+    pkg:
     builtins.elem (lib.getName pkg) [
       "nvidia-x11"
       "nvidia-settings"
     ];
 
   # Tell Xorg to use the nvidia driver
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
 

@@ -20,19 +20,13 @@
     ./hardware-configuration.nix
     ./power.nix
     ../../../modules/nixos/common.nix
+    ../../../modules/nixos/hyprland.nix
+    ../../../modules/nixos/nautilus.nix
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "x13"; # Define your hostname.
   services.hardware.bolt.enable = true;
-  services = {
-    xserver = {
-      enable = true;
-      dpi = dpi;
-      displayManager.gdm.enable = true;
-      desktopManager.gnome.enable = true;
-    };
-  };
 
   services.ollama = {
     enable = true;
