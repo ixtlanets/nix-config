@@ -85,12 +85,14 @@ in
     glfw-wayland
     pavucontrol # volume control
     swaybg # to set wallpaper
+    clipse # clipboard manager
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
     exec-once = [
       "mako"
       "variety"
+      "clipse -listen" # start clipboard manager
       # Clean up any stale state files on login/reload
       "find /tmp -name 'hypr_float_ws_*.state' -delete"
     ];
@@ -196,6 +198,9 @@ in
       # throw sharing indicators away
       "workspace special silent, title:^(Firefox — Sharing Indicator)$"
       "workspace special silent, title:^(.*is sharing (your screen|a window)\.)$"
+      # clipse - clipboard manager
+      "float, class:^(clipse)$"
+      "size 622 652,class:^(clipse)$"
     ];
     bindm = [
       "$mod, mouse:272, movewindow"
@@ -234,6 +239,7 @@ in
         ",XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle"
         ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
         "ALT, space, exec, kbd-backlight toggle"
+        "$mod, V, exec, ghostty --class clipse -e 'clipse'"
       ]
       ++ (
         # workspaces
