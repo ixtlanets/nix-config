@@ -150,6 +150,9 @@ in
     xwayland = {
       force_zero_scaling = true;
     };
+    misc = {
+      anr_missed_pings = 5;
+    };
     animation = [
       "windows, 0, 1, default"
       "border, 1, 3, default"
