@@ -12,7 +12,7 @@ let
     ];
     text = ''
       #!/usr/bin/env bash
-      set -euo pipefail
+      set -eo pipefail
 
       # Clipboard detection (unchanged)
       if [[ "''${OSTYPE:-}" == darwin* ]] && command -v pbpaste >/dev/null 2>&1; then
@@ -38,7 +38,7 @@ let
 
       MODEL="''${OLLAMA_MODEL:-gemma3n}"
 
-      if [[ -n "$OLLAMA_SERVICE_URL" ]]; then
+      if [[ -n "''${OLLAMA_SERVICE_URL:-}" ]]; then
         # Use HTTP API: /api/generate (non-streaming)
         # Combine system-like instruction with clipboard text, JSON-escape safely via jq
         { printf '%s\n' "$prompt"; "''${PASTE_CMD[@]}"; } \
