@@ -1,36 +1,61 @@
 { pkgs, ... }:
 let
+  lib = pkgs.lib;
+  stdenv = pkgs.stdenv;
+
   fixText = pkgs.writeShellApplication {
     name = "fix-text";
-    runtimeInputs = with pkgs; [
-      ollama
-      curl
-      jq
-      wl-clipboard
-      xclip
-      xsel
-      libnotify
-    ];
+    runtimeInputs =
+      # Common
+      (with pkgs; [
+        curl
+        jq
+      ])
+      # Linux-only (clipboard + libnotify)
+      ++ lib.optionals stdenv.isLinux (
+        with pkgs;
+        [
+          wl-clipboard
+          xclip
+          xsel
+          libnotify
+        ]
+      )
+      # macOS-only (native notifier)
+      ++ lib.optionals stdenv.isDarwin (with pkgs; [ terminal-notifier ]);
+
     text = ''
       #!/usr/bin/env bash
       set -eo pipefail
 
       notify() {
         local title="$1"
-        shift
-        local body="$1"
-        shift || true
+        local body="${"2:-"}"
         local rid=91142 # replace id to avoid stacking
-        if command -v dunstify >/dev/null 2>&1; then
-          dunstify -a fix-text -r "$rid" -u low -i edit-paste "$title" "$body"
+
+        # macOS: use native notifications first, avoid notify-send/libnotify
+        if [[ "''${OSTYPE:-}" == darwin* ]]; then
+          if command -v terminal-notifier >/dev/null 2>&1; then
+            terminal-notifier -title "fix-text" -subtitle "$title" -message "$body" || true
+          elif command -v osascript >/dev/null 2>&1; then
+            osascript -e 'on run argv
+              display notification (item 1 of argv) with title "fix-text" subtitle (item 2 of argv)
+            end run' "$body" "$title" || true
+          else
+            printf '[fix-text] %s: %s\n' "$title" "$body" >&2
+          fi
+
+        # Linux: prefer dunstify, then notify-send
+        elif command -v dunstify >/dev/null 2>&1; then
+          dunstify -a fix-text -r "$rid" -u low -i edit-paste "$title" "$body" || true
         elif command -v notify-send >/dev/null 2>&1; then
-          notify-send -a fix-text -u low -i edit-paste "$title" "$body"
+          notify-send -a fix-text -u low -i edit-paste "$title" "$body" || true
         else
           printf '[fix-text] %s: %s\n' "$title" "$body" >&2
         fi
       }
 
-      # Clipboard detection (unchanged)
+      # Clipboard detection
       if [[ "''${OSTYPE:-}" == darwin* ]] && command -v pbpaste >/dev/null 2>&1; then
         PASTE_CMD=(pbpaste)
         COPY_CMD=(pbcopy)
@@ -51,14 +76,9 @@ let
       # Editing prompt
       prompt=$'You are a professional copy editor. When given a passage of text, you will:\n1. Correct grammar, spelling, punctuation, and style.\n2. Preserve the author’s original tone, voice, and meaning.\n3. Output only the revised text—no explanations, comments, or formatting notes.'
 
-      # Determine whether to use a remote service or local CLI
-      # Preferred: OLLAMA_SERVICE_URL (e.g., http://localhost:11434)
-
       MODEL="''${OLLAMA_MODEL:-gemma3n}"
 
       if [[ -n "''${OLLAMA_SERVICE_URL:-}" ]]; then
-        # Use HTTP API: /api/generate (non-streaming)
-        # Combine system-like instruction with clipboard text, JSON-escape safely via jq
         if {
           printf '%s\n' "$prompt"
           "''${PASTE_CMD[@]}"
@@ -70,11 +90,10 @@ let
           "''${COPY_CMD[@]}"; then
           notify "Text fixed" "Copied to clipboard (model: $MODEL)"
         else
-          notify "Fix failed" "Smething went wrong"
+          notify "Fix failed" "Something went wrong"
           exit 1
         fi
       else
-        # Fallback to local CLI
         if {
           printf '%s\n' "$prompt"
           "''${PASTE_CMD[@]}"
@@ -83,7 +102,7 @@ let
           "''${COPY_CMD[@]}"; then
           notify "Text fixed" "Copied to clipboard (model: $MODEL)"
         else
-          notify "Fix failed" "Smething went wrong"
+          notify "Fix failed" "Something went wrong"
           exit 1
         fi
       fi
