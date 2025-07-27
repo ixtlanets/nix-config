@@ -4,8 +4,6 @@
   lib,
   config,
   pkgs,
-  niknvim,
-  ghostty,
   ...
 }:
 let
