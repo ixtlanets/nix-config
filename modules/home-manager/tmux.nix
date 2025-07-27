@@ -34,7 +34,9 @@
       }
     ];
     extraConfig = ''
-
+      # temp fix for https://github.com/tmux-plugins/tmux-sensible/issues/74
+      set -g default-shell ${pkgs.zsh}/bin/zsh
+      set -g default-command "${pkgs.zsh}/bin/zsh -l"
     '';
   };
 }
