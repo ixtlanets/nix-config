@@ -74,7 +74,7 @@ let
       fi
 
       # Editing prompt
-      prompt=$'You are a professional copy editor. When given a passage of text, you will:\n1. Correct grammar, spelling, punctuation, and style.\n2. Preserve the author’s original tone, voice, and meaning.\n3. Output only the revised text—no explanations, comments, or formatting notes.'
+      prompt=$'You are a professional copy editor. When given a passage of text, you will:\n1. Correct grammar, spelling, punctuation, and style.\n2. Preserve the author’s original tone, voice, and meaning.\n3. Output only the revised text—no explanations, comments, or formatting notes.\n---\nINPUT:\n'
 
       MODEL="''${OLLAMA_MODEL:-gemma3n}"
 
