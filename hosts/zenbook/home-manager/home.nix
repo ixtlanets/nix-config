@@ -24,7 +24,6 @@
     ../../../modules/home-manager/starship.nix
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
-    ../../../modules/home-manager/fix-text.nix
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix

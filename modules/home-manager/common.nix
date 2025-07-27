@@ -76,6 +76,9 @@ let
   '';
 in
 {
+  imports = [
+    ./fix-text.nix
+  ];
   nixpkgs = {
     # You can add overlays here
     overlays = [
