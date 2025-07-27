@@ -209,61 +209,61 @@ in
       "$mod, mouse:272, movewindow"
       "$mod, mouse:273, resizewindow"
     ];
-    bind =
-      [
-        "$mod+SHIFT, E, exit"
-        "$mod, W, killactive"
-        "$mod, F, togglefloating"
-        "$mod SHIFT, F, exec, ${toggleFloatWorkspaceScript}/bin/toggle-float-workspace"
-        "$mod, B, exec, chromium-browser"
-        "$mod, Return, exec, alacritty"
-        "$mod, D, exec, rofi -show run"
-        "$mod, H, movefocus, l"
-        "$mod, J, movefocus, d"
-        "$mod, K, movefocus, u"
-        "$mod, L, movefocus, r"
-        "$mod+CTRL, H, resizeactive, -10 0"
-        "$mod+CTRL, J, resizeactive, 0 -10"
-        "$mod+CTRL, K, resizeactive, 0 10"
-        "$mod+CTRL, L, resizeactive, 10 0"
-        "$mod, G, togglegroup"
-        "$mod, T, lockactivegroup, toggle"
-        "$mod+SHIFT, J, changegroupactive, f"
-        "$mod+SHIFT, K, changegroupactive, b"
-        "$mod+SHIFT, S, exec, grimblast copy area"
-        ",XF86MonBrightnessUp, exec, light -A 10"
-        ",XF86MonBrightnessDown, exec, light -U 10"
-        "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
-        "SHIFT ,XF86MonBrightnessDown, exec, light -U 1"
-        ",XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"
-        ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"
-        "SHIFT ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01+"
-        "SHIFT ,XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01-"
-        ",XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle"
-        ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
-        "ALT, space, exec, kbd-backlight toggle"
-        "$mod, V, exec, ghostty --class clipse -e 'clipse'"
-      ]
-      ++ (
-        # workspaces
-        # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
-        builtins.concatLists (
-          builtins.genList (
-            x:
-            let
-              ws =
-                let
-                  c = (x + 1) / 10;
-                in
-                builtins.toString (x + 1 - (c * 10));
-            in
-            [
-              "$mod, ${ws}, workspace, ${toString (x + 1)}"
-              "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-            ]
-          ) 10
-        )
-      );
+    bind = [
+      "$mod+SHIFT, E, exit"
+      "$mod, W, killactive"
+      "$mod, F, togglefloating"
+      "$mod SHIFT, F, exec, ${toggleFloatWorkspaceScript}/bin/toggle-float-workspace"
+      "$mod, B, exec, chromium-browser"
+      "$mod, Return, exec, alacritty"
+      "$mod, D, exec, rofi -show run"
+      "$mod, H, movefocus, l"
+      "$mod, J, movefocus, d"
+      "$mod, K, movefocus, u"
+      "$mod, L, movefocus, r"
+      "$mod+CTRL, H, resizeactive, -10 0"
+      "$mod+CTRL, J, resizeactive, 0 -10"
+      "$mod+CTRL, K, resizeactive, 0 10"
+      "$mod+CTRL, L, resizeactive, 10 0"
+      "$mod, G, togglegroup"
+      "$mod, T, lockactivegroup, toggle"
+      "$mod+SHIFT, J, changegroupactive, f"
+      "$mod+SHIFT, K, changegroupactive, b"
+      "$mod+SHIFT, S, exec, grimblast copy area"
+      "$mod+SHIFT, T, exec, fix-text"
+      ",XF86MonBrightnessUp, exec, light -A 10"
+      ",XF86MonBrightnessDown, exec, light -U 10"
+      "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
+      "SHIFT ,XF86MonBrightnessDown, exec, light -U 1"
+      ",XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"
+      ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"
+      "SHIFT ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01+"
+      "SHIFT ,XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01-"
+      ",XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle"
+      ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+      "ALT, space, exec, kbd-backlight toggle"
+      "$mod, V, exec, ghostty --class clipse -e 'clipse'"
+    ]
+    ++ (
+      # workspaces
+      # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
+      builtins.concatLists (
+        builtins.genList (
+          x:
+          let
+            ws =
+              let
+                c = (x + 1) / 10;
+              in
+              builtins.toString (x + 1 - (c * 10));
+          in
+          [
+            "$mod, ${ws}, workspace, ${toString (x + 1)}"
+            "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
+          ]
+        ) 10
+      )
+    );
   };
 
   programs = {

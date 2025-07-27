@@ -13,4 +13,7 @@
   home.packages = with pkgs; [
     ollamagpu
   ];
+  home.sessionVariables = {
+    OLLAMA_SERVICE_URL = "http://localhost:11434";
+  };
 }
