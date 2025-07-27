@@ -139,6 +139,10 @@ in
   };
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
+  home.sessionVariables = {
+    OLLAMA_SERVICE_URL = "http://localhost:11434";
+  };
+
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "24.11";
 }
