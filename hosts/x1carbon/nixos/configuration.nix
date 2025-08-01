@@ -27,6 +27,10 @@
 
   services.hardware.bolt.enable = true;
 
+  services.ollama = {
+    enable = true;
+  };
+
   hardware = {
     graphics = {
       enable = true;

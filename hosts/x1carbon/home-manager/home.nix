@@ -47,6 +47,10 @@
   home.packages = with pkgs; [
     nvtopPackages.full
   ];
+
+  home.sessionVariables = {
+    OLLAMA_SERVICE_URL = "http://localhost:11434";
+  };
   xresources.properties = {
     "Xft.dpi" = dpi;
   };
