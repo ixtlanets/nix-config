@@ -80,7 +80,7 @@ in
     };
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
       binding = "<Super>Return";
-      command = "alacritty";
+      command = "ghostty";
       name = "open-terminal";
     };
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
@@ -101,7 +101,7 @@ in
     "org/gnome/shell" = {
       favorite-apps = [
         "brave-browser.desktop"
-        "Alacritty.desktop"
+        "Ghostty.desktop"
         "org.gnome.Nautilus.desktop"
         "org.telegram.desktop.desktop"
         "code.desktop"
