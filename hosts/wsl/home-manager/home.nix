@@ -38,13 +38,6 @@
   catppuccin.nvim.enable = false;
 
   gtk.enable = true;
-  gtk.iconTheme = {
-    name = "Papirus-Dark";
-    package = pkgs.catppuccin-papirus-folders.override {
-      flavor = "mocha";
-      accent = "maroon";
-    };
-  };
   qt.enable = true;
   qt.style.name = "kvantum";
   qt.platformTheme.name = "kvantum";
