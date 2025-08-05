@@ -28,7 +28,6 @@ in
     brightnessctl
     pamixer
     wireplumber
-    discord
     mpv
     liberation_ttf
     font-awesome
