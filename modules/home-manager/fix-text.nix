@@ -45,7 +45,9 @@ let
             printf '[fix-text] %s: %s\n' "$title" "$body" >&2
           fi
 
-        # Linux: prefer dunstify, then notify-send
+        # Linux: prefer swayosd, then dunstify, then notify-send
+        elif command -v swayosd-client >/dev/null 2>&1; then
+          swayosd-client --custom-message "$title" --custom-icon "emblem-downloads" || true
         elif command -v dunstify >/dev/null 2>&1; then
           dunstify -a fix-text -r "$rid" -u low -i edit-paste "$title" "$body" || true
         elif command -v notify-send >/dev/null 2>&1; then
