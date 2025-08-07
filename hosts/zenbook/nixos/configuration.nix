@@ -18,7 +18,8 @@
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/gnome.nix
+    ../../../modules/nixos/hyprland.nix
+    ../../../modules/nixos/nautilus.nix
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
