@@ -231,16 +231,12 @@ in
       "$mod+SHIFT, K, changegroupactive, b"
       "$mod+SHIFT, S, exec, grimblast copy area"
       "$mod+SHIFT, T, exec, fix-text"
-      ",XF86MonBrightnessUp, exec, light -A 10"
-      ",XF86MonBrightnessDown, exec, light -U 10"
-      "SHIFT ,XF86MonBrightnessUp, exec, light -A 1"
-      "SHIFT ,XF86MonBrightnessDown, exec, light -U 1"
-      ",XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"
-      ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"
-      "SHIFT ,XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01+"
-      "SHIFT ,XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.01-"
-      ",XF86AudioMute, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ toggle"
-      ",XF86AudioMicMute, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+      ",XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
+      ",XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
+      ",XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
+      ",XF86AudioLowerVolume, exec, swayosd-client --output-volume lower"
+      ",XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
+      ",XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
       "ALT, space, exec, kbd-backlight toggle"
       "$mod, V, exec, ghostty --class clipse -e 'clipse'"
     ]
@@ -338,6 +334,43 @@ in
         }
       ];
     };
+  };
+  services.swayosd = {
+    enable = true;
+    stylePath = pkgs.writeText "style.css" ''
+      @define-color background-color #1a1b26;
+      @define-color border-color #33ccff;
+      @define-color label #a9b1d6;
+      @define-color image #a9b1d6;
+      @define-color progress #a9b1d6;
+
+      window {
+        border-radius: 0;
+        opacity: 0.97;
+        border: 2px solid @border-color;
+
+        background-color: @background-color;
+      }
+
+      label {
+        font-family: 'CaskaydiaMono Nerd Font';
+        font-size: 11pt;
+
+        color: @label;
+      }
+
+      image {
+        color: @image;
+      }
+
+      progressbar {
+        border-radius: 0;
+      }
+
+      progress {
+        background-color: @progress;
+      }
+    '';
   };
 
   # Electron Flags File
