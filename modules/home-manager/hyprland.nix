@@ -353,7 +353,7 @@ in
       }
 
       label {
-        font-family: 'CaskaydiaMono Nerd Font';
+        font-family: 'Hack Nerd Font';
         font-size: 11pt;
 
         color: @label;
