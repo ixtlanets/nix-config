@@ -345,7 +345,7 @@ in
       @define-color progress #a9b1d6;
 
       window {
-        border-radius: 0;
+        border-radius: 40px;
         opacity: 0.97;
         border: 2px solid @border-color;
 
@@ -364,7 +364,7 @@ in
       }
 
       progressbar {
-        border-radius: 0;
+        border-radius: 40px;
       }
 
       progress {
