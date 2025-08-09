@@ -116,24 +116,44 @@ in
             "min-length" = 7;
           };
           "battery" = {
-            states = {
-              good = 95;
-              warning = 20;
-              critical = 10;
+            "format" = "{capacity}% {icon}";
+            "format-discharging" = "{icon}";
+            "format-charging" = "{icon}";
+            "format-plugged" = "";
+            "format-icons" = {
+              "charging" = [
+                "󰢜"
+                "󰂆"
+                "󰂇"
+                "󰂈"
+                "󰢝"
+                "󰂉"
+                "󰢞"
+                "󰂊"
+                "󰂋"
+                "󰂅"
+              ];
+              "default" = [
+                "󰁺"
+                "󰁻"
+                "󰁼"
+                "󰁽"
+                "󰁾"
+                "󰁿"
+                "󰂀"
+                "󰂁"
+                "󰂂"
+                "󰁹"
+              ];
             };
-            format = "{capacity}% {icon}";
-            format-charging = "{capacity}% ";
-            format-plugged = "";
-            tooltip-format = "{time} ({capacity}%)";
-            format-alt = "{time} {icon} : {power} W";
-            format-full = "";
-            format-icons = [
-              ""
-              ""
-              ""
-              ""
-              ""
-            ];
+            "format-full" = "󰂅";
+            "tooltip-format-discharging" = "{power:>1.0f}W↓ {capacity}%";
+            "tooltip-format-charging" = "{power:>1.0f}W↑ {capacity}%";
+            "interval" = 5;
+            "states" = {
+              "warning" = 20;
+              "critical" = 10;
+            };
           };
           tray = {
             "icon-size" = 10;
