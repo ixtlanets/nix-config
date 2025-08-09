@@ -242,7 +242,10 @@ in
   # Podman
 
   virtualisation = {
-    docker.enable = true;
+    docker = {
+      enable = true;
+      extraPackages = with pkgs; [ docker-buildx ];
+    };
   };
   programs = {
     _1password-gui = {
