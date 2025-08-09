@@ -17,7 +17,6 @@ let
           op item get "$id" --reveal
   '';
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
-    #!/usr/bin/env nix-shell
     # gen dns suffix
     DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
 
