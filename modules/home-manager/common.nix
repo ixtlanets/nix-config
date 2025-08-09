@@ -139,6 +139,7 @@ in
       git-crypt
       git-lfs
       devenv
+      devcontainer # work with vscode devcontainers without vscode itself
       _1password-cli
       sshuttle # VPN over ssh
     ]
