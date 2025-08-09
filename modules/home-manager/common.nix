@@ -78,6 +78,7 @@ in
 {
   imports = [
     ./fix-text.nix
+    ./ips-script.nix
   ];
   nixpkgs = {
     # You can add overlays here
