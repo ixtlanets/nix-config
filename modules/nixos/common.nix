@@ -165,15 +165,35 @@ in
     };
     printing.enable = true;
   };
-
-  xdg.portal = {
+  xdg.mime = {
     enable = true;
-    xdgOpenUsePortal = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-gtk
-      xdg-desktop-portal-hyprland
-    ];
-    config.common.default = "*";
+    defaultApplications = {
+      "application/pdf" = "zathura.desktop";
+      "image/png" = "nsxiv.desktop";
+      "image/jpeg" = "nsxiv.desktop";
+      "image/gif " = "nsxiv.desktop";
+      "image/webp" = "nsxiv.desktop";
+      "image/bmp " = "nsxiv.desktop";
+      "image/tiff" = "nsxiv.desktop";
+      "text/html" = "brave.desktop";
+      "x-scheme-handler/http" = "brave.desktop";
+      "x-scheme-handler/https" = "brave.desktop";
+      "video/mp4" = "mpv.desktop";
+      "video/x-msvideo" = "mpv.desktop";
+      "video/x-matroska" = "mpv.desktop";
+      "video/x-flv" = "mpv.desktop";
+      "video/x-ms-wmv" = "mpv.desktop";
+      "video/mpeg" = "mpv.desktop";
+      "video/ogg" = "mpv.desktop";
+      "video/webm" = "mpv.desktop";
+      "video/quicktime" = "mpv.desktop";
+      "video/3gpp" = "mpv.desktop";
+      "video/3gpp2" = "mpv.desktop";
+      "video/x-ms-asf" = "mpv.desktop";
+      "video/x-ogm+ogg" = "mpv.desktop";
+      "video/x-theora+ogg" = "mpv.desktop";
+      "application/ogg" = "mpv.desktop";
+    };
   };
 
   # Enable sound with pipewire.
