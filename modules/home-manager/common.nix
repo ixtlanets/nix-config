@@ -255,7 +255,7 @@ in
           ];
           image = [
             {
-              run = "swayimg \"$@\"";
+              run = "nsxiv \"$@\"";
               block = false;
             }
           ];
@@ -342,11 +342,11 @@ in
             }
             {
               name = "*.jpg";
-              use = "wallpaper";
+              use = "image";
             }
             {
               name = "*.jpeg";
-              use = "wallpaper";
+              use = "image";
             }
             {
               name = "*.gif";
