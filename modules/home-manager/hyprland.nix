@@ -86,6 +86,7 @@ in
     pavucontrol # volume control
     swaybg # to set wallpaper
     clipse # clipboard manager
+    kdePackages.xwaylandvideobridge # screensharing bridge
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
