@@ -2,77 +2,6 @@
   pkgs,
   ...
 }:
-let
-  # Define the script to toggle floating mode for the entire workspace
-  toggleFloatWorkspaceScript = pkgs.writeShellApplication {
-    name = "toggle-float-workspace";
-    # List packages needed by the script at runtime
-    runtimeInputs = with pkgs; [
-      bash
-      jq
-      hyprland
-    ];
-    text = ''
-      #!${pkgs.bash}/bin/bash
-      # Dependencies (jq, hyprctl) are made available via runtimeInputs
-
-      # Get current workspace ID
-      # $() is usually fine, Nix doesn't typically try to interpret it
-      ws_id=$(hyprctl activeworkspace -j | jq '.id')
-      # Escape shell variables used in the script logic with $
-      if [ -z "$ws_id" ] || [ "$ws_id" == "null" ]; then
-          echo "Error: Could not determine active workspace ID." >&2
-          exit 1
-      fi
-
-      # Define a state file path in /tmp
-      # ''${ws_id} correctly uses the Nix variable `ws_id` from the outer scope
-      # $state_file uses the shell variable defined below
-      state_file="/tmp/hypr_float_ws_''${ws_id}.state"
-
-      if [ -f "$state_file" ]; then
-        # === Switch back to TILING ===
-        # Escape shell variable $ws_id used in echo
-        echo "Workspace $ws_id: Switching to tiling mode."
-        # Use Nix variable ws_id in the keyword command
-        hyprctl keyword workspace "''${ws_id},defaultFloat:false" > /dev/null
-
-        # Pass the *value* of the shell variable $ws_id to jq's variable WSID.
-        # The $WSID inside the jq script '. ... $WSID ...' is interpreted by jq itself.
-        hyprctl clients -j | jq -r --argjson WSID "$ws_id" \
-          '.[] | select(.workspace.id == $WSID and .floating == true) | .address' |
-        while read -r addr; do
-          # Escape shell variable $addr used in bash regex and hyprctl command
-          if [[ "$addr" =~ ^0x[a-fA-F0-9]+$ ]]; then
-            hyprctl dispatch togglefloating address:"$addr" > /dev/null
-          fi
-        done
-
-        # Escape shell variable $state_file used with rm
-        rm "$state_file"
-      else
-        # === Switch to FLOATING ===
-        # Escape shell variable $ws_id used in echo
-        echo "Workspace $ws_id: Switching to floating mode."
-        # Use Nix variable ws_id in the keyword command
-        hyprctl keyword workspace "''${ws_id},defaultFloat:true" > /dev/null
-
-        # Pass the *value* of the shell variable $ws_id to jq's variable WSID
-        hyprctl clients -j | jq -r --argjson WSID "$ws_id" \
-          '.[] | select(.workspace.id == $WSID and .floating == false) | .address' |
-        while read -r addr; do
-          # Escape shell variable $addr used in bash regex and hyprctl command
-           if [[ "$addr" =~ ^0x[a-fA-F0-9]+$ ]]; then
-            hyprctl dispatch togglefloating address:"$addr" > /dev/null
-           fi
-        done
-
-        # Escape shell variable $state_file used with touch
-        touch "$state_file"
-      fi
-    '';
-  };
-in
 {
   imports = [
     ./kbd-backlight.nix
@@ -214,7 +143,6 @@ in
       "$mod+SHIFT, E, exit"
       "$mod, W, killactive"
       "$mod, F, togglefloating"
-      "$mod SHIFT, F, exec, ${toggleFloatWorkspaceScript}/bin/toggle-float-workspace"
       "$mod, B, exec, chromium-browser"
       "$mod, Return, exec, alacritty"
       "$mod, D, exec, rofi -show run"
