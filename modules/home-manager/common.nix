@@ -132,6 +132,7 @@ in
       speedtest-rs # speedtest
       fabric-ai
       codex # AI coding agent by OpenAI
+      qwen-code # AI coding agent by Qwen
       viu # terminal image viewer
       ast-grep # code structural search
 
