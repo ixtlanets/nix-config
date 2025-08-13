@@ -7,7 +7,6 @@
   lib,
   config,
   pkgs,
-  niknvim,
   dpi,
   ...
 }:

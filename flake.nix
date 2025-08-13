@@ -13,16 +13,10 @@
     home-manager.url = "github:nix-community/home-manager/master";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
-    # NUR
-    nur.url = "github:nix-community/NUR";
-
     hardware.url = "github:nixos/nixos-hardware/master";
 
     darwin.url = "github:lnl7/nix-darwin";
     darwin.inputs.nixpkgs.follows = "nixpkgs";
-
-    niknvim.url = "github:ixtlanets/nixnvim";
-    niknvim.inputs.nixpkgs.follows = "nixpkgs";
 
     catppuccin.url = "github:catppuccin/nix";
 
@@ -49,9 +43,7 @@
       home-manager,
       plasma-manager,
       hardware,
-      nur,
       darwin,
-      niknvim,
       catppuccin,
       ghostty,
       disko,
@@ -114,7 +106,6 @@
             };
             modules = [
               catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
               ./hosts/x1carbon/nixos/configuration.nix
               hardware.nixosModules.lenovo-thinkpad-x1-6th-gen
               hardware.nixosModules.common-cpu-intel
@@ -127,8 +118,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -150,7 +139,6 @@
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
               catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
               ./hosts/x1extreme/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               hardware.nixosModules.common-cpu-intel
@@ -170,8 +158,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -193,7 +179,6 @@
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
               catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
               ./hosts/x13/nixos/configuration.nix
               disko.nixosModules.disko
               ./hosts/x13/nixos/disko-config.nix
@@ -220,8 +205,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -243,7 +226,6 @@
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
               catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
               ./hosts/um960pro/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               disko.nixosModules.disko
@@ -260,8 +242,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -308,7 +288,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -331,7 +310,6 @@
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
               catppuccin.nixosModules.catppuccin
-              nur.modules.nixos.default
               ./hosts/matebook/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               disko.nixosModules.disko
@@ -347,8 +325,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -382,8 +358,6 @@
                   extraSpecialArgs = {
                     inherit
                       outputs
-                      nur
-                      niknvim
                       dpi
                       ghostty
                       ;
@@ -412,7 +386,7 @@
           {
             home-manager = {
               useUserPackages = true;
-              extraSpecialArgs = { inherit outputs niknvim; };
+              extraSpecialArgs = { inherit outputs; };
               users.nik.imports = [ ./hosts/m1max/home-manager/home.nix ];
             };
           }
@@ -431,7 +405,7 @@
       homeConfigurations = {
         "nik@wsl" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
-          extraSpecialArgs = { inherit inputs outputs niknvim; };
+          extraSpecialArgs = { inherit inputs outputs; };
           modules = [
             catppuccin.homeModules.catppuccin
             # > Our main home-manager configuration file <
@@ -444,7 +418,6 @@
             inherit
               inputs
               outputs
-              niknvim
               ghostty
               ;
           };

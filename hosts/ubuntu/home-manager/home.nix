@@ -1,4 +1,11 @@
-{ inputs, outputs, lib, config, pkgs, niknvim, ... }: 
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../../../modules/home-manager/starship.nix
@@ -9,7 +16,6 @@
   ];
 
   fonts.fontconfig.enable = true;
-
 
   programs = {
     emacs = {

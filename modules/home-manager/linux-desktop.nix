@@ -52,46 +52,6 @@ in
         };
       };
     };
-    zed-editor = {
-      enable = true;
-      extensions = [
-        "anya"
-        "nix"
-        "caddyfile"
-        "csv"
-        "dart"
-        "dockerfile"
-        "docker-compose"
-        "env"
-        "make"
-        "nginx"
-        "org"
-        "prisma"
-        "ruby"
-        "scss"
-      ];
-      extraPackages = [ pkgs.nixd ];
-      userSettings = {
-        "features" = {
-          "inline_completion_provider" = "zed";
-        };
-        "assistant" = {
-          "default_model" = {
-            "provider" = "zed.dev";
-            "model" = "claude-3-5-sonnet-latest";
-          };
-          "version" = "2";
-        };
-        "relative_line_numbers" = true;
-        "vim_mode" = true;
-        "ui_font_size" = 16;
-        "buffer_font_family" = "Hack Nerd Font Mono";
-        "terminal" = {
-          "font_family" = "Hack Nerd Font Mono";
-        };
-        "buffer_font_size" = 16;
-      };
-    };
     vscode = {
       enable = true;
 
