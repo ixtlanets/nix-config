@@ -70,7 +70,7 @@ in
   powerManagement.enable = true;
 
   # Use latest kernel
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_zen;
 
   # Enable networking
   networking.networkmanager.enable = true;
