@@ -141,6 +141,11 @@ in
         glibc
       ];
     };
+    nekoray = {
+      enable = true;
+      tunMode.enable = true;
+      tunMode.setuid = true;
+    };
   };
 
   # Services
