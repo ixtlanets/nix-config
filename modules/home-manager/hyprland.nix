@@ -99,6 +99,12 @@
         new_optimizations = "on";
       };
 
+      shadow = {
+        enabled = true;
+        range = 10;
+        render_power = 10;
+        color = "rgba(1a1a1aee)";
+      };
     };
     monitor = [
       "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
