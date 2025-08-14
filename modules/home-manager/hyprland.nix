@@ -2,11 +2,34 @@
   pkgs,
   ...
 }:
+let
+  handle_monitor_connect = pkgs.writeShellScriptBin "handle_monitor_connect" ''
+    set -euo pipefail
+
+    ${pkgs.variety}/bin/variety --next
+
+    handle() {
+      case "$1" in
+        monitoradded*)
+          hyprctl dispatch moveworkspacetomonitor "1 1"
+          hyprctl dispatch moveworkspacetomonitor "2 1"
+          hyprctl dispatch moveworkspacetomonitor "3 1"
+          hyprctl dispatch moveworkspacetomonitor "4 1"
+          hyprctl dispatch moveworkspacetomonitor "5 1"
+          ;;
+      esac
+    }
+
+    ${pkgs.socat}/bin/socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
+      | while read -r line; do handle "$line"; done
+  '';
+in
 {
   imports = [
     ./kbd-backlight.nix
   ];
   home.packages = with pkgs; [
+    socat
     adwaita-icon-theme
     rofi-wayland
     grimblast # screenshot utility based on grim
@@ -16,6 +39,7 @@
     swaybg # to set wallpaper
     clipse # clipboard manager
     kdePackages.xwaylandvideobridge # screensharing bridge
+    handle_monitor_connect
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
@@ -25,6 +49,7 @@
       "clipse -listen" # start clipboard manager
       # Clean up any stale state files on login/reload
       "find /tmp -name 'hypr_float_ws_*.state' -delete"
+      "handle_monitor_connect"
     ];
     exec = [
       "systemctl --user restart waybar"

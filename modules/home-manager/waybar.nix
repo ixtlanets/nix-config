@@ -2,44 +2,7 @@
   pkgs,
   ...
 }:
-let
-  setup-workspace = pkgs.writeShellScriptBin "setup-workspace" ''
-    ${pkgs.variety}/bin/variety --next
-
-    # Get list of connected monitors
-    monitors=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[].name')
-    internal_monitor="eDP-1"
-    external_monitor=""
-
-    # Find first external monitor
-    for monitor in $monitors; do
-      if [ "$monitor" != "$internal_monitor" ]; then
-        external_monitor=$monitor
-        break
-      fi
-    done
-
-    # Determine target monitor for workspaces 1-5
-    target_monitor=$internal_monitor
-    if [ -n "$external_monitor" ]; then
-      target_monitor=$external_monitor
-    fi
-
-    # Set workspace rules
-    ${pkgs.hyprland}/bin/hyprctl keyword workspace r1-5, monitor:$target_monitor,persistent:true
-    ${pkgs.hyprland}/bin/hyprctl keyword workspace r10, monitor:$internal_monitor,persistent:true
-
-    # Move workspaces to appropriate monitors
-    for i in {1..5}; do
-      ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor $i $target_monitor
-    done
-    ${pkgs.hyprland}/bin/hyprctl dispatch moveworkspacetomonitor 10 $internal_monitor
-  '';
-in
 {
-  home.packages = [
-    setup-workspace
-  ];
   programs = {
     waybar = {
       enable = true;
@@ -50,7 +13,6 @@ in
           position = "top";
           modules-center = [ "clock" ];
           modules-right = [
-            "custom/workspace-control"
             "pulseaudio"
             "temperature"
             "backlight"
@@ -158,21 +120,6 @@ in
           tray = {
             "icon-size" = 10;
             "spacing" = 4;
-          };
-          "custom/workspace-control" = {
-            "exec" = "${pkgs.writeShellScript "workspace-status" ''
-              monitors=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[].name')
-              count=$(echo "$monitors" | wc -l)
-              if [ "$count" -gt 1 ]; then
-                    echo '{"text": "", "class": "multi-monitor"}'
-                  else
-                    echo '{"text": "", "class": "single-monitor"}'
-                  fi
-            ''}";
-            "return-type" = "json";
-            "interval" = 2;
-            "on-click" = "${setup-workspace}/bin/setup-workspace";
-            "tooltip" = false;
           };
         };
       };
