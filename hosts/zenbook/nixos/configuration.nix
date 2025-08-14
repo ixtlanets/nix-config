@@ -47,6 +47,11 @@
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
+    package = pkgs.steam.override {
+      extraPkgs = pkgs: [
+        pkgs.libglvnd
+      ];
+    };
   };
 
   system.stateVersion = "24.11"; # Did you read the comment?
