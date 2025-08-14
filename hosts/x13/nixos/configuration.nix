@@ -72,6 +72,11 @@
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
+    package = pkgs.steam.override {
+      extraPkgs = pkgs: [
+        pkgs.libglvnd
+      ];
+    };
   };
   environment.systemPackages = [
     pkgs.xf86_input_wacom
