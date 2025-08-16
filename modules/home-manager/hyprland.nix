@@ -273,6 +273,7 @@ in
   # Services
   services.network-manager-applet.enable = true;
   services.hyprpolkitagent.enable = true; # Hyprland polkit agent
+  services.gnome-keyring.enable = true;
   services.hypridle = {
     enable = true;
     settings = {
