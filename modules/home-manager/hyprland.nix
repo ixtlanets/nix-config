@@ -40,6 +40,7 @@ in
     clipse # clipboard manager
     kdePackages.xwaylandvideobridge # screensharing bridge
     handle_monitor_connect
+    hyprpolkitagent
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
@@ -271,6 +272,7 @@ in
 
   # Services
   services.network-manager-applet.enable = true;
+  services.hyprpolkitagent.enable = true; # Hyprland polkit agent
   services.hypridle = {
     enable = true;
     settings = {
