@@ -88,11 +88,11 @@ in
         font_weight_active = "bold";
         font_weight_inactive = "normal";
         # colors from catppuccin palete
-        "col.active" = "rgb(89b4fa) rgb(89b4fa)";
-        "col.inactive" = "rgb(6c7086) rgb(6c7086)"; # Surface1
-        "col.locked_active" = "rgb(89b4fa) rgb(89b4fa)";
-        "col.locked_inactive" = "rgb(6c7086) rgb(6c7086)"; # Surface1
-        "text_color" = "rgb(1e1e2e)"; # Text
+        "col.active" = "rgb(7f849c) rgb(9399b2)";
+        "col.inactive" = "rgb(313244) rgb(313244)"; # Surface1
+        "col.locked_active" = "rgb(313244) rgb(313244)";
+        "col.locked_inactive" = "rgb(7f849c) rgb(9399b2)"; # Surface1
+        "text_color" = "rgb(cdd6f4)"; # Text
 
         # sizing - to make text appear on groupbar "gradients" instead of transparent bars.
         # about half the indicator height
