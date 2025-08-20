@@ -37,6 +37,7 @@
     padding: 0 4px;
     color: @base05;
     font-weight: 700;
+    border-bottom: 3px solid @base01;
 }
 
 #workspaces button.empty {
