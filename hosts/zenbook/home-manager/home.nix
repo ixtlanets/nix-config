@@ -33,12 +33,6 @@
     ../../../modules/home-manager/ghostty.nix
   ];
 
-  wayland.windowManager.hyprland.settings = {
-    bindl = [
-      ", switch:on:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, disable\""
-      ", switch:off:Lid Switch, exec, hyprctl keyword monitor \"eDP-1, 2880x1800, 0x0, 2\""
-    ];
-  };
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
