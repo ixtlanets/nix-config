@@ -133,6 +133,8 @@ in
       fabric-ai
       codex # AI coding agent by OpenAI
       qwen-code # AI coding agent by Qwen
+      claude-code # AI coding agent by Claude
+      claude-code-router
       gemini-cli
       viu # terminal image viewer
       ast-grep # code structural search

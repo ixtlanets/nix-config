@@ -10,4 +10,5 @@
   google-genai = pkgs.callPackage ./google-genai.nix { };
   pdftext = pkgs.callPackage ./pdftext.nix { };
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };
+  claude-code-router = pkgs.callPackage ./claude-code-router.nix { };
 }
