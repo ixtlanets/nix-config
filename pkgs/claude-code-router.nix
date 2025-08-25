@@ -1,29 +1,51 @@
 {
   lib,
-  fetchFromGitHub,
   stdenv,
+  fetchzip,
+  nodejs_20,
 }:
 
 stdenv.mkDerivation rec {
   pname = "claude-code-router";
-  version = "unstable-2025-08-24";
+  version = "1.0.43";
 
-  src = fetchFromGitHub {
-    owner = "musistudio";
-    repo = "claude-code-router";
-    rev = "TODO";
-    hash = lib.fakeSha256;
+  src = fetchzip {
+    url = "https://registry.npmjs.org/@musistudio/claude-code-router/-/claude-code-router-${version}.tgz";
+    hash = "sha256-FLfSBo/rqnjOMmMHUTXbk1p0gI1H+0Uv38EiveCDJjM=";
   };
 
+  nativeBuildInputs = [ nodejs_20 ];
+
   installPhase = ''
-    mkdir -p $out
-    cp -r * $out/
+    runHook preInstall
+
+    # The npm package already contains built files
+    mkdir -p $out/bin
+    cp $src/dist/cli.js $out/bin/ccr
+    chmod +x $out/bin/ccr
+
+    # Replace the shebang with the correct node path
+    substituteInPlace $out/bin/ccr \
+      --replace-quiet "#!/usr/bin/env node" "#!${nodejs_20}/bin/node"
+
+    # Install the WASM file in the same directory as the CLI
+    cp $src/dist/tiktoken_bg.wasm $out/bin/
+
+    runHook postInstall
   '';
 
-  meta = {
-    description = "Placeholder package for claude-code-router";
+  passthru = {
+    updateScript = ./update.sh;
+  };
+
+  meta = with lib; {
+    description = "Use Claude Code without an Anthropics account and route it to another LLM provider";
     homepage = "https://github.com/musistudio/claude-code-router";
-    license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [ ];
+    changelog = "https://github.com/musistudio/claude-code-router/releases";
+    license = licenses.mit;
+    sourceProvenance = with lib.sourceTypes; [ binaryBytecode ];
+    maintainers = with maintainers; [ ];
+    mainProgram = "ccr";
+    platforms = platforms.all;
   };
 }
