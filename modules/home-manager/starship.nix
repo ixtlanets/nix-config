@@ -23,7 +23,7 @@
       ];
       right_format = lib.strings.concatStrings [
         "$battery"
-          "$time"
+        "$time"
       ];
       battery = {
         full_symbol = "";

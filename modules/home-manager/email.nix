@@ -1,4 +1,11 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   isLinux = pkgs.stdenv.isLinux;
 in
@@ -17,8 +24,8 @@ in
       mbsync.create = "maildir";
       mu.enable = true;
       signature.text = ''
-      Best wishes,
-      Sergey Nikulin
+        Best wishes,
+        Sergey Nikulin
       '';
       gpg = {
         key = "6EA4E8EBBC9094DDF20B112D539459F1879941F7";
@@ -35,8 +42,8 @@ in
       mbsync.create = "maildir";
       mu.enable = true;
       signature.text = ''
-      Best wishes,
-      Sergey Nikulin
+        Best wishes,
+        Sergey Nikulin
       '';
       thunderbird.enable = isLinux;
     };
@@ -49,8 +56,8 @@ in
       mbsync.create = "maildir";
       mu.enable = true;
       signature.text = ''
-      Best wishes,
-      Sergey Nikulin
+        Best wishes,
+        Sergey Nikulin
       '';
       thunderbird.enable = isLinux;
     };

@@ -1,4 +1,3 @@
-
 { pkgs, lib, ... }:
 {
   home.packages = with pkgs; [
@@ -6,4 +5,3 @@
     whisper-ctranslate2
   ];
 }
-

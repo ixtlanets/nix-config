@@ -1,4 +1,11 @@
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   home.packages = with pkgs; [
     swayimg
@@ -23,7 +30,7 @@
     config = {
       terminal = "\${pkgs.foot}/bin/foot";
       modifier = "Mod4";
-      bars = [];
+      bars = [ ];
       input = {
         "type:keyboard" = {
           xkb_layout = "us,ru";
@@ -41,16 +48,22 @@
         size = 11.0;
       };
       startup = [
-      { command = "variety"; always = true; }
-      { command = "systemctl --user restart waybar"; always = true; }
+        {
+          command = "variety";
+          always = true;
+        }
+        {
+          command = "systemctl --user restart waybar";
+          always = true;
+        }
       ];
       window = {
         border = 2;
       };
       keybindings =
         let
-        modifier = config.wayland.windowManager.sway.config.modifier;
-      in
+          modifier = config.wayland.windowManager.sway.config.modifier;
+        in
         lib.mkOptionDefault {
           "XF86MonBrightnessUp" = "exec light -A 10";
           "XF86MonBrightnessDown" = "exec light -U 10";
@@ -65,34 +78,38 @@
         };
     };
     extraConfig = ''
-set $laptop eDP-1
-bindswitch --reload --locked lid:on output $laptop disable
-bindswitch --reload --locked lid:off output $laptop enable
+      set $laptop eDP-1
+      bindswitch --reload --locked lid:on output $laptop disable
+      bindswitch --reload --locked lid:off output $laptop enable
     '';
   };
   programs = {
     waybar = {
       settings = {
         mainBar = {
-          modules-left = [ "sway/workspaces" "sway/language" "sway/mode" ];
+          modules-left = [
+            "sway/workspaces"
+            "sway/language"
+            "sway/mode"
+          ];
 
           "sway/workspaces" = {
             disable-scroll = true;
             all-outputs = true;
-            "persistent_workspaces"= {
-              "1"= [];
-              "2"= [];
-              "3"= [];
-              "4"= [];
+            "persistent_workspaces" = {
+              "1" = [ ];
+              "2" = [ ];
+              "3" = [ ];
+              "4" = [ ];
             };
           };
           "sway/language" = {
-            "format"= " {}";
+            "format" = " {}";
             "min-length" = 5;
-            "tooltip"= false;
+            "tooltip" = false;
           };
           "sway/mode" = {
-            "format"= "<span style=\"italic\">{}</span>";
+            "format" = "<span style=\"italic\">{}</span>";
           };
         };
       };
@@ -100,7 +117,7 @@ bindswitch --reload --locked lid:off output $laptop enable
   };
   services.network-manager-applet.enable = true;
   home.file.".config/electron-flags.conf".text = ''
---enable-features=WaylandWindowDecorations
---ozone-platform-hint=auto
+    --enable-features=WaylandWindowDecorations
+    --ozone-platform-hint=auto
   '';
 }

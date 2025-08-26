@@ -70,14 +70,22 @@
           pkgs = nixpkgs.legacyPackages.${system};
         in
         {
-          fmt = pkgs.runCommand "fmt-check" { nativeBuildInputs = [ pkgs.nixfmt-rfc-style pkgs.findutils ]; } ''
-            set -eu
-            files=$(find . -type f -name '*.nix' | tr '\n' ' ')
-            if [ -n "''${files}" ]; then
-              nixfmt --check ''${files}
-            fi
-            mkdir -p "$out"
-          '';
+          fmt =
+            pkgs.runCommand "fmt-check"
+              {
+                nativeBuildInputs = [
+                  pkgs.nixfmt-rfc-style
+                  pkgs.findutils
+                ];
+              }
+              ''
+                set -eu
+                files=$(find . -type f -name '*.nix' | tr '\n' ' ')
+                if [ -n "''${files}" ]; then
+                  nixfmt --check ''${files}
+                fi
+                mkdir -p "$out"
+              '';
           statix = pkgs.runCommand "statix-check" { nativeBuildInputs = [ pkgs.statix ]; } ''
             set -eu
             statix check .
