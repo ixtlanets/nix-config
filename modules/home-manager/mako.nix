@@ -1,5 +1,11 @@
-
-{ inputs, outputs, lib, config, pkgs, ... }:
+{
+  inputs,
+  outputs,
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 {
   home.packages = with pkgs; [
     mako
@@ -17,6 +23,6 @@
 
       [urgency=high]
       border-color=#f5a97f
-        '';
+    '';
   };
 }
