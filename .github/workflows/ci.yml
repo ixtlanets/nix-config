@@ -35,7 +35,8 @@ jobs:
       - name: Deadnix
         run: nix run nixpkgs#deadnix -- --fail .
 
-      - name: Flake checks
+      - name: Flake checks (Linux only)
+        if: runner.os == 'Linux'
         run: nix flake check --print-build-logs
 
       - name: Build key packages (Linux only)
