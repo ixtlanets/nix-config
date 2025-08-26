@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  nix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            accept-flake-config = true
+            experimental-features = nix-command flakes
+
+      - name: Show Nix version
+        run: nix --version
+
+      - name: Format check (nix fmt)
+        run: nix fmt -- --check .
+
+      - name: Statix
+        run: nix run nixpkgs#statix -- check .
+
+      - name: Deadnix
+        run: nix run nixpkgs#deadnix -- --fail .
+
+      - name: Flake checks
+        run: nix flake check --print-build-logs
+
+      - name: Build key packages (Linux only)
+        if: runner.os == 'Linux'
+        run: |
+          nix build .#marker-pdf
+          nix build .#pdftext
+          nix build .#surya-ocr
+          nix build .#google-genai

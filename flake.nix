@@ -60,6 +60,37 @@
       ];
     in
     {
+      # Code formatter for `nix fmt`
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
+
+      # CI checks (formatting + linting) exposed as flake checks
+      checks = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          fmt = pkgs.runCommand "fmt-check" { nativeBuildInputs = [ pkgs.nixfmt-rfc-style pkgs.findutils ]; } ''
+            set -eu
+            files=$(find . -type f -name '*.nix' | tr '\n' ' ')
+            if [ -n "''${files}" ]; then
+              nixfmt --check ''${files}
+            fi
+            mkdir -p "$out"
+          '';
+          statix = pkgs.runCommand "statix-check" { nativeBuildInputs = [ pkgs.statix ]; } ''
+            set -eu
+            statix check .
+            mkdir -p "$out"
+          '';
+          deadnix = pkgs.runCommand "deadnix-check" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
+            set -eu
+            deadnix --fail .
+            mkdir -p "$out"
+          '';
+        }
+      );
+
       # Your custom packages
       # Acessible through 'nix build', 'nix shell', etc
       packages = forAllSystems (
