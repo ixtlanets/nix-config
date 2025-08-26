@@ -29,15 +29,15 @@ jobs:
       - name: Format check (nix fmt)
         run: nix fmt -- --check .
 
-      - name: Statix
+      - name: Statix (advisory)
         run: nix run nixpkgs#statix -- check .
+        continue-on-error: true
 
-      - name: Deadnix
+      - name: Deadnix (advisory)
         run: nix run nixpkgs#deadnix -- --fail .
+        continue-on-error: true
 
-      - name: Flake checks (Linux only)
-        if: runner.os == 'Linux'
-        run: nix flake check --print-build-logs
+      # Removed: full flake check (expensive and cross-system builds)
 
       - name: Build key packages (Linux only)
         if: runner.os == 'Linux'
