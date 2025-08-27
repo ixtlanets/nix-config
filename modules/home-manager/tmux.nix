@@ -25,6 +25,7 @@
           set -g @dracula-show-left-icon session
           set -g @dracula-day-month true
           set -g @dracula-military-time true
+          set -g @dracula-battery-label ""
 
           set -g allow-passthrough on
 
