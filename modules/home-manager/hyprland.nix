@@ -27,11 +27,11 @@ in
 {
   imports = [
     ./kbd-backlight.nix
+    ./walker.nix
   ];
   home.packages = with pkgs; [
     socat
     adwaita-icon-theme
-    rofi-wayland
     grimblast # screenshot utility based on grim
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
@@ -171,13 +171,19 @@ in
       "$mod, mouse:272, movewindow"
       "$mod, mouse:273, resizewindow"
     ];
+    # binds which works even on lock screen
+    bindl = [
+      ",XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
+      ",XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
+      "ALT, space, exec, kbd-backlight toggle"
+    ];
     bind = [
       "$mod+SHIFT, E, exit"
       "$mod, W, killactive"
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
       "$mod, Return, exec, alacritty"
-      "$mod, D, exec, rofi -show run"
+      "$mod, D, exec, walker -p 'start'"
       "$mod, H, movefocus, l"
       "$mod, J, movefocus, d"
       "$mod, K, movefocus, u"
@@ -192,13 +198,10 @@ in
       "$mod+SHIFT, K, changegroupactive, b"
       "$mod+SHIFT, S, exec, grimblast copy area"
       "$mod+SHIFT, T, exec, fix-text"
-      ",XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
-      ",XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
       ",XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
       ",XF86AudioLowerVolume, exec, swayosd-client --output-volume lower"
       ",XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
       ",XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
-      "ALT, space, exec, kbd-backlight toggle"
       "$mod, V, exec, ghostty --class clipse -e 'clipse'"
     ]
     ++ (
