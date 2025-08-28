@@ -54,7 +54,7 @@
                 ""
               ];
             };
-            "on-click" = "pavucontrol";
+            "on-click" = "alacritty --class=Wiremix -e wiremix";
             "min-length" = 13;
           };
           temperature = {
