@@ -23,6 +23,22 @@ let
     ${pkgs.socat}/bin/socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
       | while read -r line; do handle "$line"; done
   '';
+  take-screenshot = pkgs.writeShellScriptBin "take-screenshot" ''
+    OUTPUT_DIR="$HOME/Pictures"
+
+    if [[ ! -d "$OUTPUT_DIR" ]]; then
+      notify-send "Screenshot directory does not exist: $OUTPUT_DIR" -u critical -t 3000
+      exit 1
+    fi
+
+    pkill slurp || hyprshot -m region --raw |
+      satty --filename - \
+        --output-filename "$OUTPUT_DIR/screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png" \
+        --early-exit \
+        --actions-on-enter save-to-clipboard \
+        --save-after-copy \
+        --copy-command 'wl-copy'
+  '';
 in
 {
   imports = [
@@ -33,13 +49,18 @@ in
     socat
     adwaita-icon-theme
     grimblast # screenshot utility based on grim
+    slurp # Select a region in a Wayland compositor
+    hyprshot # take screenshots in Hyprland using your mouse
     xdg-utils # for opening default programs when clicking links
     glfw-wayland
     pavucontrol # volume control
     swaybg # to set wallpaper
     clipse # clipboard manager
+    wiremix # TUI for audio
+    satty # Screenshot annotaion
     kdePackages.xwaylandvideobridge # screensharing bridge
     handle_monitor_connect
+    take-screenshot
     hyprpolkitagent
   ];
   wayland.windowManager.hyprland.enable = true;
@@ -151,6 +172,7 @@ in
       "noanim,title:^(Quick Access — 1Password)$"
 
       "float, class:^(org.gnome.*)$"
+      "float, class:(Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|TUI.float)"
       "float, class:^(pavucontrol|com.saivert.pwvucontrol)$"
       # make pop-up file dialogs floating, centred, and pinned
       "float, title:(Open|Progress|Save File)"
@@ -196,7 +218,7 @@ in
       "$mod, T, lockactivegroup, toggle"
       "$mod+SHIFT, J, changegroupactive, f"
       "$mod+SHIFT, K, changegroupactive, b"
-      "$mod+SHIFT, S, exec, grimblast copy area"
+      "$mod+SHIFT, S, exec, take-screenshot"
       "$mod+SHIFT, T, exec, fix-text"
       ",XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
       ",XF86AudioLowerVolume, exec, swayosd-client --output-volume lower"
