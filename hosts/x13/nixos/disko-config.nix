@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, config, ... }:
 {
   disko.devices = {
     disk = {
@@ -25,9 +25,16 @@
             root = {
               size = "100%";
               content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/";
+                type = "luks";
+                name = "encrypted_root";
+                # For nixos-anywhere deployment, create /tmp/disk-passphrase on the target machine
+                # before startinh install
+                passwordFile = lib.mkDefault "/tmp/disk-passphrase";
+                content = {
+                  type = "filesystem";
+                  format = "ext4";
+                  mountpoint = "/";
+                };
               };
             };
           };
