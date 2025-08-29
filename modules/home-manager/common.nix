@@ -481,8 +481,6 @@ in
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_full.git "$HOME/pro/verbatoria/verbatoria_full"
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_go.git "$HOME/pro/verbatoria/verbatoria_go"
       PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/detector.git "$HOME/pro/loktar/detector"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@loktar.gitlab.yandexcloud.net:loktar/drone-detector.git "$HOME/pro/loktar/drone-detector"
       fi
     '';
   };
