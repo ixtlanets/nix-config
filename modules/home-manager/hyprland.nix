@@ -204,7 +204,7 @@ in
       "$mod, W, killactive"
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
-      "$mod, Return, exec, alacritty"
+      "$mod, Return, exec, ghostty"
       "$mod, D, exec, walker -p 'start'"
       "$mod, H, movefocus, l"
       "$mod, J, movefocus, d"
