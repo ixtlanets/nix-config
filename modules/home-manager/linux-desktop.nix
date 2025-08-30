@@ -142,6 +142,9 @@
       };
       mutableExtensionsDir = true;
     };
+    zed-editor = {
+      enable = true;
+    };
     browserpass = {
       enable = true;
       browsers = [
