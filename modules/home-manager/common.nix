@@ -426,6 +426,9 @@ in
         };
       };
     };
+    opencode = {
+      enable = true;
+    };
   };
 
   home.shellAliases = {
