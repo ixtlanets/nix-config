@@ -144,9 +144,6 @@
     zed-editor = {
       enable = true;
     };
-    opencode = {
-      enable = true;
-    };
     browserpass = {
       enable = true;
       browsers = [
