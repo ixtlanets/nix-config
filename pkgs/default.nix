@@ -10,4 +10,5 @@
   google-genai = pkgs.callPackage ./google-genai.nix { };
   pdftext = pkgs.callPackage ./pdftext.nix { };
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };
+  codebuddy-code = pkgs.callPackage ./codebuddy-code.nix { };
 }
