@@ -9,31 +9,31 @@
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
      tawm = inputs.tawm.packages.${prev.system}.default;
-     codex = prev.codex.overrideAttrs (old: rec {
-       version = "0.34.0";
-       buildType = "simple";
-       cargoSetupPostPatchHook = ":";
-       nativeBuildInputs = [ prev.zstd ];
-       src =
-         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
-           prev.fetchurl {
-             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-             sha256 = "1r72wl2agv60zbsavlw2d3cljyf3x820kzmafp2ml7fdh7nnd023";
-           }
-         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
-           prev.fetchurl {
-             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-             sha256 = "0kna13hvcnnxzlbc1h08r55qmrc1spd55v1vz456fxirajx1p6mi";
-           }
-         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
-           prev.fetchurl {
-             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-             sha256 = "0sc0hjcy5zvc2f6dshykx61rksii9fi48fkcwgdgfrdm6zx51c86";
-           }
-         else throw "Unsupported system for codex";
-       dontUnpack = true;
-       installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
-     });
+      codex = prev.codex.overrideAttrs (old: rec {
+        version = "0.36.0";
+        buildType = "simple";
+        cargoSetupPostPatchHook = ":";
+        nativeBuildInputs = [ prev.zstd ];
+        src =
+          if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
+            prev.fetchurl {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
+              sha256 = "320062ab20916802006c820fee43063472313f26ae63bbeb52689e9fa420f129";
+            }
+          else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
+            prev.fetchurl {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
+              sha256 = "896b1a49bcec675d522a4f216e71a714cbe3de3661116ca5bb654a7e82a3a625";
+            }
+          else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
+            prev.fetchurl {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
+              sha256 = "31f480d145e985a25c069c60f14d9e0056c70e0566a13442e77dfa84d5da168f";
+            }
+          else throw "Unsupported system for codex";
+        dontUnpack = true;
+        installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
+      });
      # example = prev.example.overrideAttrs (oldAttrs: rec {
      # ...
      # });
