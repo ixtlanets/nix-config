@@ -1,5 +1,8 @@
 # Repository Guidelines
 
+## Important Notes
+- Do not run `sudo nixos-rebuild build --flake .#zenbook` or similar commands yourself. Always ask the user to execute them.
+
 ## Project Structure & Module Organization
 - Root: Nix flake (`flake.nix`, `flake.lock`), overlays (`overlays/`), custom packages (`pkgs/`).
 - Hosts: per‑machine configs under `hosts/<host>/{nixos,home-manager}/` (e.g., `hosts/x1carbon/nixos/configuration.nix`).

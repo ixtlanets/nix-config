@@ -24,6 +24,13 @@
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
 
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 8 * 1024; # 8 GB
+    }
+  ];
+
   services.ollama = {
     enable = true;
   };
