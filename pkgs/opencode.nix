@@ -17,35 +17,42 @@ stdenv.mkDerivation rec {
     else if stdenv.isLinux && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-arm64.zip";
-        sha256 = "fc231d3b233821bfba2c60fc4322fbab8bde5ab138752f11e0694ca73e02a36b";
+        sha256 = "6a08a880dca527001cb98ada750f11398a6c6630a1994ccb90e6bd6352057b3f";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-x64.zip";
-        sha256 = "26353cee1af08715ca77dab2c66771d66b5b479148c9912e10c0352035a030af";
+        sha256 = "0fca768b8987c94a04f56cf84e092842d8ff2093b2f1620a6804999c592469a2";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "86f1597380e2fa7ce6f9afb170b4de099674a567d33a3d3fcd648de2de93b93a";
+        sha256 = "b85384bd888bcff816be83acae154c989cca083a0cc60238a4e73bf2905eb1d5";
         stripRoot = false;
       }
-    else throw "Unsupported system for opencode";
+    else
+      throw "Unsupported system for opencode";
 
   dontUnpack = false;
 
+  # The binary bundles Bun with extra data; stripping it would drop the
+  # embedded payload and leave only the Bun runtime in the output.
+  dontStrip = true;
+
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/bin
     cp opencode $out/bin/
     chmod +x $out/bin/opencode
+    runHook postInstall
   '';
 
   meta = {
     description = "The AI coding agent built for the terminal";
     homepage = "https://opencode.ai";
-    license = lib.licenses.unfree; # Assuming, as it's a commercial tool
+    license = lib.licenses.mit;
     maintainers = [ ];
     mainProgram = "opencode";
   };
