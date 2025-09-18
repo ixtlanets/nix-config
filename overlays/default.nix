@@ -2,7 +2,14 @@
 { inputs, ... }:
 {
   # This one brings our custom packages from the 'pkgs' directory
-  additions = final: _prev: import ../pkgs { pkgs = final; };
+  additions = final: prev: {
+    opencode = final.callPackage ../pkgs/opencode.nix { };
+    marker-pdf = final.callPackage ../pkgs/marker-pdf.nix { };
+    google-genai = final.callPackage ../pkgs/google-genai.nix { };
+    pdftext = final.callPackage ../pkgs/pdftext.nix { };
+    surya-ocr = final.callPackage ../pkgs/surya-ocr.nix { };
+    codebuddy-code = final.callPackage ../pkgs/codebuddy-code.nix { };
+  };
 
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
@@ -34,10 +41,10 @@
         dontUnpack = true;
         installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
       });
-     # example = prev.example.overrideAttrs (oldAttrs: rec {
-     # ...
-     # });
-   };
+      # example = prev.example.overrideAttrs (oldAttrs: rec {
+      # ...
+      # });
+    };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
   # be accessible through 'pkgs.unstable'

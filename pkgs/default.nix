@@ -11,4 +11,5 @@
   pdftext = pkgs.callPackage ./pdftext.nix { };
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };
   codebuddy-code = pkgs.callPackage ./codebuddy-code.nix { };
+  opencode = pkgs.callPackage ./opencode.nix { };
 }
