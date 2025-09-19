@@ -10,7 +10,7 @@
   services.cliphist.enable = true;
   services.walker = {
     enable = true;
-    systemd.enable = true;
+    systemd.enable = false;
     settings = {
       app_launch_prefix = "env GDK_SCALE=1.5 QT_SCALE_FACTOR=1.5 ELECTRON_FORCE_DEVICE_SCALE_FACTOR=1.5";
       as_window = false;
