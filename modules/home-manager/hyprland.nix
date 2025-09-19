@@ -48,6 +48,7 @@ in
   home.packages = with pkgs; [
     socat
     adwaita-icon-theme
+    adwaita-qt
     grimblast # screenshot utility based on grim
     slurp # Select a region in a Wayland compositor
     hyprshot # take screenshots in Hyprland using your mouse
@@ -83,6 +84,9 @@ in
       layout = "master"; # Explicitly set default layout
     };
     env = [
+      "GTK_APPLICATION_PREFER_DARK_THEME,1"
+      "GTK_THEME,Adwaita:dark"
+      "GTK_THEME_VARIANT,dark"
       "XCURSOR_SIZE,24"
     ];
     input = {
