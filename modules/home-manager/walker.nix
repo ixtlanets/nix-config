@@ -12,7 +12,7 @@
     enable = true;
     systemd.enable = false;
     settings = {
-      app_launch_prefix = "env GDK_SCALE=1.5 QT_SCALE_FACTOR=1.5";
+      app_launch_prefix = "";
       as_window = false;
       close_when_open = false;
       disable_click_to_close = false;
