@@ -7,6 +7,7 @@
   pkgs,
   lib,
   dpi,
+  outputs,
   ...
 }:
 {
@@ -19,6 +20,7 @@
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/gnome.nix
+    outputs.nixosModules.vless
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
@@ -43,6 +45,11 @@
   services.hardware.bolt.enable = true;
   services = {
     asusd.enable = true;
+  };
+  services.vless = {
+    enable = true;
+    configPath = "/home/nik/nix-config/secrets/vless/zenbook.json";
+    configUser = "nik";
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
   hardware = {
