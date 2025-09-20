@@ -14,6 +14,9 @@
       scaleStr = builtins.toString scale;
     in
     {
+      EDITOR = "nvim";
+      VISUAL = "nvim";
+      SUDO_EDITOR = "nvim";
       WIFI_INTERFACE = "wlo1";
       HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
       THERMAL_ZONE = "10";
