@@ -8,6 +8,30 @@
 }:
 let
   mkTuple = lib.hm.gvariant.mkTuple;
+  braveExtensionIds = [
+    "cjpalhdlnbpafiamejdnhcphjbkeiagm" # ublock origin
+    "aeblfdkhhhdcdjpifhhbdiojplfjncoa" # 1Password
+    "mnjggcdmjocbbbhaepdhchncahnbgone" # SponsorBlock for YouTube - Skip Sponsorships
+    "kcpnkledgcbobhkgimpbmejgockkplob" # Tracking Token Stripper
+    "gebbhagfogifgggkldgodflihgfeippi" # Return YouTube Dislike
+    "naepdomgkenhinolocfifgehidddafch" # Browserpass
+    "enamippconapkdmgfgjchkhakpfinmaj" # DeArrow. dearrow.ajay.app
+    "fcphghnknhkimeagdglkljinmpbagone" # YouTube AutoHD. preselect video resolution
+    "hipekcciheckooncpjeljhnekcoolahp" # Tabliss - A Beautiful New Tab
+    "edibdbjcniadpccecjdfdjjppcpchdlm" # I still don't care about cookies
+  ];
+  braveManagedPolicy =
+    builtins.toJSON {
+      ExtensionSettings = lib.listToAttrs (
+        map (id: {
+          name = id;
+          value = {
+            installation_mode = "force_installed";
+            update_url = "https://clients2.google.com/service/update2/crx";
+          };
+        }) braveExtensionIds
+      );
+    };
 in
 {
   imports = [
@@ -125,23 +149,7 @@ in
     macos-non-native-fullscreen = true
     macos-option-as-alt = true
   '';
-  programs = {
-    brave = {
-      enable = true;
-      extensions = [
-        { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
-        { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
-        { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
-        { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
-        { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
-        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
-        { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
-        { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution
-        { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
-        { id = "edibdbjcniadpccecjdfdjjppcpchdlm"; } # I still don't care about cookies
-      ];
-    };
-  };
+  home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text = braveManagedPolicy;
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   home.sessionVariables = {

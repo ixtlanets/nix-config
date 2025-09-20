@@ -112,6 +112,10 @@
       "emacs-plus"
       # "sunshine" it's broken now
     ];
+    onActivation = {
+      autoUpdate = true;
+      upgrade = true;
+    };
   };
 
   nix.package = pkgs.nix;
