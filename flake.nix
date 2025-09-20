@@ -428,7 +428,10 @@
             home-manager = {
               useUserPackages = true;
               extraSpecialArgs = { inherit outputs; };
-              users.nik.imports = [ ./hosts/m1max/home-manager/home.nix ];
+              users.nik.imports = [
+                catppuccin.homeModules.catppuccin
+                ./hosts/m1max/home-manager/home.nix
+              ];
             };
           }
         ];
