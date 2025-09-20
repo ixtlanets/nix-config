@@ -108,6 +108,7 @@ in
       ];
       disable-user-extensions = false;
       enabled-extensions = [
+        "appindicatorsupport@rgcjonas.gmail.com"
         "trayIconsReloaded@selfmade.pl"
         "just-perfection-desktop@just-perfection"
         "caffeine@patapon.info"

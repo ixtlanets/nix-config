@@ -8,16 +8,22 @@
   ...
 }:
 {
-  home.sessionVariables = lib.mkForce {
-    WIFI_INTERFACE = "wlo1";
-    HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
-    THERMAL_ZONE = "10";
-    BACKLIGHT_CARD = "intel_backlight";
-    GDK_SCALE = "2";
-    GDK_DPI_SCALE = "2";
-    QT_AUTO_SCREEN_SCALE_FACTOR = "1";
-    STEAM_FORCE_DESKTOPUI_SCALING = "2";
-  };
+  home.sessionVariables = lib.mkForce (
+    let
+      scale = dpi / 96.0;
+      scaleStr = builtins.toString scale;
+    in
+    {
+      WIFI_INTERFACE = "wlo1";
+      HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
+      THERMAL_ZONE = "10";
+      BACKLIGHT_CARD = "intel_backlight";
+      GDK_SCALE = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "1";
+      QT_SCALE_FACTOR_ROUNDING_POLICY = "PassThrough";
+      STEAM_FORCE_DESKTOPUI_SCALING = scaleStr;
+    }
+  );
   # You can import other home-manager modules here
   imports = [
     ../../../modules/home-manager/starship.nix
@@ -26,8 +32,7 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/waybar.nix
-    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/kbd-backlight.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix

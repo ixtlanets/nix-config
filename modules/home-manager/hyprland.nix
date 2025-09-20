@@ -158,6 +158,7 @@ in
       };
     };
     monitor = [
+      "eDP-1,preferred,auto,1.5"
       "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
     ];
     workspace = [
@@ -178,10 +179,12 @@ in
       "float, class:^(org.gnome.*)$"
       "float, class:(Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|TUI.float)"
       "float, class:^(pavucontrol|com.saivert.pwvucontrol)$"
-      # make pop-up file dialogs floating, centred, and pinned
+      # make pop-up file dialogs float, stay centred, and avoid oversized layouts
       "float, title:(Open|Progress|Save File)"
       "center, title:(Open|Progress|Save File)"
-      "pin, title:(Open|Progress|Save File)"
+      "size 1280 900,title:(Open|Progress|Save File)"
+      "maxsize 1600 1000,title:(Open|Progress|Save File)"
+      "suppressevent maximize,title:(Open|Progress|Save File)"
       "float, class:^(code)$, initialTitle:^(Visual Studio Code)$"
       "center, class:^(code)$, initialTitle:^(Visual Studio Code)$"
       "pin, class:^(code)$, initialTitle:^(Visual Studio Code)$"
