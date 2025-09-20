@@ -297,8 +297,6 @@ in
     SDL_VIDEODRIVER = "wayland"; # SDL2 Wayland
     XDG_SESSION_TYPE = "wayland"; # Usually set by display manager/login
     ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Let Electron auto-detect Wayland
-    GDK_SCALE = "1.5"; # HiDPI scaling for GTK apps
-    QT_SCALE_FACTOR = "1.5"; # HiDPI scaling for Qt apps
   };
 
   # Services

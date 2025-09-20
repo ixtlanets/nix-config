@@ -144,6 +144,7 @@ in
       devcontainer # work with vscode devcontainers without vscode itself
       _1password-cli
       sshuttle # VPN over ssh
+      cachix
     ]
     ++ (lib.optionals isLinux [
       gemini-cli
