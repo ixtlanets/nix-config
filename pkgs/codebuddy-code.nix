@@ -7,11 +7,11 @@
 
 stdenv.mkDerivation rec {
   pname = "codebuddy-code";
-  version = "1.0.14";
+  version = "1.1.6";
 
   src = fetchurl {
     url = "https://registry.npmjs.org/@tencent-ai/codebuddy-code/-/codebuddy-code-${version}.tgz";
-    hash = "sha256-qdg5B/lN29SC5jGyZE7DxgiOz9fcU+pV1HN4r7YfFWo=";
+    hash = "sha256-vuRbA9j5/BiEgO2XsPh6NKc6SHKNPE2UuDwccY+PIt4=";
   };
 
   buildInputs = [ nodejs ];
@@ -30,3 +30,4 @@ stdenv.mkDerivation rec {
     mainProgram = "codebuddy";
   };
 }
+
