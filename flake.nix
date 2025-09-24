@@ -1,6 +1,11 @@
 {
   description = "Your new nix config";
 
+  nixConfig = {
+    extra-trusted-substituters = [ "https://cache.flox.dev" ];
+    extra-trusted-public-keys = [ "flox-cache-public-1:7F4OyH7ZCnFhcze3fJdfyXYLQw/aV7GEed86nQ7IsOs=" ];
+  };
+
   inputs = {
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -34,6 +39,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
+
+    flox.url = "github:flox/flox/v1.7.3";
   };
 
   outputs =
@@ -158,6 +165,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -198,6 +206,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -245,6 +254,7 @@
                   backupFileExtension = "backup";
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -282,6 +292,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -328,6 +339,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -365,6 +377,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -398,6 +411,7 @@
                   useUserPackages = true;
                   extraSpecialArgs = {
                     inherit
+                      inputs
                       outputs
                       dpi
                       ghostty
@@ -427,7 +441,7 @@
           {
             home-manager = {
               useUserPackages = true;
-              extraSpecialArgs = { inherit outputs; };
+              extraSpecialArgs = { inherit inputs outputs; };
               users.nik.imports = [
                 catppuccin.homeModules.catppuccin
                 ./hosts/m1max/home-manager/home.nix

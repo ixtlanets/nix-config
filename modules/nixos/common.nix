@@ -5,6 +5,7 @@
   ...
 }:
 let
+  floxPkg = inputs.flox.packages.${pkgs.system}.default;
   op-fzf = pkgs.writeShellScriptBin "1p" ''
     #!/usr/bin/env nix-shell
           set -euo pipefail
@@ -58,10 +59,13 @@ in
   nix.settings.substituters = [
     "https://cache.nixos.org"
     "https://devenv.cachix.org"
+    "https://cache.flox.dev"
   ];
+  nix.settings.trusted-substituters = [ "https://cache.flox.dev" ];
   nix.settings.trusted-public-keys = [
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZtWKshxzYfXc0fJyQ="
+    "flox-cache-public-1:7F4OyH7ZCnFhcze3fJdfyXYLQw/aV7GEed86nQ7IsOs="
   ];
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
@@ -242,6 +246,7 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    floxPkg
     zerotierone
     killall
     jq

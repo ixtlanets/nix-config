@@ -1,5 +1,6 @@
 {
   outputs,
+  inputs,
   lib,
   config,
   pkgs,
@@ -7,6 +8,7 @@
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
+  floxPkg = inputs.flox.packages.${pkgs.system}.default;
   gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
   gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
 
@@ -103,6 +105,7 @@ in
   home.packages =
     with pkgs;
     [
+      floxPkg
       ffmpeg
       glow # markdown reader for terminal
       portal # file transfer

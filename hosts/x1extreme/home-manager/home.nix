@@ -38,7 +38,7 @@
   };
 
   home.packages = with pkgs; [
-    nvtop
+    nvtopPackages.full
   ];
   xresources.properties = {
     "Xft.dpi" = dpi;

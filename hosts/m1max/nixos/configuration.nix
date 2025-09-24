@@ -1,9 +1,24 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
+let
+  floxPkg = inputs.flox.packages.${pkgs.system}.default;
+in
 {
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
+  ];
+
+  nix.settings.substituters = [
+    "https://cache.nixos.org"
+    "https://devenv.cachix.org"
+    "https://cache.flox.dev"
+  ];
+  nix.settings.trusted-substituters = [ "https://cache.flox.dev" ];
+  nix.settings.trusted-public-keys = [
+    "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+    "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZtWKshxzYfXc0fJyQ="
+    "flox-cache-public-1:7F4OyH7ZCnFhcze3fJdfyXYLQw/aV7GEed86nQ7IsOs="
   ];
 
   networking.hostName = "m1max"; # Define your hostname.
@@ -22,7 +37,10 @@
       bash
       zsh
     ];
-    systemPackages = [ pkgs.coreutils ];
+    systemPackages = [
+      floxPkg
+      pkgs.coreutils
+    ];
     systemPath = [ "/opt/homebrew/bin" ];
     pathsToLink = [ "/Applications" ];
   };
