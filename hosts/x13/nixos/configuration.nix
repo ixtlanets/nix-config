@@ -5,6 +5,7 @@
 {
   pkgs,
   lib,
+  outputs,
   ...
 }:
 
@@ -20,6 +21,7 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    outputs.nixosModules.vless
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
@@ -53,6 +55,11 @@
     };
   };
 
+  services.vless = {
+    enable = true;
+    configPath = "/home/nik/nix-config/secrets/vless/x13.json";
+    configUser = "nik";
+  };
   #flow devices are 2 in 1 laptops
   hardware.sensor.iio.enable = true;
 
