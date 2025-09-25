@@ -136,7 +136,6 @@ in
       fabric-ai
       codex # AI coding agent by OpenAI
       qwen-code # AI coding agent by Qwen
-      goose-cli # Open-source, extensible AI agent
       codebuddy-code # Tencent AI coding tool
       viu # terminal image viewer
       ast-grep # code structural search

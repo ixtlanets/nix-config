@@ -17,7 +17,7 @@
   modifications = final: prev: {
      tawm = inputs.tawm.packages.${prev.system}.default;
       codex = prev.codex.overrideAttrs (old: rec {
-        version = "0.39.0";
+        version = "0.41.0";
         buildType = "simple";
         cargoSetupPostPatchHook = ":";
         nativeBuildInputs = [ prev.zstd ];
@@ -25,17 +25,17 @@
           if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
             prev.fetchurl {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-              sha256 = "272f58f9b2d6db60e83277db0d4b0c99eb5d5999e55124bc9cac8c72f7846d05";
+              sha256 = "4146cafd0f7a9eaf890ec68f1126a9a5a24a67b3524f73c3f7e5d06f858d2224";
             }
           else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
             prev.fetchurl {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-              sha256 = "1a37b9b4ea436d463f78922dd0dbaf05f44a1fece8c9184b73661faffef19f5c";
+              sha256 = "a5be3aa61927e334cc0005cdc11c56f4f68a9c0631e70c6ca0f76a6f8c833466";
             }
           else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
             prev.fetchurl {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-              sha256 = "50f3380d7f07bb1550e2bc9bd494ca8a350801f724da732076de0abd12e0736e";
+              sha256 = "d3bcac43ea59d6bf75be199f8e31a4f512a292832d806aadc8fef971f9bb1c07";
             }
           else throw "Unsupported system for codex";
         dontUnpack = true;

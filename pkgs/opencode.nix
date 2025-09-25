@@ -5,31 +5,31 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "0.10.3";
+  version = "0.11.3";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.zip";
-        sha256 = "sha256-qN3Xolaf146HIa0sC4h0tDvg5R0+HZUn9/HRHaVtaOo=";
+        sha256 = "sha256-QSyOaUgvX4E46VUFPEykXDEUZFotNlNXW7csbL4vlWY=";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-arm64.zip";
-        sha256 = "sha256-lkuSlPPl0ha7PKB/4NalzplX0edzoTYSiFv+Fv4dXjc=";
+        sha256 = "sha256-yeJCB6sIcfjyLbdHdpE6N+S2HZXfKI+nC99nXApXQvw=";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-x64.zip";
-        sha256 = "sha256-ytiseQu4dO/Y1s2v4In5D4nn95DzAf892pxhQocpjaw=";
+        sha256 = "sha256-dBlVCQWlungJ2aNXP8dKN3EDSjNIRp/yVTNiqgQFqxs=";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "sha256-xXRyht6XxhiNTUbHiVbUYV0Ab0DZnPJ7I+vyiHkQaeU=";
+        sha256 = "sha256-Ob36CLQ/45VD0T01y3nZz2PWb+v6Y9rhercfDj3MoS8=";
         stripRoot = false;
       }
     else
