@@ -38,6 +38,9 @@
   programs.ssh.askPassword = pkgs.lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
   services.hardware.bolt.enable = true;
+  services.udev.extraRules = ''
+    SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
+  '';
   services.ollama = {
     enable = true;
     acceleration = "rocm";
@@ -50,8 +53,16 @@
     configUser = "nik";
   };
   hardware = {
-    graphics = {
-      enable = true;
+    graphics.enable = true;
+    nvidia = {
+      modesetting.enable = true;
+      powerManagement.enable = lib.mkDefault true;
+      open = lib.mkDefault false;
+      nvidiaSettings = true;
+      prime = {
+        offload.enable = lib.mkForce false;
+        offload.enableOffloadCmd = lib.mkForce false;
+      };
     };
   };
   programs.steam = {
