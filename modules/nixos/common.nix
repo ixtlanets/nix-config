@@ -153,11 +153,6 @@ in
         glibc
       ];
     };
-    nekoray = {
-      enable = true;
-      tunMode.enable = true;
-      tunMode.setuid = true;
-    };
   };
 
   # Services
@@ -165,12 +160,6 @@ in
     tailscale = {
       enable = true;
       useRoutingFeatures = "both";
-    };
-    zerotierone = {
-      enable = true;
-      joinNetworks = [
-        "88503383901a34c1"
-      ];
     };
     fwupd.enable = true;
     dbus.enable = true;
@@ -247,16 +236,13 @@ in
   # $ nix search wget
   environment.systemPackages = with pkgs; [
     floxPkg
-    zerotierone
     killall
     jq
     fzf
     unzip
     gum
-    podman-compose
     vpn-script
     op-fzf
-    networkmanager-l2tp
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
