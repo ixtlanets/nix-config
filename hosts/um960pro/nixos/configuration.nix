@@ -6,7 +6,7 @@
   config,
   pkgs,
   lib,
-  dpi,
+  outputs,
   ...
 }:
 
@@ -21,6 +21,7 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    outputs.nixosModules.vless
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
@@ -43,6 +44,11 @@
   };
 
   boot.blacklistedKernelModules = [ "nouveau" ];
+  services.vless = {
+    enable = true;
+    configPath = "/home/nik/nix-config/secrets/vless/um790pro.json";
+    configUser = "nik";
+  };
   hardware = {
     graphics = {
       enable = true;
