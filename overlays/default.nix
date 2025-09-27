@@ -41,6 +41,14 @@
         dontUnpack = true;
         installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
       });
+      # Ensure the client understands GSSAPI directives in system ssh_config (e.g., WSL).
+      openssh =
+        if prev.stdenv.isLinux then
+          prev.openssh.override {
+            withKerberos = true;
+          }
+        else
+          prev.openssh;
       # example = prev.example.overrideAttrs (oldAttrs: rec {
       # ...
       # });
