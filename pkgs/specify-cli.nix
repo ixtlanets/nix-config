@@ -5,14 +5,14 @@
 
 python3Packages.buildPythonApplication rec {
   pname = "specify-cli";
-  version = "0.0.17";
+  version = "0.0.54";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "github";
     repo = "spec-kit";
     rev = "v${version}";
-    hash = "sha256-8CCmccoYiWmCTWpAOdWm5ZpAAXMTTvyNBDX4jt5SQ+A=";
+    hash = "sha256-JanzqqcCVGRHtXXoc+hT7Xc4O7jg/gKuFISXr9N1L+A=";
   };
 
   nativeBuildInputs = with python3Packages; [
