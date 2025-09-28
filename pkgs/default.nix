@@ -12,4 +12,5 @@
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };
   codebuddy-code = pkgs.callPackage ./codebuddy-code.nix { };
   opencode = pkgs.callPackage ./opencode.nix { };
+  specify-cli = pkgs.callPackage ./specify-cli.nix { };
 }

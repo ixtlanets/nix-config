@@ -137,6 +137,7 @@ in
       codex # AI coding agent by OpenAI
       qwen-code # AI coding agent by Qwen
       codebuddy-code # Tencent AI coding tool
+      specify-cli # GitHub Spec Kit CLI for Spec-Driven Development
       viu # terminal image viewer
       ast-grep # code structural search
 
