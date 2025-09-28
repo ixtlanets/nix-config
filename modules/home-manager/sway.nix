@@ -12,7 +12,7 @@
     adwaita-icon-theme
     swaylock
     swayidle
-    rofi-wayland
+    rofi
     grim # screenshot functionality
     slurp # screenshot functionality
     xdg-utils # for opening default programs when clicking links

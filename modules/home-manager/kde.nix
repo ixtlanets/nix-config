@@ -3,7 +3,7 @@
   home.stateVersion = "24.11";
 
   home.packages = with pkgs; [
-    rofi-wayland
+    rofi
   ];
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";

@@ -18,7 +18,6 @@
     variety
     prismlauncher
     zathura
-    libreoffice-fresh
     brightnessctl
     pamixer
     wireplumber
