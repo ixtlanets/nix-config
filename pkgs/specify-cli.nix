@@ -12,7 +12,7 @@ python3Packages.buildPythonApplication rec {
     owner = "github";
     repo = "spec-kit";
     rev = "v${version}";
-    hash = "sha256-1q23abg8xy1m0j6zqkhkfc0l16p5lvakjh3a9n16k28qr9qsc87h";
+    hash = "sha256-8CCmccoYiWmCTWpAOdWm5ZpAAXMTTvyNBDX4jt5SQ+A=";
   };
 
   propagatedBuildInputs = with python3Packages; [
