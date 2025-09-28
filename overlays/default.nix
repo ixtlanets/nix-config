@@ -9,6 +9,7 @@
     pdftext = final.callPackage ../pkgs/pdftext.nix { };
     surya-ocr = final.callPackage ../pkgs/surya-ocr.nix { };
     codebuddy-code = final.callPackage ../pkgs/codebuddy-code.nix { };
+    specify-cli = final.callPackage ../pkgs/specify-cli.nix { };
   };
 
   # This one contains whatever you want to overlay
