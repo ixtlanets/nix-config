@@ -6,6 +6,7 @@
 python3Packages.buildPythonApplication rec {
   pname = "specify-cli";
   version = "0.0.17";
+  format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "github";
