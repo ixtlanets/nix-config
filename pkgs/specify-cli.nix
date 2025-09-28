@@ -15,6 +15,10 @@ python3Packages.buildPythonApplication rec {
     hash = "sha256-8CCmccoYiWmCTWpAOdWm5ZpAAXMTTvyNBDX4jt5SQ+A=";
   };
 
+  nativeBuildInputs = with python3Packages; [
+    hatchling
+  ];
+
   propagatedBuildInputs = with python3Packages; [
     typer
     rich
