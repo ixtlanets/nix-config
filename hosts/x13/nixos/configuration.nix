@@ -19,8 +19,7 @@
     ./hardware-configuration.nix
     ./power.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/hyprland.nix
-    ../../../modules/nixos/nautilus.nix
+    ../../../modules/nixos/kde.nix
     outputs.nixosModules.vless
   ];
 
