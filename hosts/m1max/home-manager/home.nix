@@ -20,18 +20,17 @@ let
     "hipekcciheckooncpjeljhnekcoolahp" # Tabliss - A Beautiful New Tab
     "edibdbjcniadpccecjdfdjjppcpchdlm" # I still don't care about cookies
   ];
-  braveManagedPolicy =
-    builtins.toJSON {
-      ExtensionSettings = lib.listToAttrs (
-        map (id: {
-          name = id;
-          value = {
-            installation_mode = "force_installed";
-            update_url = "https://clients2.google.com/service/update2/crx";
-          };
-        }) braveExtensionIds
-      );
-    };
+  braveManagedPolicy = builtins.toJSON {
+    ExtensionSettings = lib.listToAttrs (
+      map (id: {
+        name = id;
+        value = {
+          installation_mode = "force_installed";
+          update_url = "https://clients2.google.com/service/update2/crx";
+        };
+      }) braveExtensionIds
+    );
+  };
 in
 {
   imports = [
@@ -91,6 +90,7 @@ in
     ripgrep
     sqlite
     wordnet
+    sing-box
   ];
 
   catppuccin.flavor = "mocha";
@@ -173,7 +173,8 @@ in
     selection-background = 353749
     selection-foreground = cdd6f4
   '';
-  home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text = braveManagedPolicy;
+  home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text =
+    braveManagedPolicy;
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   home.sessionVariables = {
