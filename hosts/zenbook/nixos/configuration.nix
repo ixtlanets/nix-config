@@ -35,6 +35,7 @@
 
   services.ollama = {
     enable = true;
+    acceleration = "cuda";
   };
 
   environment.etc."brave/policies/managed/notifications.json".text = ''
@@ -43,6 +44,9 @@
     }
   '';
   services.hardware.bolt.enable = true;
+  services.udev.extraRules = ''
+    SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
+  '';
   services = {
     asusd.enable = true;
   };
