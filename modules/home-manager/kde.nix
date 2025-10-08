@@ -1,14 +1,28 @@
-{ pkgs, ... }:
+{ pkgs, dpi, ... }:
+
+let
+  DPI = builtins.toString dpi;
+  rofi_width = builtins.toString (dpi * 5);
+  rofi_height = builtins.toString (dpi * 3);
+in
 {
   home.stateVersion = "24.11";
 
   home.packages = with pkgs; [
     rofi
+    rofi-calc
+    rofi-emoji
   ];
+
+  xdg.configFile."rofi/config.rasi".text =
+    builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ]
+      (builtins.readFile ../../dotfiles/rofi);
+
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
     XCURSOR_SIZE = "24";
   };
+  home.sessionPath = [ ".local/bin" ];
   programs.plasma = {
     enable = true;
 
