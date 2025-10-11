@@ -6,17 +6,6 @@
 }:
 let
   floxPkg = inputs.flox.packages.${pkgs.system}.default;
-  op-fzf = pkgs.writeShellScriptBin "1p" ''
-    #!/usr/bin/env nix-shell
-          set -euo pipefail
-
-          id=$(op item list --format=json \
-            | jq -r '.[] | "\(.id)\t\(.title)"' \
-            | fzf --with-nth=2 --prompt="1Password > " \
-            | cut -f1) || exit 1
-
-          op item get "$id" --reveal
-  '';
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
     # gen dns suffix
     DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
@@ -242,7 +231,6 @@ in
     unzip
     gum
     vpn-script
-    op-fzf
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

@@ -30,7 +30,6 @@ in
       gpg = {
         key = "6EA4E8EBBC9094DDF20B112D539459F1879941F7";
       };
-      thunderbird.enable = isLinux;
     };
     "GR" = {
       address = "sergey@grishinrobotics.com";
@@ -45,7 +44,6 @@ in
         Best wishes,
         Sergey Nikulin
       '';
-      thunderbird.enable = isLinux;
     };
     "zencar" = {
       address = "sn@zencar.tech";
@@ -59,15 +57,6 @@ in
         Best wishes,
         Sergey Nikulin
       '';
-      thunderbird.enable = isLinux;
-    };
-  };
-  programs.thunderbird = {
-    enable = isLinux;
-    profiles = {
-      "default" = {
-        isDefault = true;
-      };
     };
   };
   programs.mbsync = {

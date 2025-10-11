@@ -4,6 +4,7 @@
 
 {
   pkgs,
+  outputs,
   ...
 }:
 {
@@ -18,6 +19,7 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    outputs.nixosModules.vless
   ];
 
   networking.hostName = "x1carbon"; # Define your hostname.
@@ -26,6 +28,12 @@
 
   services.ollama = {
     enable = true;
+  };
+
+  services.vless = {
+    enable = true;
+    configPath = "/home/nik/nix-config/secrets/vless/x1carbon.json";
+    configUser = "nik";
   };
 
   hardware = {
