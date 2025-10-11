@@ -18,29 +18,26 @@
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.system}.default;
     codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.45.0";
+      version = "0.46.0";
       buildType = "simple";
       cargoSetupPostPatchHook = ":";
       nativeBuildInputs = [ prev.zstd ];
       src =
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
-          prev.fetchurl
-            {
-              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-              sha256 = "sha256-6kMScrNDej83QJ1LBl1mYfDCZub7wSVLtOwnH6vm9yI=";
-            }
+          prev.fetchurl {
+            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
+            sha256 = "sha256-LdcKU+bKubpJH34nXNiC1MndJIo0ow/D4lEJNKO6+J0=";
+          }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
-          prev.fetchurl
-            {
-              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-              sha256 = "1a5fe2b500afe158afc297a905df46d518b7771660fc955b661c15ca2b5b50d6";
-            }
+          prev.fetchurl {
+            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
+            sha256 = "1a5fe2b500afe158afc297a905df46d518b7771660fc955b661c15ca2b5b50d6";
+          }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
-          prev.fetchurl
-            {
-              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-              sha256 = "b593449dedf20ba706f7f630d90608783885b16dd2cc643fb9b2a1bef79ea62f";
-            }
+          prev.fetchurl {
+            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
+            sha256 = "b593449dedf20ba706f7f630d90608783885b16dd2cc643fb9b2a1bef79ea62f";
+          }
         else
           throw "Unsupported system for codex";
       dontUnpack = true;
@@ -49,10 +46,9 @@
     # Ensure the client understands GSSAPI directives in system ssh_config (e.g., WSL).
     openssh =
       if prev.stdenv.isLinux then
-        prev.openssh.override
-          {
-            withKerberos = true;
-          }
+        prev.openssh.override {
+          withKerberos = true;
+        }
       else
         prev.openssh;
     # example = prev.example.overrideAttrs (oldAttrs: rec {
