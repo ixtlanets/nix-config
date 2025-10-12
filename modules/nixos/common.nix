@@ -258,6 +258,14 @@ in
       enable = true;
       extraPackages = with pkgs; [ docker-buildx ];
     };
+    libvirtd = {
+      enable = true;
+      qemu = {
+        swtpm.enable = true;
+        ovmf.packages = [ pkgs.OVMFFull.fd ];
+      };
+    };
+    spiceUSBRedirection.enable = true;
   };
   programs = {
     _1password-gui = {
