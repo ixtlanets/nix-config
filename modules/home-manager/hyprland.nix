@@ -69,7 +69,7 @@ in
       "mako"
       "variety"
       "clipse -listen" # start clipboard manager
-      "walker"
+      "walker --gapplication-service"
       # Clean up any stale state files on login/reload
       "find /tmp -name 'hypr_float_ws_*.state' -delete"
       "handle_monitor_connect"
