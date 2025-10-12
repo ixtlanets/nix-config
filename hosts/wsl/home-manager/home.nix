@@ -23,8 +23,8 @@
   };
 
   home.sessionPath = [
-    "/mnt/c/Users/nik/AppData/Local/Microsoft/WinGet/Packages/equalsraf.win32yank_Microsoft.Winget.Source_8wekyb3d8bbwe/"
-    "/mnt/c/Users/nik/AppData/Local/Programs/Microsoft\ VS\ Code/bin"
+    "/mnt/c/Users/sniku/AppData/Local/Microsoft/WinGet/Packages/equalsraf.win32yank_Microsoft.Winget.Source_8wekyb3d8bbwe/"
+    "/mnt/c/Users/sniku/AppData/Local/Programs/Microsoft\ VS\ Code/bin"
   ];
 
   home.packages = with pkgs; [
