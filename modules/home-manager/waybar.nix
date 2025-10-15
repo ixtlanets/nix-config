@@ -29,10 +29,18 @@
               "unlocked" = "";
             };
           };
-          "clock" = {
-            "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-            "format" = "{:%a, %d %b, %H:%M}";
-          };
+           "clock" = {
+             "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><span size='larger'>{calendar}</span></tt>";
+             "format" = "{:%a, %d %b, %H:%M}";
+             "calendar" = {
+               "format" = {
+                 "months" = "<span color='#f8f8f8'><b>{}</b></span>";
+                 "days" = "<span color='#d8d8d8'>{}</span>";
+                 "weekdays" = "<span color='#b8b8b8'>{}</span>";
+                 "today" = "<span background='#b4befe' color='#181825'><b>{}</b></span>";
+               };
+             };
+           };
           "pulseaudio" = {
             "reverse-scrolling" = 1;
             "format" = "{volume}% {icon} {format_source}";
