@@ -20,6 +20,7 @@
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/kde.nix
+    outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
 

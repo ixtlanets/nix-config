@@ -21,6 +21,7 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
 

@@ -20,6 +20,7 @@
     ./power.nix
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
+    outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
 

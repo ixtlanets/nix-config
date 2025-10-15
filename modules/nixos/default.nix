@@ -3,4 +3,5 @@
 
 {
   vless = import ./vless.nix;
+  ollama = import ./ollama.nix;
 }
