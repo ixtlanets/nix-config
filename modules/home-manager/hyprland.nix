@@ -159,6 +159,7 @@ in
     };
     monitor = [
       "eDP-1,preferred,auto,1.5"
+      "desc:Samsung Display Corp. 0x416D,2880x1800@60.00Hz,auto,2.0"
       "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
     ];
     workspace = [
