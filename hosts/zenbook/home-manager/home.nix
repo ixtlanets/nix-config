@@ -8,7 +8,7 @@
   ...
 }:
 {
-  home.sessionVariables = lib.mkForce (
+  home.sessionVariables =
     let
       scale = dpi / 96.0;
       scaleStr = builtins.toString scale;
@@ -25,8 +25,7 @@
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
       QT_SCALE_FACTOR_ROUNDING_POLICY = "PassThrough";
       STEAM_FORCE_DESKTOPUI_SCALING = scaleStr;
-    }
-  );
+    };
   # You can import other home-manager modules here
   imports = [
     ../../../modules/home-manager/starship.nix
