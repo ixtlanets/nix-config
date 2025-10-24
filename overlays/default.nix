@@ -18,7 +18,7 @@
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.system}.default;
     codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.47.0";
+      version = "0.49.0";
       buildType = "simple";
       cargoSetupPostPatchHook = ":";
       nativeBuildInputs = [ prev.zstd ];
@@ -26,7 +26,7 @@
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-            sha256 = "sha256-FR7CZCxEq3RmbfPgl4aEUtIqN+sHI4qgamRe9zE3OTc=";
+            sha256 = "sha256-yhH/y1ZGyglC/JfkkhGqF6sa/5APlQCyWhs7oo1x8Ag=";
           }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
           prev.fetchurl {
