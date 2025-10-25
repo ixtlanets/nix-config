@@ -35,6 +35,20 @@ let
     fi
 
   '';
+
+  power-profile-script = pkgs.writeShellScriptBin "power-profile" ''
+    # get current active profile
+    CURRENT_PROFILE=$(powerprofilesctl list | grep "^\*" | sed 's/^\* \([^:]*\):.*/\1/')
+
+    # get all available profiles
+    AVAILABLE_PROFILES=$(powerprofilesctl list | grep ":$" | sed 's/^[* ]*\([^:]*\):.*/\1/')
+
+    # let user select profile with gum
+    SELECTED_PROFILE=$(echo "$AVAILABLE_PROFILES" | gum choose --selected "$CURRENT_PROFILE" --header "Select power profile")
+
+    # apply selected profile
+    powerprofilesctl set "$SELECTED_PROFILE"
+  '';
 in
 {
   nix.settings.experimental-features = [
@@ -231,6 +245,7 @@ in
     unzip
     gum
     vpn-script
+    power-profile-script
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
