@@ -37,6 +37,7 @@
     luajitPackages.luarocks
     nixd
     nixfmt-rfc-style
+    statix
   ];
   programs = {
     neovim = {
