@@ -28,6 +28,7 @@
     obsidian
     wl-clipboard
     vscode
+    pkgs.unstable.libreoffice-qt6-fresh
   ];
 
   catppuccin.flavor = "mocha";
