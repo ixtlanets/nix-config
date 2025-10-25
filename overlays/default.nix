@@ -21,7 +21,7 @@
       version = "0.49.0";
       buildType = "simple";
       cargoSetupPostPatchHook = ":";
-      nativeBuildInputs = [ prev.zstd ];
+      nativeBuildInputs = [ prev.zstd prev.makeWrapper ];
       src =
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
           prev.fetchurl {
