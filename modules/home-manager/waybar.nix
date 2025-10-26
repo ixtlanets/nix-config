@@ -124,6 +124,7 @@
               "warning" = 20;
               "critical" = 10;
             };
+            "on-click" = "alacritty --class=Wiremix -e power-profile";
           };
           tray = {
             "icon-size" = 10;
