@@ -39,122 +39,6 @@ let
         --save-after-copy \
         --copy-command 'wl-copy'
   '';
-  spotlight-toggle = pkgs.writeShellScriptBin "spotlight-toggle" ''
-    SPOTLIGHT_STATE_FILE="/tmp/spotlight_state"
-    SPOTLIGHT_OVERLAY_SCRIPT="${pkgs.writeShellScriptBin "spotlight-overlay" ""}/bin/spotlight-overlay"
-
-    # Check if spotlight is already active
-    if [ -f "$SPOTLIGHT_STATE_FILE" ]; then
-      # Spotlight is active, deactivate it
-      rm -f "$SPOTLIGHT_STATE_FILE"
-      pkill -f "spotlight-overlay" 2>/dev/null || true
-      hyprctl dispatch closewindow "title:spotlight-overlay" 2>/dev/null || true
-    else
-      # Spotlight is inactive, activate it
-      echo "active" > "$SPOTLIGHT_STATE_FILE"
-      "$SPOTLIGHT_OVERLAY_SCRIPT" &
-    fi
-  '';
-  spotlight-overlay = pkgs.writeShellScriptBin "spotlight-overlay" ''
-    SPOTLIGHT_STATE_FILE="/tmp/spotlight_state"
-    OVERLAY_TITLE="spotlight-overlay"
-    CIRCLE_RADIUS=48
-
-    # Function to create overlay window
-    create_overlay() {
-      local monitor_info=$(hyprctl monitors -j | ${pkgs.jq}/bin/jq -r '.[0]')
-      local width=$(echo "$monitor_info" | ${pkgs.jq}/bin/jq -r '.width')
-      local height=$(echo "$monitor_info" | ${pkgs.jq}/bin/jq -r '.height')
-      local x=$(echo "$monitor_info" | ${pkgs.jq}/bin/jq -r '.x')
-      local y=$(echo "$monitor_info" | ${pkgs.jq}/bin/jq -r '.y')
-      
-      # Create a fullscreen overlay window
-      hyprctl dispatch exec "[float; size ''${width} ''${height}; pos ''${x} ''${y}; noinitialfocus; nodim; title ''${OVERLAY_TITLE}] ${pkgs.kitty}/bin/kitty --class spotlight-overlay bash -c '
-        # Create the overlay effect
-        while [ -f "'"$SPOTLIGHT_STATE_FILE"'" ]; do
-          # Get current cursor position
-          cursor_pos=$(hyprctl cursorpos -j)
-          cursor_x=$(echo "$cursor_pos" | ${pkgs.jq}/bin/jq -r ".x")
-          cursor_y=$(echo "$cursor_pos" | ${pkgs.jq}/bin/jq -r ".y")
-          
-          # Clear screen and create dark background with clear circle
-          printf "\033[2J\033[H"
-          
-          # Create dark overlay using terminal background
-          printf "\033]11;#000000\007"
-          
-          # Move cursor to spotlight position and create clear area
-          # We use a simple approach: move cursor to the spotlight position
-          printf "\033[%d;%dH" $((cursor_y)) $((cursor_x))
-          
-          sleep 0.016  # ~60 FPS refresh rate
-        done
-      '"
-    }
-
-    # Function to update spotlight position
-    update_spotlight() {
-      while [ -f "$SPOTLIGHT_STATE_FILE" ]; do
-        # Get current cursor position
-        cursor_pos=$(hyprctl cursorpos -j 2>/dev/null)
-        if [ $? -eq 0 ]; then
-          cursor_x=$(echo "$cursor_pos" | ${pkgs.jq}/bin/jq -r ".x" 2>/dev/null)
-          cursor_y=$(echo "$cursor_pos" | ${pkgs.jq}/bin/jq -r ".y" 2>/dev/null)
-          
-          if [ "$cursor_x" != "null" ] && [ "$cursor_y" != "null" ]; then
-            # Update overlay window position to follow cursor
-            # This is a simplified approach - in practice, we might need a more sophisticated method
-            hyprctl dispatch movewindow "exact ''${cursor_x} ''${cursor_y} ''${OVERLAY_TITLE}" 2>/dev/null || true
-          fi
-        fi
-        sleep 0.016  # ~60 FPS refresh rate
-      done
-    }
-
-    # Main execution
-    create_overlay
-    sleep 0.5  # Give window time to create
-    update_spotlight
-
-    # Clean up when done
-    hyprctl dispatch closewindow "title:''${OVERLAY_TITLE}" 2>/dev/null || true
-  '';
-  spotlight-state = pkgs.writeShellScriptBin "spotlight-state" ''
-    SPOTLIGHT_STATE_FILE="/tmp/spotlight_state"
-
-    case "$1" in
-      "active")
-        if [ -f "$SPOTLIGHT_STATE_FILE" ]; then
-          echo "true"
-        else
-          echo "false"
-        fi
-        ;;
-      "activate")
-        echo "active" > "$SPOTLIGHT_STATE_FILE"
-        ;;
-      "deactivate")
-        rm -f "$SPOTLIGHT_STATE_FILE"
-        ;;
-      "toggle")
-        if [ -f "$SPOTLIGHT_STATE_FILE" ]; then
-          rm -f "$SPOTLIGHT_STATE_FILE"
-          echo "deactivated"
-        else
-          echo "active" > "$SPOTLIGHT_STATE_FILE"
-          echo "activated"
-        fi
-        ;;
-      *)
-        echo "Usage: $0 {active|activate|deactivate|toggle}"
-        echo "  active     - Check if spotlight is active (returns true/false)"
-        echo "  activate   - Activate spotlight"
-        echo "  deactivate - Deactivate spotlight"
-        echo "  toggle     - Toggle spotlight state"
-        exit 1
-        ;;
-    esac
-  '';
 in
 {
   imports = [
@@ -178,10 +62,6 @@ in
     handle_monitor_connect
     take-screenshot
     hyprpolkitagent
-    spotlight-toggle
-    spotlight-overlay
-    spotlight-state
-    jq # for JSON parsing in scripts
   ];
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
@@ -316,15 +196,6 @@ in
       # clipse - clipboard manager
       "float, class:^(clipse)$"
       "size 622 652,class:^(clipse)$"
-      # spotlight overlay
-      "float, title:^(spotlight-overlay)$"
-      "nofocus,title:^(spotlight-overlay)$"
-      "noborder,title:^(spotlight-overlay)$"
-      "noshadow,title:^(spotlight-overlay)$"
-      "noanim,title:^(spotlight-overlay)$"
-      "fullscreen,title:^(spotlight-overlay)$"
-      "pin,title:^(spotlight-overlay)$"
-      "stayfocused,title:^(spotlight-overlay)$"
     ];
     bindm = [
       "$mod, mouse:272, movewindow"
@@ -362,10 +233,6 @@ in
       ",XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
       ",XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
       "$mod, V, exec, ghostty --class clipse -e 'clipse'"
-      # Spotlight (locate mouse) - double Ctrl press
-      "CTRL, CTRL, exec, spotlight-toggle"
-      # Exit spotlight with ESC
-      "ESC, exec, spotlight-state deactivate"
     ]
     ++ (
       # workspaces
