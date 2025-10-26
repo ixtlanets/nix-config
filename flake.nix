@@ -424,34 +424,59 @@
                     ./hosts/desktop/home-manager/home.nix
                   ];
                 };
-              }
-            ];
-          };
+    }
+
+  ];
+
+};
+
+};
+
+darwinConfigurations.i9mac = darwin.lib.darwinSystem {
+
+  specialArgs = { inherit inputs outputs darwin; };
+
+  system = "x86_64-darwin";
+
+  pkgs = import nixpkgs {
+
+    system = "x86_64-darwin";
+
+    config.allowUnfree = true;
+
+  };
+
+  modules = [
+
+    ./hosts/i9mac/nixos/configuration.nix
+
+    home-manager.darwinModules.home-manager
+
+    {
+
+      home-manager = {
+
+        useUserPackages = true;
+
+        extraSpecialArgs = { inherit inputs outputs; };
+
+        users.nik.imports = [
+
+          catppuccin.homeModules.catppuccin
+
+          ./hosts/i9mac/home-manager/home.nix
+
+        ];
 
       };
-      darwinConfigurations.m1max = darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs outputs darwin; };
-        system = "aarch64-darwin";
-        pkgs = import nixpkgs {
-          system = "aarch64-darwin";
-          config.allowUnfree = true;
-        };
-        modules = [
-          ./hosts/m1max/nixos/configuration.nix
-          home-manager.darwinModules.home-manager
-          {
-            home-manager = {
-              useUserPackages = true;
-              extraSpecialArgs = { inherit inputs outputs; };
-              users.nik.imports = [
-                catppuccin.homeModules.catppuccin
-                ./hosts/m1max/home-manager/home.nix
-              ];
-            };
-          }
-        ];
-      };
-      # Standalone home-manager configuration entrypoint
+
+    }
+
+  ];
+
+};
+
+# Standalone home-manager configuration entrypoint
       # enable flakes and nix command first.
       # to do so, you need to put to the /etc/nix/nix.conf
       # experimental-features = nix-command flakes
