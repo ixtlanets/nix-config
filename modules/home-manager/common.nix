@@ -182,13 +182,16 @@ in
     };
     git = {
       enable = true;
-      diff-so-fancy.enable = true;
       lfs.enable = true;
-      userEmail = "snikulin@gmail.com";
-      userName = "Sergey Nikulin";
-      extraConfig = {
+      settings = {
+        user.email = "snikulin@gmail.com";
+        user.name = "Sergey Nikulin";
         init.defaultBranch = "master";
       };
+    };
+    diff-so-fancy = {
+      enable = true;
+      enableGitIntegration = true;
     };
     direnv = {
       enable = true;
@@ -442,7 +445,7 @@ in
 
   home.activation = {
     importGpgKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-      if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.userEmail}"; then
+      if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.settings.user.email}"; then
       echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
       echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
       fi

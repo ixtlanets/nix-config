@@ -171,7 +171,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/x1carbon/home-manager/home.nix
@@ -212,7 +212,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/x1extreme/home-manager/home.nix
@@ -260,7 +260,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/x13/home-manager/home.nix
@@ -299,7 +299,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/um960pro/home-manager/home.nix
@@ -346,7 +346,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/zenbook/home-manager/home.nix
@@ -384,7 +384,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/matebook/home-manager/home.nix
@@ -418,7 +418,7 @@
                       ghostty
                       ;
                   };
-                  sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ];
+                  sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
                     ./hosts/desktop/home-manager/home.nix
