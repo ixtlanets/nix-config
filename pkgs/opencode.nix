@@ -5,13 +5,13 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "0.15.28";
+  version = "0.15.29";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.zip";
-        sha256 = "sha256-1qfouFQx/sKYlm44eXIn4esTZJ22jGgILqQJfbAKF/w=";
+        sha256 = "sha256-oymlygmLofTUAjV1AG7I1AE5rxBCmTaQ9chaYZlReAQ=";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
