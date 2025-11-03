@@ -4,6 +4,7 @@ let
   floxPkg = inputs.flox.packages.${pkgs.system}.default;
 in
 {
+  nix.enable = false; # required whn using Determinate nix
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -89,7 +90,7 @@ in
     menuExtraClock.ShowDayOfMonth = true;
     menuExtraClock.ShowDayOfWeek = true;
     spaces.spans-displays = false;
-    universalaccess.reduceMotion = false; # less animations
+    # universalaccess.reduceMotion = false; # less animations
   };
 
   security.pam.services.sudo_local.touchIdAuth = true; # Enable sudo authentication with Touch ID
@@ -104,18 +105,14 @@ in
       "1password"
       "1password-cli"
       "brave-browser"
-      "firefox-developer-edition"
-      "microsoft-edge"
       "raycast"
       "telegram"
       "moonlight"
       "notion"
       "obsidian"
       "scroll-reverser"
-      "istat-menus"
       "hammerspoon"
       "docker"
-      "vmware-fusion"
       "linearmouse"
       "rectangle"
       "ghostty"
