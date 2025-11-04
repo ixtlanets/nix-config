@@ -36,6 +36,11 @@
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
             sha256 = "1a5fe2b500afe158afc297a905df46d518b7771660fc955b661c15ca2b5b50d6";
           }
+        else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
+          prev.fetchurl {
+            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
+            sha256 = "sha256-L7AAidmlYa02nact+xPFqW0QGsJHIm018/Ox6tv+/u4";
+          }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
