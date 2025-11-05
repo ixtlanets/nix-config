@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
     else if stdenv.isDarwin && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-x64.zip";
-        sha256 = "sha256-1mYDVE8GOxwLyjMVZkqplvUECpnzdlRuB9ExfEN4alQ=";
+        sha256 = "sha256-jOqd2qTX9nrneNnKqG4U4dotoGHCT6+9XCHP0c3mHAk=";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isAarch64 then
