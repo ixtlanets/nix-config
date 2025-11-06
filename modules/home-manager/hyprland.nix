@@ -212,7 +212,7 @@ in
       "$mod, W, killactive"
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
-      "$mod, Return, exec, ghostty"
+       "$mod, Return, exec, wezterm"
       "$mod, D, exec, walker -p 'start'"
       "$mod, H, movefocus, l"
       "$mod, J, movefocus, d"
@@ -232,7 +232,7 @@ in
       ",XF86AudioLowerVolume, exec, swayosd-client --output-volume lower"
       ",XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
       ",XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
-      "$mod, V, exec, ghostty --class clipse -e 'clipse'"
+       "$mod, V, exec, wezterm start --class clipse -- clipse"
     ]
     ++ (
       # workspaces
