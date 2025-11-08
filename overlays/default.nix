@@ -39,7 +39,7 @@
         else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
-            sha256 = "sha256-aLNMmYI4rsjaOxg3y68U3l/T0jrZkD0Fx3vXlq3Yl34=";
+            sha256 = "sha256-WZQUmEKDPhp6ZXOOyz+5zSFWxdNuCr99BzD1I4TYdp0=";
           }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
