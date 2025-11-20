@@ -73,4 +73,7 @@
     };
   };
 
+  # Expose antigravity overlay from upstream input
+  antigravity = inputs.antigravity-nix.overlays.default;
+
 }

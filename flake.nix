@@ -40,6 +40,11 @@
       inputs.home-manager.follows = "home-manager";
     };
 
+    antigravity-nix = {
+      url = "github:jacopone/antigravity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     flox.url = "github:flox/flox/v1.7.3";
   };
 

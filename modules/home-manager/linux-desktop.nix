@@ -29,6 +29,7 @@
     wl-clipboard
     vscode
     pkgs.unstable.libreoffice-qt6-fresh
+    google-antigravity
   ];
 
   catppuccin.flavor = "mocha";
