@@ -30,6 +30,7 @@
     vscode
     pkgs.unstable.libreoffice-qt6-fresh
     google-antigravity
+    code-cursor-fhs
   ];
 
   catppuccin.flavor = "mocha";
