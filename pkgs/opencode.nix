@@ -5,18 +5,18 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "1.0.88";
+  version = "1.0.98";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
-        url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.zip";
-        sha256 = "sha256-DhKpS2AYivSVJvZocNAROWMwIMW52np1I47QqutZhc4=";
+        url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.tar.gz";
+        sha256 = "sha256-R8dmFC8AmGYsJ3cgQyZ+4Xb26HJ5AfV+cUju0MrBo94=";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
       fetchzip {
-        url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-arm64.zip";
+        url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-arm64.tar.gz";
         sha256 = "sha256-yeJCB6sIcfjyLbdHdpE6N+S2HZXfKI+nC99nXApXQvw=";
         stripRoot = false;
       }
