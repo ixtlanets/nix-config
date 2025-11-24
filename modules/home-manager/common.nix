@@ -132,7 +132,7 @@ in
       pscale
       tat-script
       fd # modern find
-      du-dust # modern du
+      dust # modern du
       speedtest-rs # speedtest
       fabric-ai
       codex # AI coding agent by OpenAI
@@ -152,7 +152,7 @@ in
     ]
     ++ (lib.optionals isLinux [
       gemini-cli
-      xdragon
+      dragon-drop
       vpn-script
       tabbed
       openssh

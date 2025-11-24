@@ -53,7 +53,7 @@ in
     slurp # Select a region in a Wayland compositor
     hyprshot # take screenshots in Hyprland using your mouse
     xdg-utils # for opening default programs when clicking links
-    glfw-wayland
+    glfw
     pavucontrol # volume control
     swaybg # to set wallpaper
     clipse # clipboard manager
@@ -212,7 +212,7 @@ in
       "$mod, W, killactive"
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
-       "$mod, Return, exec, wezterm"
+      "$mod, Return, exec, wezterm"
       "$mod, D, exec, walker -p 'start'"
       "$mod, H, movefocus, l"
       "$mod, J, movefocus, d"
@@ -232,7 +232,7 @@ in
       ",XF86AudioLowerVolume, exec, swayosd-client --output-volume lower"
       ",XF86AudioMute, exec, swayosd-client --output-volume mute-toggle"
       ",XF86AudioMicMute, exec, swayosd-client --input-volume mute-toggle"
-       "$mod, V, exec, wezterm start --class clipse -- clipse"
+      "$mod, V, exec, wezterm start --class clipse -- clipse"
     ]
     ++ (
       # workspaces

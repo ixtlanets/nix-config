@@ -122,7 +122,7 @@ in
       fira-mono
       font-awesome
 
-      noto-fonts-emoji
+      noto-fonts-color-emoji
       roboto
       source-code-pro
       source-sans-pro

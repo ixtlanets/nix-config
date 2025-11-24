@@ -16,7 +16,7 @@
     grim # screenshot functionality
     slurp # screenshot functionality
     xdg-utils # for opening default programs when clicking links
-    glfw-wayland
+    glfw
   ];
   home.sessionVariables = {
     NIXOS_OZONE_WL = "1";
