@@ -44,7 +44,7 @@
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-            sha256 = "sha256-XLrh0ZnH9dW+QvxSgVMoQGrCrcw+IZOM6j4h/qFCI7I=";
+            sha256 = "sha256:a269bd1af4c760e488166766b69abb782fba87abc3f3cf6078ba0c0c6c38a6ee";
           }
         else
           throw "Unsupported system for codex";
