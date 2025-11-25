@@ -60,11 +60,23 @@
         "chromium"
       ];
     };
+
+    chromium = {
+      enable = true;
+      extensions = [
+        { id = "ddkjiahejlhfcafbddmgiahcphecmpfh"; } # ublock origin lite, since Google broken proper extensions
+        { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
+        { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
+        { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
+        { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
+        { id = "edibdbjcniadpccecjdfdjjppcpchdlm"; } # I still don't care about cookies
+        { id = "ponfpcnoihfmfllpaingbgckeeldkhle"; } # Enhancer for YouTube
+      ];
+    };
     brave = {
       enable = true;
       extensions = [
         { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
-        { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
         { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
         { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
         { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
