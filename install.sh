@@ -107,6 +107,15 @@ install_devenv() {
   nix profile install nixpkgs#devenv
 }
 
+configure_git_defaults() {
+  log "configuring global git defaults"
+  git config --global user.name "Sergey Nikulin"
+  git config --global user.email "snikulin@gmail.com"
+  git config --global init.defaultBranch "master"
+  git config --global diff.tool "diff-so-fancy"
+  git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
+}
+
 write_zshrc() {
   log "writing ${HOME}/.zshrc"
   cat <<'EOF' >"$HOME/.zshrc"
@@ -597,6 +606,7 @@ main() {
   install_vless_service
   configure_nix
   install_devenv
+  configure_git_defaults
   install_tmux_plugins
 
   log "done. run 'chsh -s $(command -v zsh)' to make zsh your login shell if needed."
