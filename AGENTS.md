@@ -2,6 +2,7 @@
 
 ## Important Notes
 - Do not run `sudo nixos-rebuild build --flake .#zenbook` or similar commands yourself. Always ask the user to execute them.
+- Keep `install.sh` in sync with changes to helper scripts (vpn, vless, tat, etc.) from the Nix configs; replicate behavior updates there for CachyOS/Arch installs.
 
 ## Project Structure & Module Organization
 - Root: Nix flake (`flake.nix`, `flake.lock`), overlays (`overlays/`), custom packages (`pkgs/`).
