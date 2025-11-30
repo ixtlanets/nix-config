@@ -531,6 +531,7 @@ main() {
     gum
     tmux
     git
+    diff-so-fancy
     urlview
     sing-box
     tailscale
