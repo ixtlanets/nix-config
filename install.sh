@@ -321,6 +321,17 @@ install_tmux_plugins() {
   fi
 }
 
+write_yt_dlp_config() {
+  local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp"
+  local output_dir="$HOME/Video/YouTube"
+  mkdir -p "$config_dir" "$output_dir"
+  log "writing ${config_dir}/config"
+  cat <<'EOF' >"${config_dir}/config"
+--output ~/Video/YouTube/%(uploader)s/%(title)s.%(ext)s
+--format mp4
+EOF
+}
+
 install_tat() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -530,6 +541,7 @@ main() {
     variety
     prismlauncher
     mpv
+    yt-dlp
     zoom
     obsidian
     wl-clipboard
@@ -599,6 +611,7 @@ main() {
   write_zshrc
   write_starship_config
   write_tmux_conf
+  write_yt_dlp_config
   install_tat
   write_vpn_script
   enable_tailscale_service
