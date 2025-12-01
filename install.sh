@@ -121,7 +121,19 @@ write_zshrc() {
   cat <<'EOF' >"$HOME/.zshrc"
 # Zsh config derived from nix-config (CachyOS/Arch)
 
-export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
+# Ensure Nix paths are available even in non-login shells
+if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+  source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+elif [[ -e /etc/profile.d/nix.sh ]]; then
+  source /etc/profile.d/nix.sh
+elif [[ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+  source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+fi
+
+export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/bin:$HOME/go/bin:$PATH"
+
+# Aliases (keep in sync with home-manager common.nix)
+alias gst="git status"
 
 # History tuning
 HISTFILE="$HOME/.zsh_history"
