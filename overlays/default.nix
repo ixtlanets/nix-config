@@ -18,7 +18,7 @@
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.system}.default;
     codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.63.0";
+      version = "0.64.0";
       buildType = "simple";
       cargoSetupPostPatchHook = ":";
       nativeBuildInputs = [
@@ -29,7 +29,7 @@
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-            sha256 = "sha256-hlizHJhkadLVgG86b1j2Fr2hLBSqoSXdAh8MfnFFPdM=";
+            sha256 = "sha256:8264b993aa956e9444e2e4ec7a689fa9973918a5568d84891ee0a0b84bb1ec9a";
           }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
           prev.fetchurl {
@@ -44,7 +44,7 @@
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-            sha256 = "sha256-omm9GvTHYOSIFmdmtpq7eC+6h6vD889geLoMDGw4pu4=";
+            sha256 = "sha256:dea9c7154771919e054bd5567cc2243df3d0a87ae0ac36761c0a763a933a883f";
           }
         else
           throw "Unsupported system for codex";
