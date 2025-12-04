@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 log() {
   echo "[install:zsh] $*"
 }
@@ -333,6 +335,38 @@ install_tmux_plugins() {
   fi
 }
 
+write_variety_config() {
+  local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/variety"
+  local plugin_dir="${config_dir}/pluginconfig/quotes"
+  local repo_variety_conf="${SCRIPT_DIR}/dotfiles/variety.conf"
+  local repo_quotes="${SCRIPT_DIR}/dotfiles/quotes.txt"
+  local scripts_dir="${HOME}/scripts"
+  local set_wallpaper_src="${SCRIPT_DIR}/modules/home-manager/scripts/set_wallpaper"
+
+  mkdir -p "$config_dir" "$plugin_dir" "$scripts_dir"
+
+  if [[ -f "$repo_variety_conf" ]]; then
+    log "writing ${config_dir}/variety.conf from repo"
+    install -m644 "$repo_variety_conf" "${config_dir}/variety.conf"
+  else
+    log "warning: variety.conf not found at ${repo_variety_conf}; skipping"
+  fi
+
+  if [[ -f "$repo_quotes" ]]; then
+    log "writing ${plugin_dir}/quotes.txt"
+    install -m644 "$repo_quotes" "${plugin_dir}/quotes.txt"
+  else
+    log "warning: quotes.txt not found at ${repo_quotes}; skipping"
+  fi
+
+  if [[ -f "$set_wallpaper_src" ]]; then
+    log "installing set_wallpaper script to ${scripts_dir}/set_wallpaper"
+    install -m755 "$set_wallpaper_src" "${scripts_dir}/set_wallpaper"
+  else
+    log "warning: set_wallpaper script not found at ${set_wallpaper_src}; skipping"
+  fi
+}
+
 write_yt_dlp_config() {
   local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp"
   local output_dir="$HOME/Video/YouTube"
@@ -624,6 +658,7 @@ main() {
   write_zshrc
   write_starship_config
   write_tmux_conf
+  write_variety_config
   write_yt_dlp_config
   install_tat
   write_vpn_script
