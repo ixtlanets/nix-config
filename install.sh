@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOSTNAME_SHORT="$(hostname -s 2>/dev/null || hostname)"
 
 log() {
   echo "[install:zsh] $*"
@@ -109,6 +110,22 @@ install_devenv() {
   nix profile install nixpkgs#devenv
 }
 
+install_tz() {
+  if command -v tz >/dev/null 2>&1; then
+    log "tz already installed"
+    return
+  fi
+
+  if ! command -v go >/dev/null 2>&1; then
+    log "go not available; skipping tz install"
+    return
+  fi
+
+  log "installing tz via go install"
+  mkdir -p "${HOME}/.local/bin"
+  GOBIN="${HOME}/.local/bin" go install github.com/oz/tz@latest
+}
+
 configure_git_defaults() {
   log "configuring global git defaults"
   git config --global user.name "Sergey Nikulin"
@@ -133,6 +150,8 @@ elif [[ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
 fi
 
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/bin:$HOME/go/bin:$PATH"
+# Time zone list for tz (keep in sync with home-manager common.nix)
+export TZ_LIST="Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office;Europe/Berlin,Berlin"
 
 # Aliases (keep in sync with home-manager common.nix)
 alias gst="git status"
@@ -565,6 +584,55 @@ EOF
   sudo systemctl daemon-reload
 }
 
+install_radj_service() {
+  if ! command -v ryzenadj >/dev/null 2>&1; then
+    log "ryzenadj not available; skipping radj service install"
+    return
+  fi
+
+  local radj_script="/usr/local/lib/radj-loop.sh"
+  log "writing ${radj_script}"
+  sudo tee "$radj_script" >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+while true; do
+  if [[ ! -r /sys/class/power_supply/AC0/online ]]; then
+    sleep 60
+    continue
+  fi
+
+  if [[ "$(cat /sys/class/power_supply/AC0/online)" -eq "1" ]]; then
+    ryzenadj --tctl-temp=80 >/dev/null 2>&1 || true
+  else
+    ryzenadj --tctl-temp=55 >/dev/null 2>&1 || true
+  fi
+
+  sleep 60
+done
+EOF
+  sudo chmod 755 "$radj_script"
+
+  log "installing systemd service radj"
+  sudo tee /etc/systemd/system/radj.service >/dev/null <<EOF
+[Unit]
+Description=Ryzen Adj temperature limiter
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=${radj_script}
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now radj.service
+}
+
 main() {
   local packages=(
     zsh
@@ -633,6 +701,10 @@ main() {
     wordnet
   )
 
+  if [[ "$HOSTNAME_SHORT" == "x13" ]]; then
+    packages+=(ryzenadj)
+  fi
+
   ensure_yay
 
   for pkg in "${packages[@]}"; do
@@ -654,6 +726,7 @@ main() {
     npm_global_install "$npm_pkg"
   done
 
+  install_tz
   install_tpm
   write_zshrc
   write_starship_config
@@ -665,6 +738,11 @@ main() {
   enable_tailscale_service
   write_vless_script
   install_vless_service
+  if [[ "$HOSTNAME_SHORT" == "x13" ]]; then
+    install_radj_service
+  else
+    log "skipping RyzenAdj setup; hostname is ${HOSTNAME_SHORT}"
+  fi
   configure_nix
   install_devenv
   configure_git_defaults
