@@ -116,7 +116,7 @@ in
       "1password-cli"
       "antigravity"
       "brave-browser"
-      "firefox-developer-edition"
+      "firefox@developer-edition"
       "microsoft-edge"
       "raycast"
       "telegram"
