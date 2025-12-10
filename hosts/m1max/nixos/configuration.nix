@@ -1,4 +1,9 @@
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   floxPkg = inputs.flox.packages.${pkgs.system}.default;
@@ -68,12 +73,13 @@ in
     finder.ShowPathbar = true; # show path bar
     finder.ShowStatusBar = true; # show status bar
     finder._FXSortFoldersFirst = true; # show folders before files in finder
-    dock.autohide = true; # a bit more space
+    dock.autohide = false; # show dock
     dock.autohide-time-modifier = 0.0; # no stupid animation
     dock.mru-spaces = false; # Do not rearrange spaces
     dock.orientation = "right";
     dock.show-recents = false;
-    dock.tilesize = 32;
+    dock.tilesize = 24; # smaller icons
+    dock.expose-animation-duration = null; # no stupid animation
     dock.wvous-bl-corner = 1; # Disable Hot corner action for bottom left corner
     dock.wvous-br-corner = 1; # Disable Hot corner action for bottom right corner
     dock.wvous-tl-corner = 1; # Disable Hot corner action for top left corner
@@ -82,6 +88,11 @@ in
     NSGlobalDomain.AppleShowAllExtensions = true;
     NSGlobalDomain.InitialKeyRepeat = 14;
     NSGlobalDomain.KeyRepeat = 2;
+    NSGlobalDomain.NSAutomaticWindowAnimationsEnabled = false; # desable animations
+    NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false; # iCloud sucks
+    NSGlobalDomain.NSStatusItemSpacing = 8; # reduce spacing between status icons in the menu bar. default 12
+    NSGlobalDomain.NSWindowShouldDragOnGesture = true; # finally - proper window dragging
+    NSGlobalDomain."com.apple.keyboard.fnState" = true; # F1-F12 act as they should
     loginwindow.GuestEnabled = false;
     menuExtraClock.Show24Hour = true;
     menuExtraClock.ShowAMPM = false;
@@ -103,6 +114,7 @@ in
     casks = [
       "1password"
       "1password-cli"
+      "antigravity"
       "brave-browser"
       "firefox-developer-edition"
       "microsoft-edge"
@@ -114,7 +126,7 @@ in
       "scroll-reverser"
       "istat-menus"
       "hammerspoon"
-      "docker"
+      "docker-desktop"
       "vmware-fusion"
       "linearmouse"
       "rectangle"
