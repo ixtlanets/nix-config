@@ -5,7 +5,7 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "1.0.146";
+  version = "1.0.151";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
