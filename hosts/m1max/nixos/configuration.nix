@@ -90,7 +90,6 @@ in
     NSGlobalDomain.KeyRepeat = 2;
     NSGlobalDomain.NSAutomaticWindowAnimationsEnabled = false; # desable animations
     NSGlobalDomain.NSDocumentSaveNewDocumentsToCloud = false; # iCloud sucks
-    NSGlobalDomain.NSStatusItemSpacing = 8; # reduce spacing between status icons in the menu bar. default 12
     NSGlobalDomain.NSWindowShouldDragOnGesture = true; # finally - proper window dragging
     NSGlobalDomain."com.apple.keyboard.fnState" = true; # F1-F12 act as they should
     loginwindow.GuestEnabled = false;
@@ -103,7 +102,11 @@ in
     universalaccess.reduceMotion = false; # less animations
   };
 
-  security.pam.services.sudo_local.touchIdAuth = true; # Enable sudo authentication with Touch ID
+  security.pam.services.sudo_local = {
+    enable = true;
+    touchIdAuth = true; # Enable sudo authentication with Touch ID
+    reattach = true; # This fixes Touch ID for sudo not working inside tmux and screen.
+  };
 
   # programms installed by homebrew
   homebrew = {
