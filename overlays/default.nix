@@ -18,7 +18,7 @@
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.system}.default;
     codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.69.0";
+      version = "0.71.0";
       buildType = "simple";
       cargoSetupPostPatchHook = ":";
       nativeBuildInputs = [
@@ -29,22 +29,22 @@
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-            sha256 = "sha256:c74588ce19074fc6544c9213f09577a0526e78097c6c5c11a8a02bacb9b2f0c1";
+            sha256 = "sha256:e5c74620d8c8f737035c7877bbaeadab9c61a0286b6d8e23993d725205420595";
           }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-            sha256 = "1a5fe2b500afe158afc297a905df46d518b7771660fc955b661c15ca2b5b50d6";
+            sha256 = "sha256:583565a88d3fbb288288662e35663d217285bcafbaf8149545348e7f0fecea31";
           }
         else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
-            sha256 = "sha256-WZQUmEKDPhp6ZXOOyz+5zSFWxdNuCr99BzD1I4TYdp0=";
+            sha256 = "sha256:4dd08f45e1f980bd3ca57e6b6398eaaa66a16f05d5bbb9cadb8ea693b4c9d2f1";
           }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-            sha256 = "sha256:520c2e456d36cc18b013b303b6060d90aaa2c3e5fa41f2c1d5b1fe152afcb2de";
+            sha256 = "sha256:f8b0886074f36dab898031ad45d3d0e199c5c5579c497a3960a5ab384d57693b";
           }
         else
           throw "Unsupported system for codex";
