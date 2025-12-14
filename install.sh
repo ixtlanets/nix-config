@@ -137,6 +137,21 @@ configure_git_defaults() {
   git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
 }
 
+ensure_ssh_firewall() {
+  if ! command -v ufw >/dev/null 2>&1; then
+    log "ufw not found; skipping ssh firewall rule"
+    return
+  fi
+
+  if sudo ufw status | grep -E '(^|[^0-9])22/tcp( |$)' >/dev/null 2>&1; then
+    log "ufw rule for 22/tcp already present"
+    return
+  fi
+
+  log "allowing 22/tcp via ufw for ssh"
+  sudo ufw allow 22/tcp comment 'SSH' || true
+}
+
 enable_sshd_service() {
   if command -v systemctl >/dev/null 2>&1; then
     log "enabling and starting sshd.service"
@@ -902,6 +917,7 @@ main() {
   write_vless_script
   install_vless_service
   ensure_vless_docker_firewall
+  ensure_ssh_firewall
   configure_openssh
   configure_gpg
   clone_password_store
