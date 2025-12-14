@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.tar.gz";
-        sha256 = "sha256:c7a4755eef78f675913f5978a2b08ac2a1a8067b9549758cb7016c7c3f2e30d8";
+        sha256 = "sha256-WKCSnY0RwrGmRMMnCi5IIFiK5nXbjxqSaXjpp0eJOuQ=";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
