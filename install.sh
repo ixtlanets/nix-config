@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOSTNAME_SHORT="$(hostname -s 2>/dev/null || hostname)"
+GIT_USER_NAME="Sergey Nikulin"
+GIT_USER_EMAIL="snikulin@gmail.com"
 
 log() {
   echo "[install:zsh] $*"
@@ -128,11 +130,128 @@ install_tz() {
 
 configure_git_defaults() {
   log "configuring global git defaults"
-  git config --global user.name "Sergey Nikulin"
-  git config --global user.email "snikulin@gmail.com"
+  git config --global user.name "$GIT_USER_NAME"
+  git config --global user.email "$GIT_USER_EMAIL"
   git config --global init.defaultBranch "master"
   git config --global diff.tool "diff-so-fancy"
   git config --global core.pager "diff-so-fancy | less --tabs=4 -RFX"
+}
+
+enable_sshd_service() {
+  if command -v systemctl >/dev/null 2>&1; then
+    log "enabling and starting sshd.service"
+    sudo systemctl enable --now sshd.service
+  else
+    log "systemctl not found; skip enabling sshd.service"
+  fi
+}
+
+configure_openssh() {
+  local ssh_dir="${HOME}/.ssh"
+  mkdir -p "$ssh_dir"
+  chmod 700 "$ssh_dir"
+
+  local ssh_files=(
+    "id_rsa:600"
+    "id_rsa.pub:644"
+    "id_rsa_1:600"
+    "id_rsa_1.pub:644"
+    "startspiritup-firebase-adminsdk-o9eey-c7292ac3f8.json:600"
+  )
+
+  for entry in "${ssh_files[@]}"; do
+    IFS=: read -r filename mode <<<"$entry"
+    local src="${SCRIPT_DIR}/secrets/ssh/${filename}"
+    local dest="${ssh_dir}/${filename}"
+    if [[ -f "$src" ]]; then
+      log "installing ssh key ${filename}"
+      install -m"$mode" "$src" "$dest"
+    else
+      log "warning: ssh key ${filename} not found at ${src}; skipping"
+    fi
+  done
+
+  local auth_file="${ssh_dir}/authorized_keys"
+  local authorized_keys=(
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC35qP3UeDJNWzN1ux5FY6Mnsj7KLAmRRt254vjz1Ry5SNwdLE1VhVPVnmIufyKWK5/z6g8NiPvFxXzAyKCitpSS6ahYQjKCXS9b5P3C+FPLcwcy1Ge54Fdu1qGzTeElbIm86+MSA1aQgwbzVfHQYl/TLBk7QVTJ5SdQgdBe7w3tt4hkQMhsqTue6FKF0sTF3xMcKf8B/CSmYHgFiVZsiqg+hb8sYBogIc5vsFlNfxg14UMriGh6/wOvNvZIn7IwgGB2tKGCEtS4p9PL7Vd+LHYUgwta2a/KXgH3xQEuCKDwGPJWpE4kkbSr1SNdQuGZP3Ry9Ta5TMIEgQ8n0mAD9lR nik@msi-ubuntu"
+    "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAtj2ANdOntRVwWXdMm9FWu2fwDZNH2uEJH+vI37AfPwlmITtxBsOCM9/CYK/wkQa2elfkgkRYqvww0IlwCzI9/88t9YX7CWZU7z/P8ISufNL5VUOfiu15712CJjieauLOzTbAvyFvPhhqTkOpk/Fe1Mi1kFVaBlLqZjHsgokViACOmi+P06XFj0Bl//zAYvqC7mFSRGKDjmicW6vnUxShH6r4QQJv9J2z4KrDHs1ZWUOyWabqaVR4qD/vuGg2kYF/J1YaLKnNQGVNVtSmsaDbwTmev5dPKpZIxgRzl+MyaHDaCCxnzp6dHnjnlP8cfFW55t3Aea5JQCW8vtRrrwKExQ=="
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCgv72CRql2CHmORIPFv4bgLNbdWQbgKbb4VOHqIBnoWddXi1PfoDuhesKrLwr+tvuNcOVzdPo69nh6NhXMsOW3it7FHeEsZ9ADH8W6PiZyEItDvTtrI6j6776ZGsn+pJ0Mj+qP4fZrSkmdd13tiKiigkX5Sif04vlTDGyQiL8zVOiigEO0UIUfTlw45KrE8/iqVnCoVzcaVqQ7QjNUOhGeiKihoIcyco++XiS1Qs2nw8oSvXphQ6KGjGMq1adGl7+4HEYJgkjN0dQqfkZzZtY5TfwKOFGKofj/TRP+pntBbl8RhtBwPpI7lbEQljv715PwYgAHVYhWuOlBQhskGz5L nik@ubuntu-server"
+  )
+
+  touch "$auth_file"
+  chmod 600 "$auth_file"
+
+  for key in "${authorized_keys[@]}"; do
+    if grep -qxF "$key" "$auth_file"; then
+      continue
+    fi
+
+    local comment="${key##* }"
+    log "adding authorized key ${comment}"
+    echo "$key" >>"$auth_file"
+  done
+
+  enable_sshd_service
+}
+
+configure_gpg() {
+  if ! command -v gpg >/dev/null 2>&1; then
+    log "gpg not available; skipping gpg setup"
+    return
+  fi
+
+  local gpg_dir="${HOME}/.gnupg"
+  local agent_conf="${gpg_dir}/gpg-agent.conf"
+  mkdir -p "$gpg_dir"
+  chmod 700 "$gpg_dir"
+
+  if [[ -f "$agent_conf" ]]; then
+    if ! grep -q "^enable-ssh-support" "$agent_conf"; then
+      log "adding enable-ssh-support to ${agent_conf}"
+      echo "enable-ssh-support" >>"$agent_conf"
+    fi
+  else
+    log "writing ${agent_conf} with ssh support"
+    echo "enable-ssh-support" >"$agent_conf"
+  fi
+  chmod 600 "$agent_conf"
+
+  local public_key="${SCRIPT_DIR}/secrets/gpg/public.key"
+  local private_key="${SCRIPT_DIR}/secrets/gpg/private.key"
+  if [[ ! -f "$public_key" || ! -f "$private_key" ]]; then
+    log "gpg key files not found; skipping import"
+    return
+  fi
+
+  if gpg --list-secret-keys 2>/dev/null | grep -q "$GIT_USER_EMAIL"; then
+    log "gpg keys for ${GIT_USER_EMAIL} already present"
+    return
+  fi
+
+  log "importing gpg keys for ${GIT_USER_EMAIL}"
+  gpg --import "$public_key"
+  gpg --import "$private_key"
+}
+
+clone_password_store() {
+  local pass_dir="${HOME}/.password-store"
+
+  if [[ -d "${pass_dir}/.git" ]]; then
+    log "password store already present at ${pass_dir}"
+    return
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    log "git not available; skipping password store clone"
+    return
+  fi
+
+  log "cloning password store into ${pass_dir}"
+  if git clone git@github.com:snikulin/.password-store.git "$pass_dir"; then
+    log "password store cloned"
+  else
+    log "warning: failed to clone password store; check SSH access and gpg setup"
+  fi
 }
 
 write_zshrc() {
@@ -152,6 +271,8 @@ fi
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/bin:$HOME/go/bin:$PATH"
 # Time zone list for tz (keep in sync with home-manager common.nix)
 export TZ_LIST="Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office;Europe/Berlin,Berlin"
+export PASSWORD_STORE_DIR="$HOME/.password-store"
+export GPG_TTY="$(tty)"
 
 # Aliases (keep in sync with home-manager common.nix)
 alias gst="git status"
@@ -682,6 +803,11 @@ main() {
     gum
     tmux
     git
+    git-crypt
+    git-lfs
+    openssh
+    gnupg
+    pass
     diff-so-fancy
     urlview
     sing-box
@@ -776,6 +902,9 @@ main() {
   write_vless_script
   install_vless_service
   ensure_vless_docker_firewall
+  configure_openssh
+  configure_gpg
+  clone_password_store
   if [[ "$HOSTNAME_SHORT" == "x13" ]]; then
     install_radj_service
   else
