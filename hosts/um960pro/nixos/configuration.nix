@@ -44,7 +44,6 @@
   '';
   services.ollama = {
     enable = true;
-    acceleration = "rocm";
   };
 
   boot.blacklistedKernelModules = [ "nouveau" ];

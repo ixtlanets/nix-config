@@ -36,7 +36,6 @@
 
   services.ollama = {
     enable = true;
-    acceleration = "cuda";
   };
 
   environment.etc."brave/policies/managed/notifications.json".text = ''
