@@ -164,5 +164,12 @@ in
         StartLimitIntervalSec = 60;
       };
     };
+
+    # Allow Docker bridge traffic to reach the sing-box redirect port so
+    # containers can use the tunnel.
+    networking.firewall.extraInputRules = lib.mkIf config.virtualisation.docker.enable ''
+      -i docker0 -p tcp --dport 41935 -j ACCEPT
+      -i br-+ -p tcp --dport 41935 -j ACCEPT
+    '';
   };
 }
