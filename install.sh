@@ -823,6 +823,7 @@ main() {
     openssh
     gnupg
     pass
+    pass-otp
     diff-so-fancy
     urlview
     sing-box
