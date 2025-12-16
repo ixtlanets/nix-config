@@ -151,7 +151,9 @@ in
     };
   };
 
-  nix.package = pkgs.nix;
+  # nix 2.31.2+1 fails the nix-shell shebang functional test on aarch64-darwin;
+  # stick to the previous release until upstream fixes the regression.
+  nix.package = pkgs.nixVersions.nix_2_30;
 
   # Backward compatibility
   system.stateVersion = 4;
