@@ -5,13 +5,13 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "1.0.167";
+  version = "1.0.168";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-linux-x64.tar.gz";
-        sha256 = "sha256-4lm6eq4/rTx2BLQl+m4TERXUYD+316tZf3mRNa2WISc=";
+        sha256 = "sha256:e752c6db2a048cd884d90b5aa25096389a56c21ca424f3ff809ef4c91ce10799";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "sha256-4lm6eq4/rTx2BLQl+m4TERXUYD+316tZf3mRNa2WISa=";
+        sha256 = "sha256-WCsbk9PxCdF9ID77Q+mwupumE2F/gE9HjQcZjgN0DzU=";
         stripRoot = false;
       }
     else
