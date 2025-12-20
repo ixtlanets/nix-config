@@ -5,7 +5,7 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "1.0.168";
+  version = "1.0.180";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/sst/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "sha256-WCsbk9PxCdF9ID77Q+mwupumE2F/gE9HjQcZjgN0DzU=";
+        sha256 = "sha256-dGgfqDV8kHxW+n88RTTa9o1FuGaWodcnsTSIawG3hyY=";
         stripRoot = false;
       }
     else
