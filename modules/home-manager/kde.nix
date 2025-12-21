@@ -51,7 +51,7 @@ in
     hotkeys.commands = {
       "launch-konsole" = {
         name = "Launch Terminal";
-        key = "Meta+Shift+Return";
+        key = "Meta+Return";
         command = "alacritty";
       };
       "rofi" = {

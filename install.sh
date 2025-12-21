@@ -109,7 +109,7 @@ install_devenv() {
   fi
 
   log "installing devenv via nix profile"
-  nix profile install nixpkgs#devenv
+  nix profile add nixpkgs#devenv
 }
 
 install_tz() {
@@ -478,6 +478,140 @@ set -g @dracula-battery-label ""
 # Initialize TPM
 run '~/.tmux/plugins/tpm/tpm'
 EOF
+}
+
+configure_kde_shortcuts() {
+  local kwriteconfig=""
+  if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig6"
+  elif command -v kwriteconfig5 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig5"
+  else
+    log "kwriteconfig not found; skipping KDE shortcut configuration"
+    return
+  fi
+
+  local kglobal="${HOME}/.config/kglobalshortcutsrc"
+  log "configuring KDE global shortcuts"
+  "${kwriteconfig}" --file "$kglobal" --group org.kde.krunner --key RunCommand "Meta+D,Meta+D,Run Command"
+  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "activate application launcher" ",,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "Activate Application Launcher" ",,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Expose" "Meta+,,Meta+,,Expose"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Overview" "Meta+;,Meta+;,Overview"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window Close" "Meta+W,Meta+W,Window Close"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window Maximize" "Meta+Up,Meta+Up,Window Maximize"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Show Desktop" "Meta+Down,Meta+Down,Show Desktop"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch to Desktop 1" "Meta+1,Meta+1,Switch to Desktop 1"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch to Desktop 2" "Meta+2,Meta+2,Switch to Desktop 2"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch to Desktop 3" "Meta+3,Meta+3,Switch to Desktop 3"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch to Desktop 4" "Meta+4,Meta+4,Switch to Desktop 4"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch to Desktop 5" "Meta+5,Meta+5,Switch to Desktop 5"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window to Desktop 1" "Meta+!,Meta+!,Window to Desktop 1"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window to Desktop 2" "Meta+@,Meta+@,Window to Desktop 2"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window to Desktop 3" "Meta+#,Meta+#,Window to Desktop 3"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window to Desktop 4" "Meta+$,Meta+$,Window to Desktop 4"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window to Desktop 5" "Meta+%,Meta+%,Window to Desktop 5"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch One Desktop to the Left" "Meta+Ctrl+Left,Meta+Ctrl+Left,Switch One Desktop to the Left"
+  "${kwriteconfig}" --file "$kglobal" --group kwin --key "Switch One Desktop to the Right" "Meta+Ctrl+Right,Meta+Ctrl+Right,Switch One Desktop to the Right"
+  "${kwriteconfig}" --file "$kglobal" --group ksmserver --key "Log Out" "Meta+Shift+E,Meta+Shift+E,Log Out"
+
+  local khotkey="${HOME}/.config/khotkeysrc"
+  if [[ -f "$khotkey" ]] && rg -q "Name=Launch Alacritty" "$khotkey"; then
+    log "khotkey entry for Launch Alacritty already present; skipping"
+  else
+    local count=0
+    if [[ -f "$khotkey" ]]; then
+      count="$(
+        awk -F= '
+          /^\[Data\]$/ { in_data=1; next }
+          in_data && $1 == "DataCount" { gsub(/ /, "", $2); print $2; exit }
+        ' "$khotkey"
+      )"
+      count="${count:-0}"
+    fi
+
+    local next=$((count + 1))
+    log "adding KDE hotkey Meta+Return for Alacritty"
+    cat <<EOF >>"$khotkey"
+
+[Data_${next}]
+Comment=Launch Alacritty
+Enabled=true
+Name=Launch Alacritty
+Type=SIMPLE_ACTION_DATA
+
+[Data_${next}.Actions]
+ActionsCount=1
+
+[Data_${next}.Actions/0]
+Type=COMMAND_URL
+CommandURL=alacritty
+
+[Data_${next}.Conditions]
+ConditionsCount=0
+
+[Data_${next}.Triggers]
+TriggersCount=1
+
+[Data_${next}.Triggers/0]
+Type=SHORTCUT
+Shortcut=Meta+Return
+EOF
+
+    "${kwriteconfig}" --file "$khotkey" --group Data --key DataCount "$next"
+    "${kwriteconfig}" --file "$khotkey" --group General --key AllowKDEDefaults "true"
+  fi
+
+  if command -v qdbus6 >/dev/null 2>&1; then
+    qdbus6 org.kde.kglobalaccel /kglobalaccel org.kde.KGlobalAccel.reload >/dev/null 2>&1 || true
+  elif command -v qdbus >/dev/null 2>&1; then
+    qdbus org.kde.kglobalaccel /kglobalaccel org.kde.KGlobalAccel.reload >/dev/null 2>&1 || true
+  else
+    log "qdbus not found; KDE shortcuts will apply after re-login"
+  fi
+}
+
+configure_kde_cursor() {
+  local kwriteconfig=""
+  if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig6"
+  elif command -v kwriteconfig5 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig5"
+  else
+    log "kwriteconfig not found; skipping KDE cursor configuration"
+    return
+  fi
+
+  local kcminput="${HOME}/.config/kcminputrc"
+  log "configuring KDE cursor theme"
+  "${kwriteconfig}" --file "$kcminput" --group Mouse --key cursorTheme "Bibata-Modern-Ice"
+  "${kwriteconfig}" --file "$kcminput" --group Mouse --key cursorSize "24"
+}
+
+configure_kde_input() {
+  local kwriteconfig=""
+  if command -v kwriteconfig6 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig6"
+  elif command -v kwriteconfig5 >/dev/null 2>&1; then
+    kwriteconfig="kwriteconfig5"
+  else
+    log "kwriteconfig not found; skipping KDE input configuration"
+    return
+  fi
+
+  local kxkb="${HOME}/.config/kxkbrc"
+  log "configuring KDE keyboard layouts"
+  "${kwriteconfig}" --file "$kxkb" --group Layout --key Use "true"
+  "${kwriteconfig}" --file "$kxkb" --group Layout --key LayoutList "us,ru"
+  "${kwriteconfig}" --file "$kxkb" --group Layout --key VariantList ","
+  "${kwriteconfig}" --file "$kxkb" --group Layout --key Model "pc105"
+  "${kwriteconfig}" --file "$kxkb" --group Layout --key Options ""
+
+  local kcminput="${HOME}/.config/kcminputrc"
+  log "configuring KDE keyboard repeat delay/rate"
+  "${kwriteconfig}" --file "$kcminput" --group Keyboard --key RepeatDelay "250"
+  "${kwriteconfig}" --file "$kcminput" --group Keyboard --key RepeatRate "30"
+  "${kwriteconfig}" --file "$kcminput" --group Keyboard --key KeyboardRepeat "true"
 }
 
 write_alacritty_config() {
@@ -875,6 +1009,7 @@ main() {
     statix
     emacs-wayland
     cantarell-fonts
+    bibata-cursor-theme
     cmake
     libtool
     texlive-bin
@@ -925,6 +1060,9 @@ main() {
   write_alacritty_config
   write_variety_config
   write_yt_dlp_config
+  configure_kde_shortcuts
+  configure_kde_cursor
+  configure_kde_input
   install_tat
   write_vpn_script
   enable_tailscale_service
