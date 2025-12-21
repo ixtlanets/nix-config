@@ -480,6 +480,19 @@ run '~/.tmux/plugins/tpm/tpm'
 EOF
 }
 
+write_alacritty_config() {
+  local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/alacritty"
+  local repo_config="${SCRIPT_DIR}/dotfiles/alacritty.toml"
+  mkdir -p "$config_dir"
+
+  if [[ -f "$repo_config" ]]; then
+    log "writing ${config_dir}/alacritty.toml from repo"
+    install -m644 "$repo_config" "${config_dir}/alacritty.toml"
+  else
+    log "warning: alacritty.toml not found at ${repo_config}; skipping"
+  fi
+}
+
 install_tmux_plugins() {
   local tpm_dir="${HOME}/.tmux/plugins/tpm"
   if [[ -x "$tpm_dir/bin/install_plugins" ]]; then
@@ -829,6 +842,7 @@ main() {
     sing-box
     tailscale
     jq
+    alacritty
     telegram-desktop
     moonlight-qt
     otf-monaspace-nerdfonts
@@ -852,8 +866,6 @@ main() {
     curl
     vale
     proselint
-    luaformatter
-    prisma-engines
     lua-language-server
     make
     lua51-jsregexp
@@ -910,6 +922,7 @@ main() {
   write_zshrc
   write_starship_config
   write_tmux_conf
+  write_alacritty_config
   write_variety_config
   write_yt_dlp_config
   install_tat
