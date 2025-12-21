@@ -494,8 +494,11 @@ configure_kde_shortcuts() {
   local kglobal="${HOME}/.config/kglobalshortcutsrc"
   log "configuring KDE global shortcuts"
   "${kwriteconfig}" --file "$kglobal" --group org.kde.krunner --key RunCommand "Meta+D,Meta+D,Run Command"
-  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "activate application launcher" ",,Activate Application Launcher"
-  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "Activate Application Launcher" ",,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group services --group org.kde.krunner.desktop --key _launch 'Meta+D\tSearch'
+  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "activate application launcher" "none,none,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group org.kde.plasmashell --key "Activate Application Launcher" "none,none,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group plasmashell --key "activate application launcher" "none,none,Activate Application Launcher"
+  "${kwriteconfig}" --file "$kglobal" --group plasmashell --key "Activate Application Launcher" "none,none,Activate Application Launcher"
   "${kwriteconfig}" --file "$kglobal" --group kwin --key "Expose" "Meta+,,Meta+,,Expose"
   "${kwriteconfig}" --file "$kglobal" --group kwin --key "Overview" "Meta+;,Meta+;,Overview"
   "${kwriteconfig}" --file "$kglobal" --group kwin --key "Window Close" "Meta+W,Meta+W,Window Close"
