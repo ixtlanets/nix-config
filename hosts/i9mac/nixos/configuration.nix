@@ -116,6 +116,7 @@ in
       "linearmouse"
       "rectangle"
       "ghostty"
+      "codex"
     ];
     taps = [
       "fujiapple852/trippy"
@@ -125,6 +126,7 @@ in
     brews = [
       "trippy"
       "emacs-plus"
+      "opencode"
       # "sunshine" it's broken now
     ];
     onActivation = {

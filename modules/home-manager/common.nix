@@ -8,6 +8,7 @@
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
+  isDarwin = pkgs.stdenv.isDarwin;
   floxPkg = inputs.flox.packages.${pkgs.system}.default;
   gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
   gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
@@ -134,10 +135,12 @@ in
       fd # modern find
       dust # modern du
       speedtest-rs # speedtest
-      fabric-ai
-      codex # AI coding agent by OpenAI
+       fabric-ai
       qwen-code # AI coding agent by Qwen
+    ] ++ lib.optionals (!isDarwin) [
+      codex # AI coding agent by OpenAI
       codebuddy-code # Tencent AI coding tool
+    ] ++ [
       specify-cli # GitHub Spec Kit CLI for Spec-Driven Development
       viu # terminal image viewer
       ast-grep # code structural search
@@ -435,7 +438,7 @@ in
         };
       };
     };
-    opencode = {
+    opencode = lib.mkIf (!isDarwin) {
       enable = true;
     };
   };
