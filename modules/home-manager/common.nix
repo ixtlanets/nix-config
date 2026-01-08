@@ -135,12 +135,14 @@ in
       fd # modern find
       dust # modern du
       speedtest-rs # speedtest
-       fabric-ai
+      fabric-ai
+    ]
+    ++ lib.optionals (!isDarwin) [
       qwen-code # AI coding agent by Qwen
-    ] ++ lib.optionals (!isDarwin) [
       codex # AI coding agent by OpenAI
       codebuddy-code # Tencent AI coding tool
-    ] ++ [
+    ]
+    ++ [
       specify-cli # GitHub Spec Kit CLI for Spec-Driven Development
       viu # terminal image viewer
       ast-grep # code structural search
