@@ -269,6 +269,78 @@ clone_password_store() {
   fi
 }
 
+install_claude_skills() {
+  local claude_dir="${HOME}/.claude"
+  local repo_dir="${claude_dir}/skills-repo"
+  local skills_src_dir="${repo_dir}/skills"
+  local skills_dest_dir="${claude_dir}/skills"
+
+  local repo_ssh="git@github.com:anthropics/skills.git"
+  local repo_https="https://github.com/anthropics/skills.git"
+
+  if ! command -v git >/dev/null 2>&1; then
+    log "git not available; skipping Claude skills install"
+    return
+  fi
+
+  mkdir -p "$claude_dir"
+
+  if [[ -e "$repo_dir" && ! -d "$repo_dir" ]]; then
+    log "warning: ${repo_dir} exists and is not a directory; skipping Claude skills"
+    return
+  fi
+
+  if [[ -d "$repo_dir/.git" ]]; then
+    log "updating Claude skills repo in ${repo_dir}"
+    if ! git -C "$repo_dir" pull --ff-only; then
+      log "warning: failed to update Claude skills via origin; trying HTTPS"
+      local branch
+      branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+      if [[ -n "$branch" && "$branch" != "HEAD" ]]; then
+        git -C "$repo_dir" pull --ff-only "$repo_https" "$branch" || true
+      else
+        git -C "$repo_dir" pull --ff-only "$repo_https" || true
+      fi
+    fi
+  elif [[ -d "$repo_dir" ]]; then
+    log "warning: ${repo_dir} exists but is not a git checkout; skipping Claude skills"
+    return
+  else
+    log "cloning Claude skills repo into ${repo_dir}"
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+
+    if git clone "$repo_ssh" "$tmpdir/skills-repo"; then
+      :
+    else
+      log "warning: SSH clone failed; trying HTTPS"
+      rm -rf "$tmpdir/skills-repo"
+      if ! git clone "$repo_https" "$tmpdir/skills-repo"; then
+        log "warning: failed to clone Claude skills repo"
+        rm -rf "$tmpdir"
+        return
+      fi
+    fi
+
+    mv "$tmpdir/skills-repo" "$repo_dir"
+    rm -rf "$tmpdir"
+  fi
+
+  if [[ ! -d "$skills_src_dir" ]]; then
+    log "warning: skills folder not found at ${skills_src_dir}; skipping"
+    return
+  fi
+
+  if [[ -e "$skills_dest_dir" && ! -d "$skills_dest_dir" ]]; then
+    log "warning: ${skills_dest_dir} exists and is not a directory; skipping"
+    return
+  fi
+
+  mkdir -p "$skills_dest_dir"
+  log "installing Claude skills into ${skills_dest_dir}"
+  cp -a "${skills_src_dir}/." "${skills_dest_dir}/"
+}
+
 write_zshrc() {
   log "writing ${HOME}/.zshrc"
   cat <<'EOF' >"$HOME/.zshrc"
@@ -1074,6 +1146,7 @@ main() {
   ensure_vless_docker_firewall
   ensure_ssh_firewall
   configure_openssh
+  install_claude_skills
   configure_gpg
   clone_password_store
   if [[ "$HOSTNAME_SHORT" == "x13" ]]; then
