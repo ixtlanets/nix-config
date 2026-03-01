@@ -552,6 +552,170 @@ run '~/.tmux/plugins/tpm/tpm'
 EOF
 }
 
+install_dash_to_panel_extension() {
+  local dash_to_panel_uuid="dash-to-panel@jderose9.github.com"
+  local extensions_dir="${HOME}/.local/share/gnome-shell/extensions"
+  
+  mkdir -p "$extensions_dir"
+  
+  if [[ -d "${extensions_dir}/${dash_to_panel_uuid}" ]]; then
+    log "dash-to-panel extension already installed"
+    return 0
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    log "jq not installed; cannot download dash-to-panel extension"
+    return 1
+  fi
+
+  log "downloading dash-to-panel extension"
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+  
+  local download_url
+  download_url=$(curl -s https://api.github.com/repos/home-sweet-gnome/dash-to-panel/releases/latest | \
+    jq -r '.assets[] | select(.name | endswith(".zip")) | .browser_download_url')
+  
+  if [[ -z "$download_url" || "$download_url" == "null" ]]; then
+    log "failed to get dash-to-panel download URL"
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  log "downloading from ${download_url}"
+  if ! curl -L -o "${tmpdir}/dash-to-panel.zip" "$download_url"; then
+    log "failed to download dash-to-panel extension"
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  log "extracting dash-to-panel extension"
+  if ! unzip -q "${tmpdir}/dash-to-panel.zip" -d "${extensions_dir}/${dash_to_panel_uuid}"; then
+    log "failed to extract dash-to-panel extension"
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  rm -rf "$tmpdir"
+  log "dash-to-panel extension installed successfully"
+}
+
+install_gnome_packages() {
+  if ! command -v gnome-shell >/dev/null 2>&1; then
+    log "GNOME not installed; skipping GNOME packages"
+    return
+  fi
+
+  local gnome_packages=(
+    gnome-extra
+    papirus-icon-theme
+    papirus-folders
+    jq
+  )
+
+  for pkg in "${gnome_packages[@]}"; do
+    pacman_install "$pkg"
+  done
+
+  install_dash_to_panel_extension
+}
+
+configure_gnome_settings() {
+  if ! command -v gsettings >/dev/null 2>&1; then
+    log "gsettings not found; skipping GNOME configuration"
+    return
+  fi
+
+  if ! pgrep -x "gnome-shell" >/dev/null 2>&1; then
+    log "GNOME Shell not running; skipping GNOME configuration"
+    return
+  fi
+
+  log "configuring GNOME settings"
+
+  # Disable Super key alone (use Super+d instead)
+  gsettings set org.gnome.mutter overlay-key ''
+
+  # Set overview toggle to Super+d
+  gsettings set org.gnome.shell.keybindings toggle-overview "['<Super>d']"
+
+  # Disable dynamic workspaces, use fixed 5 workspaces
+  gsettings set org.gnome.mutter dynamic-workspaces false
+  gsettings set org.gnome.desktop.wm.preferences num-workspaces 5
+
+  # Workspace names
+  gsettings set org.gnome.desktop.wm.preferences workspace-names "['1', '2', '3', '4', '5']"
+
+  # Input sources (US and RU layouts)
+  gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us'), ('xkb', 'ru')]"
+  gsettings set org.gnome.desktop.input-sources xkb-options "['grp:win_space_toggle']"
+
+  # Keybindings
+  # Close window
+  gsettings set org.gnome.desktop.wm.keybindings close "['<Super>w']"
+  
+  # Maximize/Minimize
+  gsettings set org.gnome.desktop.wm.keybindings maximize "['<Super>Up']"
+  gsettings set org.gnome.desktop.wm.keybindings minimize "['<Super>h']"
+  
+  # Toggle fullscreen
+  gsettings set org.gnome.desktop.wm.keybindings toggle-fullscreen "['<Super>f']"
+
+  # Switch to workspaces
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-1 "['<Super>1']"
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-2 "['<Super>2']"
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-3 "['<Super>3']"
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-4 "['<Super>4']"
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-last "['<Super>5']"
+
+  # Move to workspaces
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-1 "['<Super><Shift>1']"
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-2 "['<Super><Shift>2']"
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-3 "['<Super><Shift>3']"
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-4 "['<Super><Shift>4']"
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-last "['<Super><Shift>5']"
+
+  # Switch workspace left/right
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-left "['<Super><Alt>Left', '<Control><Alt>Left']"
+  gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-right "['<Super><Alt>Right', '<Control><Alt>Right']"
+
+  # Move workspace left/right
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-left "['<Super><Shift><Alt>Left', '<Control><Shift><Alt>Left']"
+  gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-right "['<Super><Shift><Alt>Right', '<Control><Shift><Alt>Right']"
+
+  # Disable switch-to-application shortcuts (use dash-to-panel instead)
+  for i in {1..8}; do
+    gsettings set org.gnome.shell.keybindings switch-to-application-${i} "[]"
+  done
+
+  # Cursor and icon themes
+  gsettings set org.gnome.desktop.interface cursor-theme 'Bibata-Original-Ice'
+  gsettings set org.gnome.desktop.interface cursor-size 24
+  gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Light'
+
+  # Enable extensions
+  gsettings set org.gnome.shell disable-user-extensions false
+  gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com', 'caffeine@patapon.info', 'Vitals@CoreCoding.com', 'dash-to-panel@jderose9.github.com']"
+
+  log "configuring dash-to-panel"
+  # Dash-to-panel settings
+  gsettings set org.gnome.shell.extensions.dash-to-panel panel-position 'BOTTOM'
+  gsettings set org.gnome.shell.extensions.dash-to-panel panel-size 48
+  gsettings set org.gnome.shell.extensions.dash-to-panel multi-monitors true
+  gsettings set org.gnome.shell.extensions.dash-to-panel show-activities-button false
+  gsettings set org.gnome.shell.extensions.dash-to-panel show-favorites true
+  gsettings set org.gnome.shell.extensions.dash-to-panel group-apps true
+  gsettings set org.gnome.shell.extensions.dash-to-panel animate-app-switch true
+  gsettings set org.gnome.shell.extensions.dash-to-panel click-action 'CYCLE-MIN'
+  gsettings set org.gnome.shell.extensions.dash-to-panel middle-click-action 'LAUNCH'
+  gsettings set org.gnome.shell.extensions.dash-to-panel dot-style-focused 'METRO'
+  gsettings set org.gnome.shell.extensions.dash-to-panel dot-style-unfocused 'METRO'
+  gsettings set org.gnome.shell.extensions.dash-to-panel dot-position 'BOTTOM'
+  gsettings set org.gnome.shell.extensions.dash-to-panel intellihide false
+  gsettings set org.gnome.shell.extensions.dash-to-panel isolate-workspaces false
+  gsettings set org.gnome.shell.extensions.dash-to-panel scroll-icon-action 'CYCLE_WINDOWS'
+}
+
 configure_kde_shortcuts() {
   local kwriteconfig=""
   if command -v kwriteconfig6 >/dev/null 2>&1; then
@@ -1138,6 +1302,8 @@ main() {
   configure_kde_shortcuts
   configure_kde_cursor
   configure_kde_input
+  install_gnome_packages
+  configure_gnome_settings
   install_tat
   write_vpn_script
   enable_tailscale_service
