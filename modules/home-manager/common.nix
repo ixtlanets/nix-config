@@ -443,6 +443,42 @@ in
     };
     opencode = lib.mkIf (!isDarwin) {
       enable = true;
+      commands = ../../dotfiles/opencode/commands;
+      skills = ../../dotfiles/opencode/skills;
+      settings = {
+        mcp = {
+          figma = {
+            enabled = true;
+            type = "remote";
+            url = "https://mcp.figma.com/mcp";
+          };
+          supabase = {
+            enabled = true;
+            type = "remote";
+            url = "https://mcp.supabase.com/mcp";
+          };
+          vercel = {
+            enabled = true;
+            type = "remote";
+            url = "https://mcp.vercel.com";
+          };
+          chrome-devtools = {
+            type = "local";
+            command = [
+              "bunx"
+              "chrome-devtools-mcp@latest"
+              "--browser-url=http://127.0.0.1:9222"
+            ];
+          };
+        };
+      };
+    };
+  };
+
+  xdg.configFile."opencode/tui.json" = lib.mkIf (!isDarwin) {
+    text = builtins.toJSON {
+      "$schema" = "https://opencode.ai/tui.json";
+      theme = "catppuccin";
     };
   };
 
