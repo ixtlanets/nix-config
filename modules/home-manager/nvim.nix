@@ -36,7 +36,7 @@
     lua
     luajitPackages.luarocks
     nixd
-    nixfmt-rfc-style
+    nixfmt
     statix
   ];
   programs = {

@@ -1,8 +1,12 @@
 {
   pkgs,
+  dpi,
   ...
 }:
 let
+  DPI = builtins.toString dpi;
+  rofi_width = builtins.toString (dpi * 5);
+  rofi_height = builtins.toString (dpi * 3);
   handle_monitor_connect = pkgs.writeShellScriptBin "handle_monitor_connect" ''
     set -euo pipefail
 
@@ -43,9 +47,11 @@ in
 {
   imports = [
     ./kbd-backlight.nix
-    ./walker.nix
   ];
   home.packages = with pkgs; [
+    rofi
+    rofi-calc
+    rofi-emoji
     socat
     adwaita-icon-theme
     adwaita-qt
@@ -63,13 +69,15 @@ in
     take-screenshot
     hyprpolkitagent
   ];
+  xdg.configFile."rofi/config.rasi".text =
+    builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ]
+      (builtins.readFile ../../dotfiles/rofi);
   wayland.windowManager.hyprland.enable = true;
   wayland.windowManager.hyprland.settings = {
     exec-once = [
       "mako"
       "variety"
       "clipse -listen" # start clipboard manager
-      "walker --gapplication-service"
       # Clean up any stale state files on login/reload
       "find /tmp -name 'hypr_float_ws_*.state' -delete"
       "handle_monitor_connect"
@@ -134,13 +142,9 @@ in
     misc = {
       anr_missed_pings = 5;
     };
-    animation = [
-      "windows, 0, 1, default"
-      "border, 1, 3, default"
-      "borderangle, 1, 2, default"
-      "fade, 1, 2, default"
-      "workspaces, 0, 1, default"
-    ];
+    animations = {
+      enabled = false;
+    };
     decoration = {
       rounding = 2;
       blur = {
@@ -171,31 +175,31 @@ in
       "5, monitor:eDP-1, persistent:true"
       "10, monitor:eDP-1, persistent:true"
     ];
-    windowrulev2 = [
-      "float, class:^(1Password)$"
-      "stayfocused,title:^(Quick Access — 1Password)$"
-      "dimaround,title:^(Quick Access — 1Password)$"
-      "noanim,title:^(Quick Access — 1Password)$"
+    windowrule = [
+      "float on, match:class ^(1Password)$"
+      "stay_focused on, match:title ^(Quick Access — 1Password)$"
+      "dim_around on, match:title ^(Quick Access — 1Password)$"
+      "no_anim on, match:title ^(Quick Access — 1Password)$"
 
-      "float, class:^(org.gnome.*)$"
-      "float, class:(Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|TUI.float)"
-      "float, class:^(pavucontrol|com.saivert.pwvucontrol)$"
+      "float on, match:class ^(org.gnome.*)$"
+      "float on, match:class (Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|TUI.float)"
+      "float on, match:class ^(pavucontrol|com.saivert.pwvucontrol)$"
       # make pop-up file dialogs float, stay centred, and avoid oversized layouts
-      "float, title:(Open|Progress|Save File)"
-      "center, title:(Open|Progress|Save File)"
-      "size 1280 900,title:(Open|Progress|Save File)"
-      "maxsize 1600 1000,title:(Open|Progress|Save File)"
-      "suppressevent maximize,title:(Open|Progress|Save File)"
-      "float, class:^(code)$, initialTitle:^(Visual Studio Code)$"
-      "center, class:^(code)$, initialTitle:^(Visual Studio Code)$"
-      "pin, class:^(code)$, initialTitle:^(Visual Studio Code)$"
+      "float on, match:title (Open|Progress|Save File)"
+      "center on, match:title (Open|Progress|Save File)"
+      "size 1280 900, match:title (Open|Progress|Save File)"
+      "max_size 1600 1000, match:title (Open|Progress|Save File)"
+      "suppress_event maximize, match:title (Open|Progress|Save File)"
+      "float on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
+      "center on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
+      "pin on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
 
       # throw sharing indicators away
-      "workspace special silent, title:^(Firefox — Sharing Indicator)$"
-      "workspace special silent, title:^(.*is sharing (your screen|a window)\.)$"
+      "workspace special silent, match:title ^(Firefox — Sharing Indicator)$"
+      "workspace special silent, match:title ^(.*is sharing (your screen|a window)\.)$"
       # clipse - clipboard manager
-      "float, class:^(clipse)$"
-      "size 622 652,class:^(clipse)$"
+      "float on, match:class ^(clipse)$"
+      "size 622 652, match:class ^(clipse)$"
     ];
     bindm = [
       "$mod, mouse:272, movewindow"
@@ -213,7 +217,7 @@ in
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
       "$mod, Return, exec, wezterm"
-      "$mod, D, exec, walker -p 'start'"
+      "$mod, D, exec, rofi -show drun"
       "$mod, H, movefocus, l"
       "$mod, J, movefocus, d"
       "$mod, K, movefocus, u"

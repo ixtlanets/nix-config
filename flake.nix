@@ -74,7 +74,7 @@
     in
     {
       # Code formatter for `nix fmt`
-      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt-rfc-style);
+      formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
 
       # CI checks (formatting + linting) exposed as flake checks
       checks = forAllSystems (
@@ -87,7 +87,7 @@
             pkgs.runCommand "fmt-check"
               {
                 nativeBuildInputs = [
-                  pkgs.nixfmt-rfc-style
+                  pkgs.nixfmt
                   pkgs.findutils
                 ];
               }

@@ -16,7 +16,7 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
-    tawm = inputs.tawm.packages.${prev.system}.default;
+    tawm = inputs.tawm.packages.${prev.stdenv.hostPlatform.system}.default;
     codex = prev.codex.overrideAttrs (old: rec {
       version = "0.77.0";
       buildType = "simple";
@@ -68,7 +68,7 @@
   # be accessible through 'pkgs.unstable'
   unstable-packages = final: _prev: {
     unstable = import inputs.nixpkgs-unstable {
-      system = final.system;
+      system = final.stdenv.hostPlatform.system;
       config.allowUnfree = true;
     };
   };

@@ -9,7 +9,7 @@
 let
   isLinux = pkgs.stdenv.isLinux;
   isDarwin = pkgs.stdenv.isDarwin;
-  floxPkg = inputs.flox.packages.${pkgs.system}.default;
+  floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
   gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
   gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
 
@@ -239,6 +239,7 @@ in
     };
     yazi = {
       enable = true;
+      shellWrapperName = "yy";
       settings = {
         mgr = {
           linemode = "size";

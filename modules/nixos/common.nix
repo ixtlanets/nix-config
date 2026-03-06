@@ -5,7 +5,7 @@
   ...
 }:
 let
-  floxPkg = inputs.flox.packages.${pkgs.system}.default;
+  floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
     # gen dns suffix
     DNS_SUFFIX=$(tailscale status --json | jq '.MagicDNSSuffix' | sed 's/"//g')
@@ -255,7 +255,7 @@ in
     enable = true;
     enableSSHSupport = true;
   };
-  programs.light.enable = true;
+  #programs.light.enable = true;
 
   # List services that you want to enable:
 
@@ -288,6 +288,11 @@ in
     };
     virt-manager.enable = true;
   };
+
+  systemd.services.virt-secret-init-encryption.serviceConfig.ExecStart = lib.mkForce [
+    ""
+    "${pkgs.runtimeShell} -c 'umask 0077 && (${pkgs.coreutils}/bin/dd if=/dev/random status=none bs=32 count=1 | ${pkgs.systemd}/bin/systemd-creds encrypt --name=secrets-encryption-key - /var/lib/libvirt/secrets/secrets-encryption-key)'"
+  ];
 
   services.power-profiles-daemon.enable = true;
 
