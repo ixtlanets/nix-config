@@ -36,6 +36,7 @@
 
   services.ollama = {
     enable = true;
+    package = pkgs.ollama-cuda;
   };
 
   environment.etc."brave/policies/managed/notifications.json".text = ''
