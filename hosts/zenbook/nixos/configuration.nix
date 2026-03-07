@@ -19,7 +19,7 @@
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/kde.nix
+    ../../../modules/nixos/hyprland.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];

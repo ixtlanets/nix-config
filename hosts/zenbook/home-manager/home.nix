@@ -22,6 +22,7 @@
       THERMAL_ZONE = "10";
       BACKLIGHT_CARD = "intel_backlight";
       GDK_SCALE = "1";
+      OLLAMA_SERVICE_URL = "http://localhost:11434";
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
       QT_SCALE_FACTOR_ROUNDING_POLICY = "PassThrough";
       STEAM_FORCE_DESKTOPUI_SCALING = scaleStr;
@@ -34,7 +35,8 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/kde.nix
+    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/kbd-backlight.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
