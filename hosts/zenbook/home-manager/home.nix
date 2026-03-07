@@ -40,6 +40,7 @@
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ./syncthing.nix
   ];
 
   home = {

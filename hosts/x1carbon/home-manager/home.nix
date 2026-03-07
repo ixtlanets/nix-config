@@ -28,6 +28,7 @@
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
     ./hyprland-x1carbon.nix
+    ./syncthing.nix
   ];
 
   dconf.settings = {

@@ -53,6 +53,20 @@
     border-bottom: 3px solid @base0D;
 }
 
+#workspaces .taskbar-window {
+    margin: 0 2px;
+    padding: 0 4px;
+    border-radius: 4px;
+    color: @base04;
+    background-color: transparent;
+}
+
+#workspaces .taskbar-window.active {
+    color: @base07;
+    background-color: @base02;
+    box-shadow: inset 0 -2px 0 @base0D;
+}
+
 #workspaces button.urgent {
     color: rgba(238, 46, 36, 1);
 }

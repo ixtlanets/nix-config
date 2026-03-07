@@ -281,6 +281,14 @@ in
           ];
 
           "hyprland/workspaces" = {
+            "format" = "{id} {windows}";
+            "format-window-separator" = " ";
+            "workspace-taskbar" = {
+              "enable" = true;
+              "update-active-window" = true;
+              "format" = "{icon}";
+              "icon-size" = 14;
+            };
           };
           "custom/hyprlayout" = {
             "exec" = "hypr-layout-waybar";
