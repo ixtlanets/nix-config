@@ -43,6 +43,36 @@ let
         --save-after-copy \
         --copy-command 'wl-copy'
   '';
+  toggle-layout-mode = pkgs.writeShellScriptBin "toggle-layout-mode" ''
+    set -euo pipefail
+
+    current_layout="$(${pkgs.hyprland}/bin/hyprctl -j getoption general:layout | ${pkgs.jq}/bin/jq -r '.str')"
+
+    if [ "$current_layout" = "monocle" ]; then
+      ${pkgs.hyprland}/bin/hyprctl keyword general:layout "master" >/dev/null
+    else
+      ${pkgs.hyprland}/bin/hyprctl keyword general:layout "monocle" >/dev/null
+    fi
+
+    ${pkgs.procps}/bin/pkill -RTMIN+8 waybar || true
+  '';
+  hypr-layout-waybar = pkgs.writeShellScriptBin "hypr-layout-waybar" ''
+    set -euo pipefail
+
+    layout="$(${pkgs.hyprland}/bin/hyprctl -j getoption general:layout | ${pkgs.jq}/bin/jq -r '.str')"
+
+    case "$layout" in
+      monocle)
+        printf "[M] monocle\n"
+        ;;
+      master)
+        printf "[T] master\n"
+        ;;
+      *)
+        printf "[?] %s\n" "$layout"
+        ;;
+    esac
+  '';
 in
 {
   imports = [
@@ -67,6 +97,8 @@ in
     satty # Screenshot annotaion
     handle_monitor_connect
     take-screenshot
+    toggle-layout-mode
+    hypr-layout-waybar
     hyprpolkitagent
   ];
   xdg.configFile."rofi/config.rasi".text =
@@ -112,29 +144,6 @@ in
       };
 
       # sensitivity = 0;
-    };
-    # Styling for window groupbar (window grouping tabs)
-    group = {
-      groupbar = {
-        # font size and weight for window titles
-        font_size = 14;
-        font_weight_active = "bold";
-        font_weight_inactive = "normal";
-        # colors from catppuccin palete
-        "col.active" = "rgb(7f849c) rgb(9399b2)";
-        "col.inactive" = "rgb(313244) rgb(313244)"; # Surface1
-        "col.locked_active" = "rgb(313244) rgb(313244)";
-        "col.locked_inactive" = "rgb(7f849c) rgb(9399b2)"; # Surface1
-        "text_color" = "rgb(cdd6f4)"; # Text
-
-        # sizing - to make text appear on groupbar "gradients" instead of transparent bars.
-        # about half the indicator height
-        height = 1;
-        text_offset = -9;
-        # Make the indicator tall enough to render text inside
-        indicator_height = 18;
-
-      };
     };
     xwayland = {
       force_zero_scaling = true;
@@ -226,10 +235,9 @@ in
       "$mod+CTRL, J, resizeactive, 0 -10"
       "$mod+CTRL, K, resizeactive, 0 10"
       "$mod+CTRL, L, resizeactive, 10 0"
-      "$mod, G, togglegroup"
-      "$mod, T, lockactivegroup, toggle"
-      "$mod+SHIFT, J, changegroupactive, f"
-      "$mod+SHIFT, K, changegroupactive, b"
+      "$mod, G, exec, toggle-layout-mode"
+      "$mod+SHIFT, J, layoutmsg, cycleprev"
+      "$mod+SHIFT, K, layoutmsg, cyclenext"
       "$mod+SHIFT, S, exec, take-screenshot"
       "$mod+SHIFT, T, exec, fix-text"
       ",XF86AudioRaiseVolume, exec, swayosd-client --output-volume raise"
@@ -267,9 +275,17 @@ in
           modules-left = [
             "hyprland/workspaces"
           ];
-          modules-right = [ "hyprland/language" ];
+          modules-right = [
+            "custom/hyprlayout"
+            "hyprland/language"
+          ];
 
           "hyprland/workspaces" = {
+          };
+          "custom/hyprlayout" = {
+            "exec" = "hypr-layout-waybar";
+            "signal" = 8;
+            "tooltip" = false;
           };
           "hyprland/language" = {
             "format" = " {}";
