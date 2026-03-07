@@ -125,8 +125,6 @@ in
     };
     env = [
       "GTK_APPLICATION_PREFER_DARK_THEME,1"
-      "GTK_THEME,Adwaita:dark"
-      "GTK_THEME_VARIANT,dark"
       "XCURSOR_SIZE,24"
     ];
     input = {

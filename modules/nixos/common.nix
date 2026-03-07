@@ -184,9 +184,9 @@ in
       "image/webp" = "nsxiv.desktop";
       "image/bmp " = "nsxiv.desktop";
       "image/tiff" = "nsxiv.desktop";
-      "text/html" = "brave.desktop";
-      "x-scheme-handler/http" = "brave.desktop";
-      "x-scheme-handler/https" = "brave.desktop";
+      "text/html" = "brave-browser.desktop";
+      "x-scheme-handler/http" = "brave-browser.desktop";
+      "x-scheme-handler/https" = "brave-browser.desktop";
       "video/mp4" = "mpv.desktop";
       "video/x-msvideo" = "mpv.desktop";
       "video/x-matroska" = "mpv.desktop";

@@ -31,10 +31,12 @@
     pkgs.unstable.libreoffice-qt6-fresh
     google-antigravity
     code-cursor-fhs
+    papirus-icon-theme
   ];
 
   catppuccin.flavor = "mocha";
   catppuccin.enable = true;
+  catppuccin.gtk.icon.enable = false;
   catppuccin.nvim.enable = false;
   catppuccin.alacritty.enable = true;
 
@@ -109,12 +111,41 @@
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
     builtins.readFile ../../dotfiles/quotes.txt;
+  xdg.dataFile."icons/Paper-Fallback/index.theme".text = ''
+    [Icon Theme]
+    Name=Paper-Fallback
+    Comment=Paper icons with Papirus and Adwaita fallbacks
+    Inherits=Paper,Papirus-Dark,Adwaita,gnome,hicolor
+  '';
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
   };
 
-  gtk.enable = true;
+  gtk = {
+    enable = true;
+    colorScheme = "dark";
+    theme = {
+      name = "catppuccin-mocha-blue-standard";
+      package = pkgs.catppuccin-gtk.override {
+        accents = [ "blue" ];
+        size = "standard";
+        variant = "mocha";
+      };
+    };
+    iconTheme = {
+      name = "Paper-Fallback";
+      package = pkgs.paper-icon-theme;
+    };
+    gtk4.theme = {
+      name = "catppuccin-mocha-blue-standard";
+      package = pkgs.catppuccin-gtk.override {
+        accents = [ "blue" ];
+        size = "standard";
+        variant = "mocha";
+      };
+    };
+  };
   qt.enable = true;
   qt.style.name = "kvantum";
   qt.platformTheme.name = "kvantum";
