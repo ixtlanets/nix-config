@@ -497,6 +497,8 @@ in
       # Create .ssh directory with correct permissions
       mkdir -p ~/.ssh
       chmod 700 ~/.ssh
+      touch ~/.ssh/known_hosts
+      chmod 600 ~/.ssh/known_hosts
 
       # Copy and set permissions for private keys
       cp -f ${../../secrets/ssh/id_rsa} ~/.ssh/id_rsa
@@ -509,33 +511,59 @@ in
       # Copy public keys
       cp -f ${../../secrets/ssh/id_rsa.pub} ~/.ssh/id_rsa.pub
       cp -f ${../../secrets/ssh/id_rsa_1.pub} ~/.ssh/id_rsa_1.pub
+
+      if ! ${pkgs.gnugrep}/bin/grep -q '^github.com ' ~/.ssh/known_hosts 2>/dev/null; then
+        ${pkgs.openssh}/bin/ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null || \
+          echo "warning: failed to fetch github.com host key" >&2
+      fi
     '';
-    clonePasswordStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    clonePasswordStore = lib.hm.dag.entryAfter [ "setupSsh" ] ''
       if [ ! -d "$HOME/.password-store" ]; then
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store"
+      export PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH"
+      export GIT_SSH_COMMAND='${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=accept-new'
+      ${pkgs.git}/bin/git clone git@github.com:snikulin/.password-store.git "$HOME/.password-store" || \
+        echo "warning: failed to clone $HOME/.password-store" >&2
       fi
     '';
-    cloneOrgStore = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    cloneOrgStore = lib.hm.dag.entryAfter [ "setupSsh" ] ''
       if [ ! -d "$HOME/org" ]; then
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/org.git "$HOME/org"
+      export PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH"
+      export GIT_SSH_COMMAND='${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=accept-new'
+      ${pkgs.git}/bin/git clone git@github.com:snikulin/org.git "$HOME/org" || \
+        echo "warning: failed to clone $HOME/org" >&2
       fi
     '';
-    closeGitProjects = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    closeGitProjects = lib.hm.dag.entryAfter [ "setupSsh" ] ''
       if [ ! -d "$HOME/pro" ]; then
+      export PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH"
+      export GIT_SSH_COMMAND='${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=accept-new'
+
+      clone_warn() {
+        local repo="$1"
+        local dest="$2"
+
+        if [ -d "$dest" ]; then
+          return 0
+        fi
+
+        ${pkgs.git}/bin/git clone "$repo" "$dest" || \
+          echo "warning: failed to clone $repo into $dest" >&2
+      }
+
       mkdir -p "$HOME/pro/GR"
       mkdir -p "$HOME/pro/verbatoria"
       mkdir -p "$HOME/pro/loktar"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-cbhelper.git "$HOME/pro/GR/gr-cbhelper"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-crunchbase-scraper.git "$HOME/pro/GR/gr-crunchbase-scraper"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-firestore.git "$HOME/pro/GR/gr-firestore"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-processor.git "$HOME/pro/GR/gr-processor"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/gr-startups-sight.git "$HOME/pro/GR/gr-startups-sight"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria-webapp.git "$HOME/pro/verbatoria/verbatoria-webapp"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_backend.git "$HOME/pro/verbatoria/verbatoria_backend"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_frontend.git "$HOME/pro/verbatoria/verbatoria_frontend"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_full.git "$HOME/pro/verbatoria/verbatoria_full"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_go.git "$HOME/pro/verbatoria/verbatoria_go"
-      PATH="${pkgs.openssh}/bin:${pkgs.git}/bin:${pkgs.git-lfs}/bin:$PATH" ${pkgs.git}/bin/git clone git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
+      clone_warn git@github.com:snikulin/gr-cbhelper.git "$HOME/pro/GR/gr-cbhelper"
+      clone_warn git@github.com:snikulin/gr-crunchbase-scraper.git "$HOME/pro/GR/gr-crunchbase-scraper"
+      clone_warn git@github.com:snikulin/gr-firestore.git "$HOME/pro/GR/gr-firestore"
+      clone_warn git@github.com:snikulin/gr-processor.git "$HOME/pro/GR/gr-processor"
+      clone_warn git@github.com:snikulin/gr-startups-sight.git "$HOME/pro/GR/gr-startups-sight"
+      clone_warn git@github.com:snikulin/verbatoria-webapp.git "$HOME/pro/verbatoria/verbatoria-webapp"
+      clone_warn git@github.com:snikulin/verbatoria_backend.git "$HOME/pro/verbatoria/verbatoria_backend"
+      clone_warn git@github.com:snikulin/verbatoria_frontend.git "$HOME/pro/verbatoria/verbatoria_frontend"
+      clone_warn git@github.com:snikulin/verbatoria_full.git "$HOME/pro/verbatoria/verbatoria_full"
+      clone_warn git@github.com:snikulin/verbatoria_go.git "$HOME/pro/verbatoria/verbatoria_go"
+      clone_warn git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
       fi
     '';
   };
