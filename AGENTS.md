@@ -35,6 +35,7 @@
 ## Testing Guidelines
 - Eval flake and build targets you touched: `nix build .#<attr>`.
 - For host edits, do a dry build first: `sudo nixos-rebuild build --flake .#<host>` or `home-manager switch --flake .#<user>@<host> --dry-run`.
+- If you add or rename files referenced by the flake, stage them with git before running `nixos-rebuild` or `home-manager switch`, otherwise the flake source may not include them.
 - If adding modules, ensure they import cleanly by referencing them from a host before switching.
 
 ## Commit & Pull Request Guidelines
