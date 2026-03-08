@@ -7,6 +7,10 @@
   };
 
   wayland.windowManager.hyprland.settings = {
+    monitor = [
+      "eDP-1,preferred,auto,1.5"
+    ];
+
     decoration = {
       blur.enabled = lib.mkForce false;
       shadow.enabled = lib.mkForce false;
