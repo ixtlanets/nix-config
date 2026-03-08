@@ -59,6 +59,16 @@
     configUser = "nik";
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
+  boot.kernel.sysctl = {
+    "vm.page-cluster" = 0;
+    "vm.swappiness" = 80;
+  };
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+    priority = 100;
+  };
   hardware = {
     graphics = {
       enable = true;
