@@ -30,14 +30,11 @@ let
   take-screenshot = pkgs.writeShellScriptBin "take-screenshot" ''
     OUTPUT_DIR="$HOME/Pictures"
 
-    if [[ ! -d "$OUTPUT_DIR" ]]; then
-      notify-send "Screenshot directory does not exist: $OUTPUT_DIR" -u critical -t 3000
-      exit 1
-    fi
+    ${pkgs.coreutils}/bin/mkdir -p "$OUTPUT_DIR"
 
-    pkill slurp || hyprshot -m region --raw |
+    ${pkgs.procps}/bin/pkill slurp || hyprshot -m region --raw |
       satty --filename - \
-        --output-filename "$OUTPUT_DIR/screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png" \
+        --output-filename "$OUTPUT_DIR/screenshot-$(${pkgs.coreutils}/bin/date +'%Y-%m-%d_%H-%M-%S').png" \
         --early-exit \
         --actions-on-enter save-to-clipboard \
         --save-after-copy \
@@ -73,6 +70,94 @@ let
         ;;
     esac
   '';
+  hypr-lid-apply = pkgs.writeShellScriptBin "hypr-lid-apply" ''
+    set -euo pipefail
+
+    hyprctl_bin="${pkgs.hyprland}/bin/hyprctl"
+    jq_bin="${pkgs.jq}/bin/jq"
+    systemctl_bin="${pkgs.systemd}/bin/systemctl"
+
+    inhibitor_unit="hypr-lid-docked-inhibitor.service"
+    release_timer_unit="hypr-lid-docked-inhibitor-release.timer"
+
+    internal_monitor="''${HYPR_INTERNAL_MONITOR:-eDP-1}"
+    internal_scale="''${HYPR_INTERNAL_MONITOR_SCALE:-1.5}"
+    policy="''${HYPR_INTERNAL_MONITOR_POLICY:-lid-docked}"
+
+    lid_closed() {
+      local state_file
+
+      for state_file in /proc/acpi/button/lid/*/state; do
+        [ -r "$state_file" ] || continue
+
+        case "$(${pkgs.coreutils}/bin/tr '[:upper:]' '[:lower:]' < "$state_file")" in
+          *closed*)
+            return 0
+            ;;
+        esac
+      done
+
+      return 1
+    }
+
+    monitors_json="$($hyprctl_bin -j monitors all)"
+    detected_internal="$({ printf '%s' "$monitors_json" | $jq_bin -r 'map(select(.name | test("^eDP"))) | if length > 0 then .[0].name else empty end'; } || true)"
+
+    if [ -n "$detected_internal" ]; then
+      internal_monitor="$detected_internal"
+    fi
+
+    external_count="$(printf '%s' "$monitors_json" | $jq_bin '[.[] | select(((.name | test("^eDP")) | not) and ((.disabled // false) == false))] | length')"
+    internal_disabled="$(printf '%s' "$monitors_json" | $jq_bin -r --arg internal "$internal_monitor" '([.[] | select(.name == $internal) | (.disabled // false)] | .[0]) // false')"
+
+    if [ "$policy" = "external-only" ]; then
+      if [ "$external_count" -gt 0 ]; then
+        desired_internal_state="disabled"
+      else
+        desired_internal_state="enabled"
+      fi
+    else
+      if [ "$external_count" -gt 0 ] && lid_closed; then
+        desired_internal_state="disabled"
+      else
+        desired_internal_state="enabled"
+      fi
+    fi
+
+    if [ "$desired_internal_state" = "disabled" ] && [ "$internal_disabled" != "true" ]; then
+      $hyprctl_bin keyword monitor "$internal_monitor,disable" >/dev/null
+    fi
+
+    if [ "$desired_internal_state" = "enabled" ] && [ "$internal_disabled" != "false" ]; then
+      $hyprctl_bin keyword monitor "$internal_monitor,preferred,auto,$internal_scale" >/dev/null
+    fi
+
+    if [ "$external_count" -gt 0 ]; then
+      $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      $systemctl_bin --user start "$inhibitor_unit" >/dev/null 2>&1 || true
+    elif lid_closed; then
+      if $systemctl_bin --user is-active --quiet "$inhibitor_unit"; then
+        $systemctl_bin --user restart "$release_timer_unit" >/dev/null 2>&1 || true
+      fi
+    else
+      $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      $systemctl_bin --user stop "$inhibitor_unit" >/dev/null 2>&1 || true
+    fi
+  '';
+  hypr-lid-monitor = pkgs.writeShellScriptBin "hypr-lid-monitor" ''
+    set -euo pipefail
+
+    ${hypr-lid-apply}/bin/hypr-lid-apply
+
+    ${pkgs.socat}/bin/socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
+      | while read -r line; do
+          case "$line" in
+            monitoradded*|monitorremoved*)
+              ${hypr-lid-apply}/bin/hypr-lid-apply
+              ;;
+          esac
+        done
+  '';
 in
 {
   imports = [
@@ -99,6 +184,8 @@ in
     take-screenshot
     toggle-layout-mode
     hypr-layout-waybar
+    hypr-lid-apply
+    hypr-lid-monitor
     hyprpolkitagent
   ];
   xdg.configFile."rofi/config.rasi".text =
@@ -113,6 +200,7 @@ in
       # Clean up any stale state files on login/reload
       "find /tmp -name 'hypr_float_ws_*.state' -delete"
       "handle_monitor_connect"
+      "hypr-lid-monitor"
     ];
     exec = [
       "systemctl --user restart waybar"
@@ -191,12 +279,18 @@ in
       "float on, match:class ^(org.gnome.*)$"
       "float on, match:class (Wiremix|org.gnome.NautilusPreviewer|com.gabm.satty|TUI.float)"
       "float on, match:class ^(pavucontrol|com.saivert.pwvucontrol)$"
-      # make pop-up file dialogs float, stay centred, and avoid oversized layouts
-      "float on, match:title (Open|Progress|Save File)"
-      "center on, match:title (Open|Progress|Save File)"
-      "size 1280 900, match:title (Open|Progress|Save File)"
-      "max_size 1600 1000, match:title (Open|Progress|Save File)"
-      "suppress_event maximize, match:title (Open|Progress|Save File)"
+      # keep transient portal/file chooser dialogs out of the tiling layout
+      "float on, match:title ^(Select what to share)$"
+      "center on, match:title ^(Select what to share)$"
+      "pin on, match:title ^(Select what to share)$"
+      "size 1400 920, match:title ^(Select what to share)$"
+      "max_size 1800 1100, match:title ^(Select what to share)$"
+      "suppress_event maximize, match:title ^(Select what to share)$"
+      "float on, match:title ^(Open|Open File|Open Files|Progress|Save File|Save As|Select Folder|Choose Files?|File Upload|Choose what to share)$"
+      "center on, match:title ^(Open|Open File|Open Files|Progress|Save File|Save As|Select Folder|Choose Files?|File Upload|Choose what to share)$"
+      "size 1280 900, match:title ^(Open|Open File|Open Files|Progress|Save File|Save As|Select Folder|Choose Files?|File Upload|Choose what to share)$"
+      "max_size 1600 1000, match:title ^(Open|Open File|Open Files|Progress|Save File|Save As|Select Folder|Choose Files?|File Upload|Choose what to share)$"
+      "suppress_event maximize, match:title ^(Open|Open File|Open Files|Progress|Save File|Save As|Select Folder|Choose Files?|File Upload|Choose what to share)$"
       "float on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
       "center on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
       "pin on, match:class ^(code)$, match:initial_title ^(Visual Studio Code)$"
@@ -217,6 +311,8 @@ in
       ",XF86MonBrightnessUp, exec, swayosd-client --brightness raise"
       ",XF86MonBrightnessDown, exec, swayosd-client --brightness lower"
       "ALT, space, exec, kbd-backlight toggle"
+      ", switch:on:Lid Switch, exec, hypr-lid-apply"
+      ", switch:off:Lid Switch, exec, hypr-lid-apply"
     ];
     bind = [
       "$mod+SHIFT, E, exit"
@@ -393,6 +489,28 @@ in
         background-color: @progress;
       }
     '';
+  };
+
+  systemd.user.services.hypr-lid-docked-inhibitor = {
+    Unit.Description = "Ignore lid sleep while docked";
+    Service.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch:sleep --why=External-monitor-connected ${pkgs.coreutils}/bin/sleep infinity";
+  };
+
+  systemd.user.services.hypr-lid-docked-inhibitor-release = {
+    Unit.Description = "Release docked lid inhibitor";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.systemd}/bin/systemctl --user stop hypr-lid-docked-inhibitor.service";
+    };
+  };
+
+  systemd.user.timers.hypr-lid-docked-inhibitor-release = {
+    Unit.Description = "Grace period before lid sleep resumes";
+    Timer = {
+      AccuracySec = "1s";
+      OnActiveSec = "15s";
+      Unit = "hypr-lid-docked-inhibitor-release.service";
+    };
   };
 
   # Electron Flags File
