@@ -89,6 +89,11 @@ in
 
   # Enable networking
   networking.networkmanager.enable = true;
+  networking.firewall.allowedTCPPorts = [ 22000 ];
+  networking.firewall.allowedUDPPorts = [
+    21027
+    22000
+  ];
 
   # disable rpfilter, since it'll be blocking Wireguard traffic
   networking.firewall.checkReversePath = lib.mkForce false;
