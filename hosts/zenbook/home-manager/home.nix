@@ -52,10 +52,7 @@
 
   home.packages = with pkgs; [
     asusctl
-    supergfxctl
     nvtopPackages.full
-
-    gnomeExtensions.gpu-supergfxctl-switch
   ];
   xresources.properties = {
     "Xft.dpi" = dpi;

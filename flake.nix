@@ -331,11 +331,8 @@
               hardware.nixosModules.common-gpu-nvidia
               {
                 hardware.nvidia = {
-                  open = true;
-                  prime = {
-                    intelBusId = "PCI:0:2:0";
-                    nvidiaBusId = "PCI:46:0:0";
-                  };
+                  open = false;
+                  modesetting.enable = false;
                 };
               }
               hardware.nixosModules.common-pc-laptop

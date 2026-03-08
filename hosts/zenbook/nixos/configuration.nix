@@ -47,9 +47,11 @@
   services.hardware.bolt.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
+    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:01:00.0", ATTR{remove}="1"
   '';
   services = {
     asusd.enable = true;
+    supergfxd.enable = false;
   };
   services.vless = {
     enable = true;
@@ -61,9 +63,17 @@
     graphics = {
       enable = true;
     };
+    nvidia = {
+      powerManagement.enable = lib.mkForce false;
+      prime = {
+        offload.enable = lib.mkForce false;
+        offload.enableOffloadCmd = lib.mkForce false;
+        reverseSync.enable = lib.mkForce false;
+        sync.enable = lib.mkForce false;
+      };
+    };
   };
 
-  hardware.nvidia-container-toolkit.enable = true;
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
