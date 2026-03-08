@@ -32,6 +32,7 @@
     google-antigravity
     code-cursor-fhs
     papirus-icon-theme
+    kora-icon-theme
   ];
 
   catppuccin.flavor = "mocha";
@@ -111,12 +112,6 @@
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
     builtins.readFile ../../dotfiles/quotes.txt;
-  xdg.dataFile."icons/Paper-Fallback/index.theme".text = ''
-    [Icon Theme]
-    Name=Paper-Fallback
-    Comment=Paper icons with Papirus and Adwaita fallbacks
-    Inherits=Paper,Papirus-Dark,Adwaita,gnome,hicolor
-  '';
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
@@ -134,8 +129,8 @@
       };
     };
     iconTheme = {
-      name = "Paper-Fallback";
-      package = pkgs.paper-icon-theme;
+      name = "kora";
+      package = pkgs.kora-icon-theme;
     };
     gtk4.theme = {
       name = "catppuccin-mocha-blue-standard";
