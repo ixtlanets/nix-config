@@ -12,6 +12,7 @@ let
   floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
   gpgPublicKey = builtins.readFile ../../secrets/gpg/public.key;
   gpgPrivateKey = builtins.readFile ../../secrets/gpg/private.key;
+  gpgOwnerTrust = lib.removeSuffix "\n" (builtins.readFile ../../secrets/gpg/ownertrust.txt);
 
   vpn-script = pkgs.writeShellScriptBin "vpn" ''
     #!/usr/bin/env nix-shell
@@ -490,8 +491,12 @@ in
   home.activation = {
     importGpgKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.settings.user.email}"; then
-      echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
-      echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
+        echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
+        echo "${gpgPrivateKey}" | ${pkgs.gnupg}/bin/gpg --import
+      fi
+
+      if [ -n "${gpgOwnerTrust}" ]; then
+        printf '%s\n' "${gpgOwnerTrust}" | ${pkgs.gnupg}/bin/gpg --import-ownertrust
       fi
     '';
     setupSsh = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

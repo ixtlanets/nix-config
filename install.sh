@@ -217,6 +217,9 @@ configure_gpg() {
 
   local gpg_dir="${HOME}/.gnupg"
   local agent_conf="${gpg_dir}/gpg-agent.conf"
+  local public_key="${SCRIPT_DIR}/secrets/gpg/public.key"
+  local private_key="${SCRIPT_DIR}/secrets/gpg/private.key"
+  local ownertrust_file="${SCRIPT_DIR}/secrets/gpg/ownertrust.txt"
   mkdir -p "$gpg_dir"
   chmod 700 "$gpg_dir"
 
@@ -231,8 +234,6 @@ configure_gpg() {
   fi
   chmod 600 "$agent_conf"
 
-  local public_key="${SCRIPT_DIR}/secrets/gpg/public.key"
-  local private_key="${SCRIPT_DIR}/secrets/gpg/private.key"
   if [[ ! -f "$public_key" || ! -f "$private_key" ]]; then
     log "gpg key files not found; skipping import"
     return
@@ -240,12 +241,16 @@ configure_gpg() {
 
   if gpg --list-secret-keys 2>/dev/null | grep -q "$GIT_USER_EMAIL"; then
     log "gpg keys for ${GIT_USER_EMAIL} already present"
-    return
+  else
+    log "importing gpg keys for ${GIT_USER_EMAIL}"
+    gpg --import "$public_key"
+    gpg --import "$private_key"
   fi
 
-  log "importing gpg keys for ${GIT_USER_EMAIL}"
-  gpg --import "$public_key"
-  gpg --import "$private_key"
+  if [[ -f "$ownertrust_file" ]]; then
+    log "importing gpg ownertrust"
+    gpg --import-ownertrust "$ownertrust_file"
+  fi
 }
 
 clone_password_store() {
