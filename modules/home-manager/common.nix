@@ -233,8 +233,9 @@ in
     yt-dlp = {
       enable = true;
       settings = {
-        "output" = "~/Video/YouTube/%(uploader)s/%(title)s.%(ext)s";
-        "format" = "mp4";
+        "cookies-from-browser" = "brave";
+        "output" = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s";
+        "format" = "bv*[height<=1080]+ba/b[height<=1080]/b";
       };
     };
     yazi = {

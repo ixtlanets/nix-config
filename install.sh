@@ -910,12 +910,13 @@ write_variety_config() {
 
 write_yt_dlp_config() {
   local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp"
-  local output_dir="$HOME/Video/YouTube"
+  local output_dir="$HOME/Videos/YouTube"
   mkdir -p "$config_dir" "$output_dir"
   log "writing ${config_dir}/config"
   cat <<'EOF' >"${config_dir}/config"
---output ~/Video/YouTube/%(uploader)s/%(title)s.%(ext)s
---format mp4
+--cookies-from-browser brave
+--output ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
+--format bv*[height<=1080]+ba/b[height<=1080]/b
 EOF
 }
 
