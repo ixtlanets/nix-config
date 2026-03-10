@@ -1,7 +1,7 @@
-{
-  pkgs,
-  ...
-}:
+{ pkgs, ... }:
+let
+  lmstudio = pkgs.unstable.lmstudio;
+in
 {
 
   home.packages = with pkgs; [
@@ -29,6 +29,7 @@
     wl-clipboard
     vscode
     pkgs.unstable.libreoffice-qt6-fresh
+    lmstudio
     google-antigravity
     code-cursor-fhs
     papirus-icon-theme
