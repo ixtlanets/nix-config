@@ -6,7 +6,7 @@
 }:
 
 let
-  floxPkg = inputs.flox.packages.${pkgs.system}.default;
+  floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
   nix.settings.experimental-features = [

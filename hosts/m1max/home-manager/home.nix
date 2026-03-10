@@ -120,11 +120,13 @@ in
     };
     git = {
       enable = true;
-      diff-so-fancy.enable = true;
       lfs.enable = true;
-      userEmail = "snikulin@gmail.com";
-      userName = "Sergey Nikulin";
+      settings = {
+        user.email = "snikulin@gmail.com";
+        user.name = "Sergey Nikulin";
+      };
     };
+    diff-so-fancy.enable = true;
     zsh = {
       enable = true;
       autosuggestion.enable = true;
