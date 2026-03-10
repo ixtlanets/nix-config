@@ -167,6 +167,7 @@ in
     rofi
     rofi-calc
     rofi-emoji
+    thunar
     socat
     adwaita-icon-theme
     adwaita-qt
@@ -317,6 +318,7 @@ in
       "$mod, W, killactive"
       "$mod, F, togglefloating"
       "$mod, B, exec, chromium-browser"
+      "$mod, E, exec, thunar"
       "$mod, Return, exec, wezterm"
       "$mod, D, exec, rofi -show drun"
       "$mod, H, movefocus, l"
