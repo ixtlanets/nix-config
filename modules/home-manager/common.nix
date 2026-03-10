@@ -446,7 +446,7 @@ in
         };
       };
     };
-    opencode = lib.mkIf (!isDarwin) {
+    opencode = {
       enable = true;
       commands = ../../dotfiles/opencode/commands;
       skills = ../../dotfiles/opencode/skills;
@@ -480,7 +480,7 @@ in
     };
   };
 
-  xdg.configFile."opencode/tui.json" = lib.mkIf (!isDarwin) {
+  xdg.configFile."opencode/tui.json" = {
     text = builtins.toJSON {
       "$schema" = "https://opencode.ai/tui.json";
       theme = "catppuccin";
