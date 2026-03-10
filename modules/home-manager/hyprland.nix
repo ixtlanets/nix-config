@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   dpi,
   ...
 }:
@@ -489,6 +490,23 @@ in
         background-color: @progress;
       }
     '';
+  };
+
+  # Fix swayosd to start after Hyprland is ready
+  systemd.user.services.swayosd = {
+    Unit = {
+      After = lib.mkForce [
+        "graphical-session.target"
+        "wayland-session.target"
+      ];
+      PartOf = lib.mkForce [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 2";
+      RestartSec = lib.mkForce "5";
+      StartLimitBurst = lib.mkForce 10;
+      StartLimitIntervalSec = lib.mkForce "60";
+    };
   };
 
   systemd.user.services.hypr-lid-docked-inhibitor = {
