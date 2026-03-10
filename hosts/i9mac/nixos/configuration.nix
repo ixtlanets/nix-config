@@ -126,7 +126,6 @@ in
     brews = [
       "trippy"
       "emacs-plus"
-      "opencode"
       # "sunshine" it's broken now
     ];
     onActivation = {
