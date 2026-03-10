@@ -222,11 +222,14 @@ in
     };
     password-store = {
       enable = true;
-      package = pkgs.pass.withExtensions (exts: [
-        exts.pass-otp
-        exts.pass-import
-        exts.pass-genphrase
-      ]);
+      package = pkgs.pass.withExtensions (
+        exts:
+        [
+          exts.pass-otp
+          exts.pass-genphrase
+        ]
+        ++ lib.optionals (!pkgs.stdenv.isDarwin) [ exts.pass-import ]
+      );
       settings = {
         PASSWORD_STORE_DIR = "$HOME/.password-store";
       };
