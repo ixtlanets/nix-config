@@ -457,11 +457,7 @@ in
             type = "remote";
             url = "https://mcp.figma.com/mcp";
           };
-          supabase = {
-            enabled = true;
-            type = "remote";
-            url = "https://mcp.supabase.com/mcp";
-          };
+
           vercel = {
             enabled = true;
             type = "remote";
