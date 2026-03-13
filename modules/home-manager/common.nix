@@ -452,6 +452,9 @@ in
       commands = ../../dotfiles/opencode/commands;
       skills = ../../dotfiles/opencode/skills;
       settings = {
+        permission = {
+          playwright_browser_install = "deny";
+        };
         mcp = {
           figma = {
             enabled = true;
@@ -472,6 +475,18 @@ in
               "--browser-url=http://127.0.0.1:9222"
             ];
           };
+          playwright = {
+            enabled = true;
+            type = "local";
+            command = [
+              "npx"
+              "@playwright/mcp@latest"
+              "--extension"
+            ];
+            environment = {
+              PLAYWRIGHT_MCP_EXTENSION_TOKEN = "{env:PLAYWRIGHT_MCP_EXTENSION_TOKEN}";
+            };
+          };
         };
       };
     };
@@ -483,6 +498,11 @@ in
       theme = "catppuccin";
     };
   };
+  xdg.configFile."opencode/AGENTS.md".text = ''
+    When using Playwright MCP, prefer the existing browser session through the Playwright MCP Bridge extension.
+    Do not install browsers or start a separate Playwright-managed browser unless I explicitly ask.
+    Assume authenticated browser work should happen in my existing Brave profile/session.
+  '';
 
   home.shellAliases = {
     gst = "git status";
