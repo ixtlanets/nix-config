@@ -83,6 +83,7 @@ in
     ./fix-text.nix
     ./ips-script.nix
     ./yt-dlp-helper.nix
+    ./yt-script.nix
   ];
   nixpkgs = {
     # You can add overlays here
