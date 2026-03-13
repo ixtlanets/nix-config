@@ -254,38 +254,43 @@ in
         opener = {
           wallpaper = [
             {
-              #  `$@` expands to the absolute path(s) of the selected file(s)
-              run = "variety --set-wallpaper \"$@\"";
-              block = false; # don’t block yazi while the command runs
+              run = "variety --set-wallpaper %s";
+              block = false;
             }
           ];
           text = [
             {
-              run = "nvim \"$@\"";
+              run = "nvim %s";
               block = true;
             }
           ];
           pdf = [
             {
-              run = "zathura \"$@\"";
+              run = "zathura %s";
               block = false;
             }
           ];
           office = [
             {
-              run = "libreoffice \"$@\"";
+              run = "libreoffice %s";
               block = false;
             }
           ];
           image = [
             {
-              run = "nsxiv \"$@\"";
+              run = "qlmanage -p %s";
               block = false;
+              for = "macos";
+            }
+            {
+              run = "nsxiv %s";
+              block = false;
+              for = "linux";
             }
           ];
           video = [
             {
-              run = "mpv \"$@\"";
+              run = "mpv %s";
               block = false;
             }
           ];
@@ -293,155 +298,155 @@ in
         open = {
           rules = [
             {
-              name = "*.json";
+              url = "*.json";
               use = "text";
             }
             {
-              name = "*.cpp";
+              url = "*.cpp";
               use = "text";
             }
             {
-              name = "*.lua";
+              url = "*.lua";
               use = "text";
             }
             {
-              name = "*.toml";
+              url = "*.toml";
               use = "text";
             }
             {
-              name = "*.yaml";
+              url = "*.yaml";
               use = "text";
             }
             {
-              name = "*.c";
+              url = "*.c";
               use = "text";
             }
             {
-              name = "*.ts";
+              url = "*.ts";
               use = "text";
             }
             {
-              name = "*.nix";
+              url = "*.nix";
               use = "text";
             }
             {
-              name = "*.md";
+              url = "*.md";
               use = "text";
             }
             {
-              name = "*.js";
+              url = "*.js";
               use = "text";
             }
             {
-              name = "*.jsx";
+              url = "*.jsx";
               use = "text";
             }
             {
-              name = "*.tsx";
+              url = "*.tsx";
               use = "text";
             }
             {
-              name = "*.pdf";
+              url = "*.pdf";
               use = "pdf";
             }
             {
-              name = "*.docx";
+              url = "*.docx";
               use = "office";
             }
             {
-              name = "*.pptx";
+              url = "*.pptx";
               use = "office";
             }
             {
-              name = "*.xlsx";
+              url = "*.xlsx";
               use = "office";
             }
             {
-              name = "*.odt";
+              url = "*.odt";
               use = "office";
             }
             {
-              name = "*.png";
+              url = "*.png";
               use = "image";
             }
             {
-              name = "*.jpg";
+              url = "*.jpg";
               use = "image";
             }
             {
-              name = "*.jpeg";
+              url = "*.jpeg";
               use = "image";
             }
             {
-              name = "*.gif";
+              url = "*.gif";
               use = "image";
             }
             {
-              name = "*.svg";
+              url = "*.svg";
               use = "image";
             }
             {
-              name = "*.bmp";
+              url = "*.bmp";
               use = "image";
             }
             {
-              name = "*.tiff";
+              url = "*.tiff";
               use = "image";
             }
             {
-              name = "*.tif";
+              url = "*.tif";
               use = "image";
             }
             {
-              name = "*.webp";
+              url = "*.webp";
               use = "image";
             }
             {
-              name = "*.heic";
+              url = "*.heic";
               use = "image";
             }
             {
-              name = "*.heif";
+              url = "*.heif";
               use = "image";
             }
             {
-              name = "*.mp4";
+              url = "*.mp4";
               use = "video";
             }
             {
-              name = "*.mkv";
+              url = "*.mkv";
               use = "video";
             }
             {
-              name = "*.webm";
+              url = "*.webm";
               use = "video";
             }
             {
-              name = "*.avi";
+              url = "*.avi";
               use = "video";
             }
             {
-              name = "*.mov";
+              url = "*.mov";
               use = "video";
             }
             {
-              name = "*.wmv";
+              url = "*.wmv";
               use = "video";
             }
             {
-              name = "*.flv";
+              url = "*.flv";
               use = "video";
             }
             {
-              name = "*.m4v";
+              url = "*.m4v";
               use = "video";
             }
             {
-              name = "*.mpg";
+              url = "*.mpg";
               use = "video";
             }
             {
-              name = "*.mpeg";
+              url = "*.mpeg";
               use = "video";
             }
           ];
