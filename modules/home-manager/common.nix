@@ -82,6 +82,7 @@ in
   imports = [
     ./fix-text.nix
     ./ips-script.nix
+    ./yt-dlp-helper.nix
   ];
   nixpkgs = {
     # You can add overlays here

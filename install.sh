@@ -966,6 +966,57 @@ EOF
   chmod +x "$tat_path"
 }
 
+install_yp_script() {
+  local bin_dir="${HOME}/.local/bin"
+  mkdir -p "$bin_dir"
+  local yp_path="${bin_dir}/yp"
+  log "writing ${yp_path}"
+  cat <<'EOF' >"$yp_path"
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Detect clipboard tool
+if [[ "${OSTYPE:-}" == darwin* ]] && command -v pbpaste >/dev/null 2>&1; then
+  PASTE_CMD=(pbpaste)
+  COPY_CMD=(pbcopy)
+elif [[ -n "${WAYLAND_DISPLAY-}" ]] && command -v wl-paste >/dev/null 2>&1; then
+  PASTE_CMD=(wl-paste)
+  COPY_CMD=(wl-copy)
+elif command -v xclip >/dev/null 2>&1; then
+  PASTE_CMD=(xclip -selection clipboard -o)
+  COPY_CMD=(xclip -selection clipboard -i)
+elif command -v xsel >/dev/null 2>&1; then
+  PASTE_CMD=(xsel --clipboard --output)
+  COPY_CMD=(xsel --clipboard --input)
+else
+  echo "yp: no clipboard tool found" >&2
+  exit 1
+fi
+
+# Get URL from clipboard
+URL=$("${PASTE_CMD[@]}")
+
+# Basic URL validation
+if [[ ! "$URL" =~ ^https?:// ]]; then
+  echo "yp: clipboard does not contain a valid URL: $URL" >&2
+  exit 1
+fi
+
+# Ensure output directory exists
+mkdir -p ~/tmp/.tt/inbox
+
+# Clear clipboard
+printf "" | "${COPY_CMD[@]}"
+
+# Start download with custom output directory while respecting other settings
+yt-dlp \
+  --config-location "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config" \
+  --output "$HOME/tmp/.tt/inbox/%(title)s.%(ext)s" \
+  "$URL"
+EOF
+  chmod +x "$yp_path"
+}
+
 write_vpn_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1305,6 +1356,7 @@ main() {
   write_alacritty_config
   write_variety_config
   write_yt_dlp_config
+  install_yp_script
   configure_kde_shortcuts
   configure_kde_cursor
   configure_kde_input
