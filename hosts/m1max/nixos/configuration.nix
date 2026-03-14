@@ -25,6 +25,7 @@ in
     "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZtWKshxzYfXc0fJyQ="
     "flox-cache-public-1:7F4OyH7ZCnFhcze3fJdfyXYLQw/aV7GEed86nQ7IsOs="
   ];
+  nix.settings.trusted-users = [ "nik" ];
 
   networking.hostName = "m1max"; # Define your hostname.
 
