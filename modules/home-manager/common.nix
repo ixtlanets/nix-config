@@ -457,44 +457,6 @@ in
       enable = true;
       commands = ../../dotfiles/opencode/commands;
       skills = ../../dotfiles/opencode/skills;
-      settings = {
-        permission = {
-          playwright_browser_install = "deny";
-        };
-        mcp = {
-          figma = {
-            enabled = true;
-            type = "remote";
-            url = "https://mcp.figma.com/mcp";
-          };
-
-          vercel = {
-            enabled = true;
-            type = "remote";
-            url = "https://mcp.vercel.com";
-          };
-          chrome-devtools = {
-            type = "local";
-            command = [
-              "bunx"
-              "chrome-devtools-mcp@latest"
-              "--browser-url=http://127.0.0.1:9222"
-            ];
-          };
-          playwright = {
-            enabled = true;
-            type = "local";
-            command = [
-              "npx"
-              "@playwright/mcp@latest"
-              "--extension"
-            ];
-            environment = {
-              PLAYWRIGHT_MCP_EXTENSION_TOKEN = "{env:PLAYWRIGHT_MCP_EXTENSION_TOKEN}";
-            };
-          };
-        };
-      };
     };
   };
 
