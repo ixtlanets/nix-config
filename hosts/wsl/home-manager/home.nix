@@ -20,6 +20,9 @@
   home.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
     NIXOS_OZONE_WL = "1";
+    BROWSER = "wslview";
+    DISPLAY = ":0";
+    WAYLAND_DISPLAY = "wayland-0";
   };
 
   home.sessionPath = [
@@ -30,6 +33,8 @@
   home.packages = with pkgs; [
     bzip2
     wslu
+    wsl-open
+    wl-clipboard
     vanilla-dmz
   ];
 
