@@ -6,6 +6,7 @@ in
 
   home.packages = with pkgs; [
     browserpass
+    google-chrome
     telegram-desktop
     moonlight-qt
     xclip
@@ -62,6 +63,7 @@ in
         "brave"
         "firefox"
         "chromium"
+        "chrome"
       ];
     };
 
@@ -97,6 +99,9 @@ in
         }
       ];
       commandLineArgs = [ "--disable-features=WaylandWpColorManagerV1" ]; # fix for crash on hyprland
+    };
+    google-chrome = {
+      enable = true;
     };
 
     obs-studio = {
