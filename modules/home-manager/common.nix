@@ -210,13 +210,14 @@ in
       autosuggestion.enable = true;
       enableCompletion = true;
       defaultKeymap = "emacs";
-      syntaxHighlighting.enable = true;
+      syntaxHighlighting.enable = false;
       history = {
         expireDuplicatesFirst = true;
         ignoreDups = true;
       };
       initContent = ''
         export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
+        source ${pkgs.zsh-fast-syntax-highlighting}/share/zsh/plugins/fast-syntax-highlighting/fast-syntax-highlighting.plugin.zsh
       '';
     };
     fzf = {
