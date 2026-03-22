@@ -19,7 +19,7 @@
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/gnome.nix
+    ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
@@ -48,11 +48,10 @@
   services.hardware.bolt.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
-    ACTION=="add", SUBSYSTEM=="pci", KERNEL=="0000:01:00.0", ATTR{remove}="1"
   '';
   services = {
     asusd.enable = true;
-    supergfxd.enable = false;
+    supergfxd.enable = true;
   };
   services.vless = {
     enable = true;
@@ -73,15 +72,9 @@
   hardware = {
     graphics = {
       enable = true;
-    };
-    nvidia = {
-      powerManagement.enable = lib.mkForce false;
-      prime = {
-        offload.enable = lib.mkForce false;
-        offload.enableOffloadCmd = lib.mkForce false;
-        reverseSync.enable = lib.mkForce false;
-        sync.enable = lib.mkForce false;
-      };
+      extraPackages = with pkgs; [
+        vulkan-loader
+      ];
     };
   };
 

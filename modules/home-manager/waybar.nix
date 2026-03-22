@@ -11,8 +11,14 @@
         mainBar = {
           layer = "top";
           position = "top";
+          modules-left = [
+            "hyprland/workspaces"
+          ];
           modules-center = [ "clock" ];
           modules-right = [
+            "custom/voxtype"
+            "custom/hyprlayout"
+            "hyprland/language"
             "pulseaudio"
             "temperature"
             "backlight"
@@ -21,6 +27,39 @@
             "tray"
           ];
 
+          "hyprland/workspaces" = {
+            "format" = "{id} {windows}";
+            "format-window-separator" = " ";
+            "workspace-taskbar" = {
+              "enable" = true;
+              "update-active-window" = true;
+              "format" = "{icon}";
+              "icon-size" = 14;
+            };
+          };
+          "custom/voxtype" = {
+            "exec" = "voxtype status --follow --format json";
+            "return-type" = "json";
+            "format" = "{icon}";
+            "format-icons" = {
+              "idle" = "󰍬";
+              "recording" = "󰍫";
+              "transcribing" = "󰔟";
+              "stopped" = "󰍭";
+            };
+            "tooltip" = true;
+            "on-click" = "systemctl --user restart voxtype";
+          };
+          "custom/hyprlayout" = {
+            "exec" = "hypr-layout-waybar";
+            "signal" = 8;
+            "tooltip" = false;
+          };
+          "hyprland/language" = {
+            "format" = " {}";
+            "format-en" = "en";
+            "format-ru" = "ру";
+          };
           "keyboard-state" = {
             "capslock" = true;
             "format" = "{name} {icon} ";

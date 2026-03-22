@@ -363,42 +363,6 @@ in
     );
   };
 
-  programs = {
-    waybar = {
-      settings = {
-        mainBar = {
-          modules-left = [
-            "hyprland/workspaces"
-          ];
-          modules-right = [
-            "custom/hyprlayout"
-            "hyprland/language"
-          ];
-
-          "hyprland/workspaces" = {
-            "format" = "{id} {windows}";
-            "format-window-separator" = " ";
-            "workspace-taskbar" = {
-              "enable" = true;
-              "update-active-window" = true;
-              "format" = "{icon}";
-              "icon-size" = 14;
-            };
-          };
-          "custom/hyprlayout" = {
-            "exec" = "hypr-layout-waybar";
-            "signal" = 8;
-            "tooltip" = false;
-          };
-          "hyprland/language" = {
-            "format" = " {}";
-            "format-en" = "en";
-            "format-ru" = "ру";
-          };
-        };
-      };
-    };
-  };
   programs.hyprlock = {
     enable = true;
     settings = {
@@ -424,6 +388,11 @@ in
     SDL_VIDEODRIVER = "wayland"; # SDL2 Wayland
     XDG_SESSION_TYPE = "wayland"; # Usually set by display manager/login
     ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Let Electron auto-detect Wayland
+    # NVIDIA PRIME Offload environment variables
+    __NV_PRIME_RENDER_OFFLOAD = "1";
+    __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
+    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
+    __VK_LAYER_NV_optimus = "NVIDIA_only";
   };
 
   # Services
