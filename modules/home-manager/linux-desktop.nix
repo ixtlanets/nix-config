@@ -9,7 +9,6 @@ in
     google-chrome
     telegram-desktop
     moonlight-qt
-    xclip
     nerd-fonts.ubuntu
     nerd-fonts.ubuntu-mono
     nerd-fonts.ubuntu-sans
@@ -35,6 +34,10 @@ in
     code-cursor-fhs
     papirus-icon-theme
     kora-icon-theme
+    dotool
+    wtype
+    voxtype-vulkan
+    vulkan-tools
   ];
 
   catppuccin.flavor = "mocha";
@@ -115,6 +118,28 @@ in
   };
 
   xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
+  xdg.configFile."voxtype/config.toml".text = ''
+    state_file = "auto"
+
+    [hotkey]
+    enabled = true
+    key = "RIGHTALT"
+
+    [audio]
+    device = "default"
+    sample_rate = 16000
+    max_duration_secs = 60
+
+    [whisper]
+    model = "large-v3-turbo"
+    language = ["en", "ru"]
+
+    [output]
+    mode = "type"
+
+    [output.notification]
+    on_transcription = true
+  '';
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
     builtins.readFile ../../dotfiles/quotes.txt;

@@ -144,3 +144,28 @@
 #custom-workspace-control.multi-monitor {
     color: @base0D;
 }
+
+#custom-voxtype {
+    margin: 4px 2px;
+    padding: 0 6px;
+    background-color: @base02;
+    border-radius: 4px;
+    min-width: 20px;
+}
+
+#custom-voxtype.idle {
+    color: @base0B;
+}
+
+#custom-voxtype.recording {
+    color: #ff5555;
+    border: 2px solid #ff5555;
+}
+
+#custom-voxtype.transcribing {
+    color: #f1fa8c;
+}
+
+#custom-voxtype.stopped {
+    color: @base03;
+}
