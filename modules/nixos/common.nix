@@ -87,6 +87,12 @@ in
   # Use latest kernel
   boot.kernelPackages = pkgs.linuxPackages;
 
+  # Disable IPv6 — VLESS proxy is IPv4-only, AAAA records cause routing failures
+  boot.kernel.sysctl = {
+    "net.ipv6.conf.all.disable_ipv6" = 1;
+    "net.ipv6.conf.default.disable_ipv6" = 1;
+  };
+
   # Enable networking
   networking.networkmanager.enable = true;
   networking.firewall.allowedTCPPorts = [ 22000 ];
