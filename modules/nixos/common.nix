@@ -1,8 +1,7 @@
-{
-  inputs,
-  pkgs,
-  lib,
-  ...
+{ inputs
+, pkgs
+, lib
+, ...
 }:
 let
   floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
@@ -224,6 +223,7 @@ in
       "networkmanager"
       "wheel"
       "video"
+      "input"
       "docker"
       "vboxusers"
       "libvirtd"
