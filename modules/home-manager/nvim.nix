@@ -20,7 +20,6 @@
     vale # linter for prose
     proselint # ditto
     luaformatter # ditto for lua
-    prisma-engines # ditto for schema.prisma files
     nixpkgs-fmt
     lua-language-server
     gnumake
