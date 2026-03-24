@@ -1,6 +1,13 @@
 {
   cert,
   key,
+  syncthingHome ? "/home/nik/.local/state/syncthing",
+  folderPaths ? {
+    "3y3qt-shfv6" = "/home/nik/obsidian-vault";
+    "lavhv-cjakz" = "/home/nik/Documents/Проекты";
+    wallpapers = "/home/nik/wallpapers";
+    "разведмобиль" = "/home/nik/Documents/разведмобиль";
+  },
   ...
 }:
 let
@@ -20,7 +27,7 @@ let
     name = folder.id;
     value = {
       label = if folder ? label then folder.label else folder.id;
-      path = folder.path;
+      path = folderPaths.${folder.id};
       type = folder.type;
       devices = state.computerDevices ++ (mobileShares.${folder.id} or [ ]);
     };
@@ -30,7 +37,7 @@ in
   services.syncthing = {
     enable = true;
     inherit cert key;
-    extraOptions = [ "--home=/home/nik/.local/state/syncthing" ];
+    extraOptions = [ "--home=${syncthingHome}" ];
     overrideDevices = true;
     overrideFolders = true;
 

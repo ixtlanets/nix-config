@@ -40,6 +40,7 @@ in
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
+    ./syncthing.nix
   ];
 
   nixpkgs = {

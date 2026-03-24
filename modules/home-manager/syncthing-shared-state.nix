@@ -5,7 +5,7 @@
     x1carbon = "ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS";
     um790pro = "OKR2QCL-FLJ7JE5-HPWXEKY-SV2BHIA-I24BTUD-CJRVW4Y-VUFRT7H-YFPWOQL";
     x13 = "NZ4IHCR-OW6F44P-FPNHA6M-PE44VY7-ZXPCEEB-QSLKP6J-I56KPSA-4AX5VQX";
-    m1max = "VY7DPRY-MD4DGDF-HXQ63HT-NTZY5BN-GPY4SAT-OQN7BD4-OXM7DQD-XO2MMA3";
+    m1max = "A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV";
     zenbook = "H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7";
     desktop = "6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS";
     um790pro-wsl = "6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL";
@@ -32,7 +32,6 @@
   folders = {
     obsidian-vault = {
       id = "3y3qt-shfv6";
-      path = "/home/nik/obsidian-vault";
       type = "sendreceive";
       devices = [
         "x1carbon"
@@ -50,7 +49,6 @@
     projects = {
       id = "lavhv-cjakz";
       label = "Проекты";
-      path = "/home/nik/Documents/Проекты";
       type = "sendreceive";
       devices = [
         "x1carbon"
@@ -66,7 +64,6 @@
 
     wallpapers = {
       id = "wallpapers";
-      path = "/home/nik/wallpapers";
       type = "sendreceive";
       devices = [
         "x1carbon"
@@ -81,7 +78,6 @@
     razvedmobil = {
       id = "разведмобиль";
       label = "разведмобиль";
-      path = "/home/nik/Documents/разведмобиль";
       type = "sendreceive";
       devices = [
         "x1carbon"
