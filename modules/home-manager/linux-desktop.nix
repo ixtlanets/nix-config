@@ -137,6 +137,7 @@ in
     [output]
     mode = "paste"
     paste_keys = "ctrl+shift+v"
+    restore_clipboard = true
 
     [output.notification]
     on_transcription = true
