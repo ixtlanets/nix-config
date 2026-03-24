@@ -25,7 +25,16 @@ description: Split a git working tree into logically coherent commits, craft sho
   - generated/lockfile changes mixed with source changes (only split if safe)
   - mechanical renames/moves mixed with logic changes
 - Ensure each commit is logically consistent and plausibly reviewable on its own.
-- Always present the plan first and ask for explicit confirmation before running any `git commit`.
+- Always present the plan first and use the `question` tool to ask for approval:
+  - Use header: "Commit plan"
+  - Use multiple: false (single choice)
+  - Provide three options:
+    - **Confirm** (description: "Proceed with executing all commits as planned")
+    - **Edit** (description: "I want to adjust messages or commit splits")
+    - **Abort** (description: "Cancel — do not commit anything")
+  - Only proceed with commits if user selects "Confirm"
+  - If "Edit" is selected, ask the user what changes they want to make
+  - If "Abort" is selected, stop and do not commit
 
 Commit plan output format (example)
 
@@ -54,7 +63,7 @@ Commit 2
 
 4. Create the commit
 
-- Only commit after confirmation.
+- Commits are executed after plan approval in step 2.
 - Create exactly one commit per planned unit.
 - Never create empty commits.
 - After each commit, re-check what remains and update the next patch/plan if needed:
