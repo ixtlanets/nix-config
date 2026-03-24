@@ -135,10 +135,14 @@ in
     language = ["en", "ru"]
 
     [output]
-    mode = "type"
+    mode = "paste"
+    paste_keys = "ctrl+shift+v"
 
     [output.notification]
     on_transcription = true
+
+    [meeting]
+    enabled = true
   '';
   xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
   xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
