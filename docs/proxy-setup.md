@@ -6,42 +6,78 @@ London SOCKS5 relay for traffic that needs a UK exit IP (google.com).
 ## Architecture
 
 ```
-                    ┌─────────────────────────────────────────────────────────┐
-                    │  NixOS client (zenbook / x13 / x1carbon / um960pro)     │
-                    │                                                          │
-                    │  sing-box (TUN mode, auto_route)                         │
-                    │    ├─ private / Russian IPs ──► direct                   │
-                    │    ├─ google.com ──────────────► london outbound          │
-                    │    └─ everything else ─────────► proxy outbound           │
-                    └───────────────────┬─────────────────────┬────────────────┘
-                                        │ VLESS+Reality/TLS   │ SOCKS5 over
-                                        │ port 443            │ WireGuard (tailscale)
-                                        ▼                     ▼
-                          ┌─────────────────────┐   ┌────────────────────┐
-                          │ Frankfurt            │   │ London             │
-                          │ wire.nikcode.xyz     │   │ 132.145.52.74      │
-                          │ 31.58.85.163         │   │ 100.119.182.9      │
-                          │ tailscale 100.76.x   │   │ (tailscale)        │
-                          │                      │   │                    │
-                          │ sing-box in Docker   │   │ microsocks         │
-                          │ (reality-ezpz)       │   │ port 1080          │
-                          └──────────┬───────────┘   └────────┬───────────┘
-                                     │                         │
-                                     └──────────┬──────────────┘
-                                                ▼
-                                           internet
+  ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
+  │ NixOS client                        │   │ macOS client (m1max)                │
+  │ (zenbook/x13/x1carbon/um960pro)     │   │                                     │
+  │                                     │   │ sing-box GUI (TUN mode, auto_route) │
+  │ sing-box (TUN mode, auto_route)     │   │   ├─ UDP 443 ────────────► block    │
+  │   ├─ private / Russian IPs ► direct │   │   ├─ private / Russian IPs ► direct │
+  │   ├─ google.com ──────────► london  │   │   └─ everything else ──► proxy      │
+  │   └─ everything else ─────► proxy   │   └──────────────────┬──────────────────┘
+  └──────────┬──────────────┬───────────┘                      │ VLESS+Reality
+             │ VLESS+Reality │ SOCKS5 over                     │ port 443
+             │ port 443      │ Tailscale                        ▼
+             │               │                    ┌─────────────────────┐
+             │               │                    │ Frankfurt            │
+             │               │                    │ wire.nikcode.xyz     │
+             ▼               │                    │ 31.58.85.163         │
+  ┌─────────────────────┐    │                    │                      │
+  │ Frankfurt            │    │                    │ sing-box in Docker  │
+  │ wire.nikcode.xyz     │    │                    │   ├─ geosite-google  │
+  │ 31.58.85.163         │    │                    │   │   UDP 443 ► block│
+  │                      │    │                    │   ├─ geosite-google  │
+  │ sing-box in Docker   │    │                    │   │   TCP ──► london │
+  │ (reality-ezpz)       │    │                    │   └─ else ──► direct│
+  └──────────┬───────────┘    │                    └──────────┬──────────┘
+             │                │                               │ SOCKS5
+             │                │                               │ port 1080
+             │                ▼                               │ (public)
+             │     ┌────────────────────┐                     │
+             │     │ London             │◄────────────────────┘
+             │     │ 132.145.52.74      │
+             │     │ 100.119.182.9      │
+             │     │ (tailscale)        │
+             │     │                    │
+             │     │ microsocks         │
+             │     │ port 1080          │
+             │     └────────┬───────────┘
+             │               │
+             └───────────────┤
+                             ▼
+                        internet
 ```
 
 All machines (NixOS clients, Frankfurt, London) are on the same Tailscale network (`tailf108.ts.net`).
 
-## Traffic routing rules (sing-box)
+## Traffic routing rules
+
+### NixOS clients
 
 | Traffic | Outbound | Path |
 |---------|----------|------|
 | Private IPs (RFC1918, loopback) | `direct` | Local network |
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
-| `*.google.com` / `google.com` | `london` | tailscale → London microsocks → internet |
+| `*.google.com` / `google.com` | `london` | Tailscale → London microsocks → internet |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
+
+### macOS client (m1max)
+
+| Traffic | Outbound | Path |
+|---------|----------|------|
+| UDP port 443 (QUIC/HTTP3) | `block` | Dropped — forces TCP fallback |
+| Private IPs (RFC1918, loopback) | `direct` | Local network |
+| Russian IPs (`geoip-ru`) | `direct` | Local ISP |
+| Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
+
+Google traffic is routed to London at the Frankfurt level (see Frankfurt section).
+
+### Frankfurt sing-box (applies to all clients)
+
+| Traffic | Outbound | Path |
+|---------|----------|------|
+| `geosite-google` UDP 443 | `block-quic` | Dropped |
+| `geosite-google` TCP | `london` | London microsocks → internet |
+| Everything else | `internet` | Direct → internet |
 
 ## Components
 
@@ -78,6 +114,22 @@ services.vless = {
 };
 ```
 
+### macOS client (m1max)
+
+**sing-box GUI app**: `io.nekohasekai.sfavt` (sing-box for Apple platforms)
+
+**Config**: `secrets/vless/m1max-gui.json` — load manually in the sing-box GUI app.
+
+**Key differences from NixOS clients**:
+- Google routing is handled at Frankfurt, not on the client — the Mac config has no `london` outbound
+- UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
+- No Tailscale dependency — London is reached via Frankfurt over the public internet
+- Uses older sing-box config syntax (no `type` field on DNS servers, no `domain_resolver` on outbounds) to match the GUI app's bundled sing-box version
+
+**macOS + Tailscale conflict**: macOS only allows one active VPN Network Extension at a time.
+sing-box GUI and Tailscale.app both use Network Extensions and cannot run simultaneously.
+This is why the Mac config offloads London routing to Frankfurt instead of using Tailscale directly.
+
 ### Frankfurt — VLESS+Reality server
 
 **Host**: `wire.nikcode.xyz` / `31.58.85.163`
@@ -91,8 +143,18 @@ installer that creates a Docker Compose stack running `sing-box` as a VLESS+Real
 
 Key files:
 - `config` — reality-ezpz parameters (actual secret values live on the Frankfurt host in `/opt/reality-ezpz/config`)
-- `engine.conf` — generated sing-box JSON (do not edit manually; regenerated by reality-ezpz)
+- `engine.conf` — sing-box JSON config. **Manually maintained** — do not regenerate via reality-ezpz as that will wipe the London routing rules.
 - `docker-compose.yml` — Docker Compose stack definition
+
+**Manually added to `engine.conf`** (beyond what reality-ezpz generates):
+- Outbound `london`: SOCKS5 to `132.145.52.74:1080` with auth
+- Outbound `block-quic`: block type
+- Rule set `geosite-google` from SagerNet/sing-geosite
+- Rule: `geosite-google` + UDP 443 → `block-quic`
+- Rule: `geosite-google` → `london`
+
+To apply changes: `docker restart reality-ezpz-engine-1`
+Backup is at `/opt/reality-ezpz/engine.conf.bak`
 
 **`/opt/reality-ezpz/config`**:
 ```
@@ -134,9 +196,8 @@ Also install Tailscale and join the tailnet (see Tailscale section below).
 deep-packet-inspection systems.
 
 **Note**: the VLESS server runs inside Docker and does **not** have access to the host's
-Tailscale network. This means routing through Frankfurt to London via Tailscale (a `detour`
-chain in sing-box) does not work — the container cannot reach `100.119.182.9`. This is why the
-NixOS clients connect to London directly over Tailscale instead.
+Tailscale network. The container cannot reach `100.119.182.9` (London's Tailscale IP) — it
+connects to London via the public IP `132.145.52.74:1080` instead.
 
 ### London — SOCKS5 relay
 
@@ -169,9 +230,11 @@ WantedBy=multi-user.target
 ```
 
 Listens on `0.0.0.0:1080` with username/password authentication.
-Accessible from NixOS clients via Tailscale (`100.119.182.9:1080`) — Oracle Cloud's security
-list blocks port 1080 from the public internet, but Tailscale traffic arrives via WireGuard on
-the `tailscale0` interface, bypassing the cloud firewall.
+
+**Network access**:
+- NixOS clients connect via Tailscale (`100.119.182.9:1080`)
+- Frankfurt Docker container connects via public IP (`132.145.52.74:1080`) — Oracle Cloud security list and host iptables both have port 1080 open. The iptables rule is persisted via `netfilter-persistent`.
+- The macOS client connects to London indirectly — via Frankfurt (VLESS) → London (SOCKS5)
 
 **To recover from scratch**:
 ```bash
@@ -227,12 +290,16 @@ system traffic through London. This conflicted with sing-box's TUN transparent p
 - Additionally, `tailscale set` is persistent — the exit node is re-activated on every boot,
   breaking the setup even before sing-box starts
 
-### Why not chain through Frankfurt (zenbook → VLESS → Frankfurt → London)?
+### Why not chain through Frankfurt for NixOS clients (zenbook → VLESS → Frankfurt → London)?
 
-sing-box supports `detour` on outbounds to chain connections. However, Frankfurt's sing-box runs
-inside Docker, and Docker containers do not share the host's Tailscale network namespace. The
-container cannot reach `100.119.182.9` (London's Tailscale IP). Moving microsocks to London's
-public IP would require opening port 1080 in Oracle Cloud's security list.
+Frankfurt's sing-box runs inside Docker, which does not share the host's Tailscale network
+namespace. The container cannot reach `100.119.182.9` (London's Tailscale IP). NixOS clients
+therefore connect to London directly over Tailscale.
+
+For the macOS client, this constraint is handled differently: London's public port 1080 was
+opened (Oracle Cloud security list + host iptables), allowing Frankfurt's Docker container to
+reach London via its public IP. The macOS client routes all traffic through VLESS to Frankfurt,
+where `geosite-google` traffic is forwarded to London over the public internet.
 
 ### Why `bind_interface: tailscale0`?
 
@@ -243,7 +310,5 @@ packet is sent out through `wlo1` where there is no route to `100.64.0.0/10`.
 
 ### Why microsocks with password auth?
 
-Microsocks listens on `0.0.0.0:1080` (all interfaces) rather than only `100.119.182.9`.
-Although Oracle Cloud's security list currently blocks port 1080 from the public internet,
-password authentication ensures the proxy cannot be abused if the firewall rule ever changes or
-is misconfigured.
+Port 1080 is now open to the public internet (required for Frankfurt's Docker container to reach
+London). Password authentication prevents the proxy from being used as an open relay.
