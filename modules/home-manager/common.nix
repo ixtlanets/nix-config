@@ -139,6 +139,7 @@ in
       dust # modern du
       speedtest-rs # speedtest
       fabric-ai
+      acli # Atlassian CLI
     ]
     ++ lib.optionals (!isDarwin) [
       qwen-code # AI coding agent by Qwen
