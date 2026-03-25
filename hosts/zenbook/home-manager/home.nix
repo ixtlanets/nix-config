@@ -41,6 +41,7 @@
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ./hyprland-zenbook.nix
     ./syncthing.nix
   ];
 
