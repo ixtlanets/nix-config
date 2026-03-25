@@ -51,7 +51,6 @@
     enable = true;
     configPath = "/home/nik/nix-config/secrets/vless/um790pro.json";
     configUser = "nik";
-    tailscaleExitNode = "london";
   };
   hardware = {
     graphics.enable = true;

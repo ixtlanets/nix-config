@@ -57,7 +57,6 @@
     enable = true;
     configPath = "/home/nik/nix-config/secrets/vless/zenbook.json";
     configUser = "nik";
-    tailscaleExitNode = "london";
   };
   boot.blacklistedKernelModules = [ "nouveau" ];
   boot.kernel.sysctl = {
