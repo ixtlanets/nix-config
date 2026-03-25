@@ -68,6 +68,13 @@ in
       default = false;
       description = "Whether to start the VLESS tunnel automatically at boot.";
     };
+
+    tailscaleExitNode = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      example = "london";
+      description = ''Tailscale exit node hostname to activate while the service is running. When set, the system tailscale daemon is configured to use this exit node on service start and reverts to no exit node on service stop.'';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -134,11 +141,16 @@ in
       path = [
         pkgs.iproute2
         pkgs.coreutils
+        pkgs.tailscale
       ];
       serviceConfig = {
         Type = "simple";
         ExecStart = ''${cfg.package}/bin/sing-box run --disable-color -c ${lib.escapeShellArg runtimeConfig}'';
         ExecStartPre = prepareConfigCommands;
+        ExecStartPost = lib.mkIf (cfg.tailscaleExitNode != null)
+          "${pkgs.tailscale}/bin/tailscale set --exit-node=${lib.escapeShellArg cfg.tailscaleExitNode} --exit-node-allow-lan-access=true";
+        ExecStopPost = lib.mkIf (cfg.tailscaleExitNode != null)
+          "${pkgs.tailscale}/bin/tailscale set --exit-node='' --exit-node-allow-lan-access=false";
         Restart = "on-failure";
         RestartSec = 5;
         CapabilityBoundingSet = [
