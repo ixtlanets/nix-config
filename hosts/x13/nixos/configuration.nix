@@ -59,6 +59,7 @@
     enable = true;
     configPath = "/home/nik/nix-config/secrets/vless/x13.json";
     configUser = "nik";
+    tailscaleExitNode = "london";
   };
   #flow devices are 2 in 1 laptops
   hardware.sensor.iio.enable = true;

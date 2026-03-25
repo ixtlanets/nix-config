@@ -35,6 +35,7 @@
     enable = true;
     configPath = "/home/nik/nix-config/secrets/vless/x1carbon.json";
     configUser = "nik";
+    tailscaleExitNode = "london";
   };
 
   hardware = {
