@@ -17,6 +17,15 @@
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.stdenv.hostPlatform.system}.default;
+    # nss_wrapper is Linux-only and its store path is referenced in mailutils' preCheck hook.
+    # Nix tracks all store paths in derivation attrs, so even with doCheck=false it tries to build it.
+    # Clear preCheck on Darwin to drop the reference entirely.
+    mailutils = if prev.stdenv.isDarwin then
+      prev.mailutils.overrideAttrs (_old: {
+        preCheck = "";
+      })
+    else
+      prev.mailutils;
     codex = prev.codex.overrideAttrs (old: rec {
       version = "0.77.0";
       buildType = "simple";
