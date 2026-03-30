@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "sha256-czOV1DnGg7UveZRP9oLIAuLVC2wSUe7H8i2xbGYs9hM=";
+        sha256 = "sha256-TnXy+Wc7UEJ+cDZx3gG8fZ1+ls0hNr/qe5qmuvMg1dA=";
         stripRoot = false;
       }
     else
