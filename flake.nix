@@ -475,7 +475,11 @@
         system = "aarch64-darwin";
         pkgs = import nixpkgs {
           system = "aarch64-darwin";
-          config.allowUnfree = true;
+          config = {
+            allowUnfree = true;
+            # nss_wrapper is broken on Darwin but pulled in as a transitive dep by home-manager fonts
+            problems.handlers.nss_wrapper.broken = "ignore";
+          };
         };
 
         modules = [

@@ -57,6 +57,8 @@ in
       allowUnfree = true;
       # Workaround for https://github.com/nix-community/home-manager/issues/2942
       allowUnfreePredicate = (_: true);
+      # nss_wrapper is broken on Darwin but pulled in as a transitive dep by home-manager fonts
+      problems.handlers.nss_wrapper.broken = "ignore";
     };
   };
 
