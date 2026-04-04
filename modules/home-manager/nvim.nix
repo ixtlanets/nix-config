@@ -24,14 +24,14 @@
     lua-language-server
     gnumake
     luajitPackages.jsregexp
-    nodePackages.eslint_d # js/ts code formatter and linter
-    nodePackages.prettier # ditto
-    nodePackages.vscode-langservers-extracted # lsp servers for json, html, css
-    nodePackages.svelte-language-server
-    nodePackages.diagnostic-languageserver
-    nodePackages.typescript-language-server
-    nodePackages.bash-language-server
-    nodePackages."@tailwindcss/language-server"
+    eslint_d
+    prettier
+    vscode-langservers-extracted
+    svelte-language-server
+    diagnostic-languageserver
+    typescript-language-server
+    bash-language-server
+    tailwindcss-language-server
     lua
     luajitPackages.luarocks
     nixd
