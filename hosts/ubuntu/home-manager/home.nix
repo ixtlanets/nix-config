@@ -19,7 +19,7 @@
 
   programs = {
     emacs = {
-      package = lib.mkForce pkgs.emacs29;
+      package = lib.mkForce pkgs.emacs30;
     };
   };
 
