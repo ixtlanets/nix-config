@@ -40,7 +40,7 @@ in
       settings = {
         env.TERM = "xterm-256color";
         font = {
-          normal.family = "Hack Nerd Font";
+          normal.family = "Hack Nerd Font Mono";
           size = 14;
         };
       };

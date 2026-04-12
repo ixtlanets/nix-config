@@ -12,7 +12,7 @@
     extraConfig = ''
       return {
         color_scheme = "Catppuccin Mocha",
-        font = wezterm.font("Hack Nerd Font"),
+        font = wezterm.font("Hack Nerd Font Mono"),
         font_size = 16,
         hide_tab_bar_if_only_one_tab = true,
       }

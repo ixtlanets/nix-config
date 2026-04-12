@@ -109,7 +109,7 @@ in
       settings = {
         env.TERM = "xterm-256color";
         font = {
-          normal.family = "Hack Nerd Font";
+          normal.family = "Hack Nerd Font Mono";
           size = 16;
         };
       };
@@ -147,7 +147,7 @@ in
   };
   home.file.".inputrc".source = ../../../dotfiles/inputrc;
   home.file.".config/ghostty/config".text = ''
-    font-family = "Hack Nerd Font"
+    font-family = "Hack Nerd Font Mono"
     font-size = 16
     theme = catppuccin-mocha
     quit-after-last-window-closed = true

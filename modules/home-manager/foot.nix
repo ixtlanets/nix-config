@@ -13,7 +13,7 @@
       catppuccin.enable = true;
       settings = {
         main = {
-          font = "Hack Nerd Font:size=14";
+          font = "Hack Nerd Font Mono:size=14";
           term = "xterm-256color";
         };
       };
