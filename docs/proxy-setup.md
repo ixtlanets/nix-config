@@ -143,7 +143,7 @@ installer that creates a Docker Compose stack running `sing-box` as a VLESS+Real
 
 Key files:
 - `config` — reality-ezpz parameters (actual secret values live on the Frankfurt host in `/opt/reality-ezpz/config`)
-- `engine.conf` — sing-box JSON config. **Manually maintained** — do not regenerate via reality-ezpz as that will wipe the London routing rules.
+- `engine.conf` — sing-box JSON config. **Manually maintained** — `./realityez -m` rewrites this file from reality-ezpz templates and user list, which drops the manually added London routing rules.
 - `docker-compose.yml` — Docker Compose stack definition
 
 **Manually added to `engine.conf`** (beyond what reality-ezpz generates):
@@ -155,6 +155,33 @@ Key files:
 
 To apply changes: `docker restart reality-ezpz-engine-1`
 Backup is at `/opt/reality-ezpz/engine.conf.bak`
+
+**Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` / `block-quic` / `geosite-google` sections before restarting the container.
+
+**Preferred user-management workflow**: do **not** use `./realityez -m` for this host anymore. Use the repo-managed helper script instead, which edits `engine.conf` in place and keeps `/opt/reality-ezpz/users` synced without touching the custom London routing.
+
+Deploy helper to Frankfurt:
+```bash
+scp -i ~/.ssh/id_rsa_1 scripts/reality-user.py root@wire.nikcode.xyz:/opt/reality-ezpz/reality-user
+ssh -i ~/.ssh/id_rsa_1 root@wire.nikcode.xyz 'chmod +x /opt/reality-ezpz/reality-user'
+```
+
+Usage on Frankfurt:
+```bash
+# List users
+/opt/reality-ezpz/reality-user list
+
+# Add new user, validate engine.conf, print share URL
+/opt/reality-ezpz/reality-user add alice
+
+# Show share URL for existing user
+/opt/reality-ezpz/reality-user show alice
+
+# Show share URL and terminal QR code
+/opt/reality-ezpz/reality-user show alice --qr
+```
+
+`add` creates timestamped backups of `engine.conf` and `users`, validates the updated config with `sing-box check`, and aborts with rollback on validation failure. It does **not** restart the container.
 
 **`/opt/reality-ezpz/config`**:
 ```
