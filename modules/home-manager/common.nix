@@ -36,11 +36,11 @@ let
     fi
 
     #let user select exit node with gum
-    EXIT_NODE=$(gum choose --selected $SELECTED $EXIT_NODES)
+    EXIT_NODE=$(gum choose --selected "$SELECTED" $EXIT_NODES)
     if [[ "$EXIT_NODE" == "None" ]]; then
-      sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+      sudo tailscale set --exit-node= --exit-node-allow-lan-access=false
     else
-      sudo tailscale up --exit-node $EXIT_NODE --exit-node-allow-lan-access=true
+      sudo tailscale set --exit-node "$EXIT_NODE" --exit-node-allow-lan-access=true
     fi
 
   '';
