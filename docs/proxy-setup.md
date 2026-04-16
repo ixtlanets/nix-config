@@ -1,7 +1,7 @@
 # Proxy Setup
 
 Transparent proxy for bypassing geo-restrictions, using VLESS+Reality for most traffic and a
-London SOCKS5 relay for traffic that needs a UK exit IP (google.com).
+London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenlabs.io`).
 
 ## Architecture
 
@@ -12,7 +12,7 @@ London SOCKS5 relay for traffic that needs a UK exit IP (google.com).
   │                                     │   │ sing-box GUI (TUN mode, auto_route) │
   │ sing-box (TUN mode, auto_route)     │   │   ├─ UDP 443 ────────────► block    │
   │   ├─ private / Russian IPs ► direct │   │   ├─ private / Russian IPs ► direct │
-  │   ├─ google.com ──────────► london  │   │   └─ everything else ──► proxy      │
+  │   ├─ google.com / elevenlabs.io ─► london │   │   └─ everything else ──► proxy      │
   │   └─ everything else ─────► proxy   │   └──────────────────┬──────────────────┘
   └──────────┬──────────────┬───────────┘                      │ VLESS+Reality
              │ VLESS+Reality │ SOCKS5 over                     │ port 443
@@ -27,7 +27,11 @@ London SOCKS5 relay for traffic that needs a UK exit IP (google.com).
   │ 31.58.85.163         │    │                    │   │   UDP 443 ► block│
   │                      │    │                    │   ├─ geosite-google  │
   │ sing-box in Docker   │    │                    │   │   TCP ──► london │
-  │ (reality-ezpz)       │    │                    │   └─ else ──► direct│
+  │ (reality-ezpz)       │    │                    │   ├─ elevenlabs.io  │
+  │                      │    │                    │   │   UDP 443 ► block│
+  │                      │    │                    │   ├─ elevenlabs.io  │
+  │                      │    │                    │   │   TCP ──► london │
+  │                      │    │                    │   └─ else ──► direct│
   └──────────┬───────────┘    │                    └──────────┬──────────┘
              │                │                               │ SOCKS5
              │                │                               │ port 1080
@@ -58,6 +62,7 @@ All machines (NixOS clients, Frankfurt, London) are on the same Tailscale networ
 | Private IPs (RFC1918, loopback) | `direct` | Local network |
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
 | `*.google.com` / `google.com` | `london` | Tailscale → London microsocks → internet |
+| `*.elevenlabs.io` / `elevenlabs.io` | `london` | Tailscale → London microsocks → internet |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
 
 ### macOS client (m1max)
@@ -69,7 +74,7 @@ All machines (NixOS clients, Frankfurt, London) are on the same Tailscale networ
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
 
-Google traffic is routed to London at the Frankfurt level (see Frankfurt section).
+Google and ElevenLabs traffic are routed to London at the Frankfurt level (see Frankfurt section).
 
 ### Frankfurt sing-box (applies to all clients)
 
@@ -77,6 +82,8 @@ Google traffic is routed to London at the Frankfurt level (see Frankfurt section
 |---------|----------|------|
 | `geosite-google` UDP 443 | `block-quic` | Dropped |
 | `geosite-google` TCP | `london` | London microsocks → internet |
+| `*.elevenlabs.io` / `elevenlabs.io` UDP 443 | `block-quic` | Dropped |
+| `*.elevenlabs.io` / `elevenlabs.io` TCP | `london` | London microsocks → internet |
 | Everything else | `internet` | Direct → internet |
 
 ## Components
@@ -121,7 +128,7 @@ services.vless = {
 **Config**: `secrets/vless/m1max-gui.json` — load manually in the sing-box GUI app.
 
 **Key differences from NixOS clients**:
-- Google routing is handled at Frankfurt, not on the client — the Mac config has no `london` outbound
+- Google and ElevenLabs routing are handled at Frankfurt, not on the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
 - No Tailscale dependency — London is reached via Frankfurt over the public internet
 - Uses older sing-box config syntax (no `type` field on DNS servers, no `domain_resolver` on outbounds) to match the GUI app's bundled sing-box version
@@ -152,11 +159,13 @@ Key files:
 - Rule set `geosite-google` from SagerNet/sing-geosite
 - Rule: `geosite-google` + UDP 443 → `block-quic`
 - Rule: `geosite-google` → `london`
+- Rule: `domain_suffix: elevenlabs.io` + UDP 443 → `block-quic`
+- Rule: `domain_suffix: elevenlabs.io` → `london`
 
 To apply changes: `docker restart reality-ezpz-engine-1`
 Backup is at `/opt/reality-ezpz/engine.conf.bak`
 
-**Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` / `block-quic` / `geosite-google` sections before restarting the container.
+**Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` / `block-quic` / `geosite-google` / `elevenlabs.io` sections before restarting the container.
 
 **Preferred user-management workflow**: do **not** use `./realityez -m` for this host anymore. Use the repo-managed helper script instead, which edits `engine.conf` in place and keeps `/opt/reality-ezpz/users` synced without touching the custom London routing.
 
@@ -326,7 +335,7 @@ therefore connect to London directly over Tailscale.
 For the macOS client, this constraint is handled differently: London's public port 1080 was
 opened (Oracle Cloud security list + host iptables), allowing Frankfurt's Docker container to
 reach London via its public IP. The macOS client routes all traffic through VLESS to Frankfurt,
-where `geosite-google` traffic is forwarded to London over the public internet.
+where `geosite-google` and `elevenlabs.io` traffic are forwarded to London over the public internet.
 
 ### Why `bind_interface: tailscale0`?
 
