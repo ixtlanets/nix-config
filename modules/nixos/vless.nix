@@ -57,7 +57,7 @@ in
     configPath = mkOption {
       type = types.str;
       example = "/etc/nekoray/vless.json";
-      description = ''Absolute path to the sing-box JSON configuration on disk. The file is exposed to the service under /run/${serviceName}/config.json.'';
+      description = "Absolute path to the sing-box JSON configuration on disk. The file is exposed to the service under /run/${serviceName}/config.json.";
     };
 
     package = mkOption {
@@ -71,7 +71,7 @@ in
       type = types.nullOr types.str;
       default = null;
       example = "nik";
-      description = ''User that can read the sing-box configuration file when the service itself cannot (for example, if the file lives on a FUSE mount without allow_other). When set, the configuration is staged using this user before the service starts.'';
+      description = "User that can read the sing-box configuration file when the service itself cannot (for example, if the file lives on a FUSE mount without allow_other). When set, the configuration is staged using this user before the service starts.";
     };
 
     serviceName = mkOption {
