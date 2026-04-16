@@ -15,10 +15,27 @@ let
   serviceName = cfg.serviceName;
   runtimeDir = "/run/${serviceName}";
   runtimeConfig = "${runtimeDir}/config.json";
+  restoreIpv6RaScript = pkgs.writeShellScript "restore-${serviceName}-ipv6-ra" ''
+    set -euo pipefail
+
+    # sing-box TUN auto-routing can leave IPv6 router advertisements disabled
+    # on physical uplinks, which breaks LAN IPv6 even when kernel IPv6 is on.
+    for ifacePath in /sys/class/net/*; do
+      iface="''${ifacePath##*/}"
+      if [[ ! -e "$ifacePath/device" ]]; then
+        continue
+      fi
+
+      raPath="/proc/sys/net/ipv6/conf/$iface/accept_ra"
+      if [[ -w "$raPath" ]]; then
+        printf '2\n' > "$raPath"
+      fi
+    done
+  '';
   prepareConfigCommands =
     if cfg.configUser == null then
       [
-        ''${pkgs.coreutils}/bin/install -Dm0400 ${lib.escapeShellArg cfg.configPath} ${lib.escapeShellArg runtimeConfig}''
+        "${pkgs.coreutils}/bin/install -Dm0400 ${lib.escapeShellArg cfg.configPath} ${lib.escapeShellArg runtimeConfig}"
       ]
     else
       let
@@ -40,7 +57,7 @@ in
     configPath = mkOption {
       type = types.str;
       example = "/etc/nekoray/vless.json";
-      description = ''Absolute path to the sing-box JSON configuration on disk. The file is exposed to the service under /run/${serviceName}/config.json.'';
+      description = "Absolute path to the sing-box JSON configuration on disk. The file is exposed to the service under /run/${serviceName}/config.json.";
     };
 
     package = mkOption {
@@ -54,7 +71,7 @@ in
       type = types.nullOr types.str;
       default = null;
       example = "nik";
-      description = ''User that can read the sing-box configuration file when the service itself cannot (for example, if the file lives on a FUSE mount without allow_other). When set, the configuration is staged using this user before the service starts.'';
+      description = "User that can read the sing-box configuration file when the service itself cannot (for example, if the file lives on a FUSE mount without allow_other). When set, the configuration is staged using this user before the service starts.";
     };
 
     serviceName = mkOption {
@@ -137,8 +154,9 @@ in
       ];
       serviceConfig = {
         Type = "simple";
-        ExecStart = ''${cfg.package}/bin/sing-box run --disable-color -c ${lib.escapeShellArg runtimeConfig}'';
+        ExecStart = "${cfg.package}/bin/sing-box run --disable-color -c ${lib.escapeShellArg runtimeConfig}";
         ExecStartPre = prepareConfigCommands;
+        ExecStartPost = restoreIpv6RaScript;
         Restart = "on-failure";
         RestartSec = 5;
         CapabilityBoundingSet = [
