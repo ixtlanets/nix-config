@@ -1091,9 +1091,9 @@ fi
 
 EXIT_NODE=$(echo -e "$EXIT_NODES" | gum choose --selected "$SELECTED")
 if [[ "$EXIT_NODE" == "None" ]]; then
-  sudo tailscale up --exit-node "" --exit-node-allow-lan-access=false
+  sudo tailscale set --exit-node= --exit-node-allow-lan-access=false
 else
-  sudo tailscale up --exit-node "$EXIT_NODE" --exit-node-allow-lan-access=true
+  sudo tailscale set --exit-node "$EXIT_NODE" --exit-node-allow-lan-access=true
 fi
 EOF
   chmod +x "$vpn_path"
