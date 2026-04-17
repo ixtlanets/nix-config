@@ -15,6 +15,154 @@ let
   serviceName = cfg.serviceName;
   runtimeDir = "/run/${serviceName}";
   runtimeConfig = "${runtimeDir}/config.json";
+  toggleScript = pkgs.writeShellScriptBin "vless-toggle" ''
+    set -euo pipefail
+
+    SERVICE=${lib.escapeShellArg serviceName}
+
+    if [ "$#" -ne 1 ]; then
+      printf 'Usage: vless-toggle [up|down]\n' >&2
+      exit 1
+    fi
+
+    case "$1" in
+      up)
+        exec ${pkgs.systemd}/bin/systemctl start "$SERVICE"
+        ;;
+      down)
+        exec ${pkgs.systemd}/bin/systemctl stop "$SERVICE"
+        ;;
+      *)
+        printf 'Usage: vless-toggle [up|down]\n' >&2
+        exit 1
+        ;;
+    esac
+  '';
+  waybarScript = pkgs.writeShellScriptBin "vless-waybar" ''
+        set -euo pipefail
+
+        SERVICE=${lib.escapeShellArg serviceName}
+        CACHE_DIR="''${XDG_RUNTIME_DIR:-/run/user/$(${pkgs.coreutils}/bin/id -u)}/vless-waybar"
+        IP_FILE="$CACHE_DIR/ip"
+        TS_FILE="$CACHE_DIR/ip.ts"
+        REFRESH_SECS=60
+
+        escape_json() {
+          local value=$1
+          value=''${value//\\/\\\\}
+          value=''${value//\"/\\\"}
+          value=''${value//$'\n'/\\n}
+          printf '%s' "$value"
+        }
+
+        print_json() {
+          local text=$1
+          local class=$2
+          local tooltip=$3
+          printf '{"text":"%s","class":"%s","tooltip":"%s"}\n' \
+            "$(escape_json "$text")" \
+            "$(escape_json "$class")" \
+            "$(escape_json "$tooltip")"
+        }
+
+        service_exists() {
+          ${pkgs.systemd}/bin/systemctl show "$SERVICE" >/dev/null 2>&1
+        }
+
+        format_uptime() {
+          local total=$1
+          local days hours mins
+          days=$((total / 86400))
+          hours=$(((total % 86400) / 3600))
+          mins=$(((total % 3600) / 60))
+
+          if [ "$days" -gt 0 ]; then
+            printf '%sd %sh' "$days" "$hours"
+          elif [ "$hours" -gt 0 ]; then
+            printf '%sh %sm' "$hours" "$mins"
+          else
+            printf '%sm' "$mins"
+          fi
+        }
+
+        fetch_ip() {
+          local now cached_ts ip
+          now=$(${pkgs.coreutils}/bin/date +%s)
+          ${pkgs.coreutils}/bin/mkdir -p "$CACHE_DIR"
+
+          if [ -f "$IP_FILE" ] && [ -f "$TS_FILE" ]; then
+            cached_ts=$(${pkgs.coreutils}/bin/cat "$TS_FILE" 2>/dev/null || true)
+            if [ -n "$cached_ts" ] && [ $((now - cached_ts)) -lt "$REFRESH_SECS" ]; then
+              ${pkgs.coreutils}/bin/cat "$IP_FILE"
+              return 0
+            fi
+          fi
+
+          if ip=$(${pkgs.curl}/bin/curl -fsS --max-time 3 https://icanhazip.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '\n'); then
+            printf '%s' "$ip" > "$IP_FILE"
+            printf '%s' "$now" > "$TS_FILE"
+            printf '%s\n' "$ip"
+            return 0
+          fi
+
+          if [ -f "$IP_FILE" ]; then
+            ${pkgs.coreutils}/bin/cat "$IP_FILE"
+            return 0
+          fi
+
+          return 1
+        }
+
+        if [ "''${1:-}" = "toggle" ]; then
+          if ! service_exists; then
+            exit 0
+          fi
+
+          case "$(${pkgs.systemd}/bin/systemctl is-active "$SERVICE" 2>/dev/null || true)" in
+            active)
+              exec ${pkgs.sudo}/bin/sudo ${toggleScript}/bin/vless-toggle down
+              ;;
+            *)
+              exec ${pkgs.sudo}/bin/sudo ${toggleScript}/bin/vless-toggle up
+              ;;
+          esac
+        fi
+
+        if ! service_exists; then
+          print_json "󱚡" "inactive" "VLESS: Inactive"
+          exit 0
+        fi
+
+        status="$(${pkgs.systemd}/bin/systemctl is-active "$SERVICE" 2>/dev/null || true)"
+        case "$status" in
+          active)
+            now=$(${pkgs.coreutils}/bin/date +%s)
+            started_at="$(${pkgs.systemd}/bin/systemctl show -p ActiveEnterTimestamp --value "$SERVICE" 2>/dev/null || true)"
+            uptime="unknown"
+            if [ -n "$started_at" ]; then
+              started_epoch=$(${pkgs.coreutils}/bin/date -d "$started_at" +%s 2>/dev/null || true)
+              if [ -n "$started_epoch" ]; then
+                uptime=$(format_uptime $((now - started_epoch)))
+              fi
+            fi
+
+            ip="unavailable"
+            if fetched_ip=$(fetch_ip); then
+              ip=$fetched_ip
+            fi
+
+            print_json "󰖂" "active" "VLESS: Active
+    IP: $ip
+    Uptime: $uptime"
+            ;;
+          failed)
+            print_json "󰖂" "failed" "VLESS: Failed"
+            ;;
+          *)
+            print_json "󱚡" "inactive" "VLESS: Inactive"
+            ;;
+        esac
+  '';
   restoreIpv6RaScript = pkgs.writeShellScript "restore-${serviceName}-ipv6-ra" ''
     set -euo pipefail
 
@@ -96,6 +244,8 @@ in
     ];
 
     environment.systemPackages = [
+      toggleScript
+      waybarScript
       (pkgs.writeShellScriptBin "vless" ''
         set -euo pipefail
 
@@ -127,10 +277,10 @@ in
 
         case "$choice" in
           up)
-            sudo systemctl start "$SERVICE"
+            sudo ${toggleScript}/bin/vless-toggle up
             ;;
           down)
-            sudo systemctl stop "$SERVICE"
+            sudo ${toggleScript}/bin/vless-toggle down
             ;;
           status)
             systemctl status "$SERVICE"
@@ -141,6 +291,18 @@ in
             ;;
         esac
       '')
+    ];
+
+    security.sudo.extraRules = [
+      {
+        groups = [ "wheel" ];
+        commands = [
+          {
+            command = "${toggleScript}/bin/vless-toggle";
+            options = [ "NOPASSWD" ];
+          }
+        ];
+      }
     ];
 
     systemd.services.${serviceName} = {

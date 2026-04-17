@@ -153,6 +153,26 @@
     min-width: 20px;
 }
 
+#custom-vless {
+    margin: 4px 2px;
+    padding: 0 6px;
+    background-color: @base02;
+    border-radius: 4px;
+    min-width: 20px;
+}
+
+#custom-vless.active {
+    color: @base0B;
+}
+
+#custom-vless.inactive {
+    color: @base03;
+}
+
+#custom-vless.failed {
+    color: #ff5555;
+}
+
 #custom-voxtype.idle {
     color: @base0B;
 }
