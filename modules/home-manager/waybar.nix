@@ -24,7 +24,6 @@
             "temperature"
             "backlight"
             "battery"
-            "keyboard-state"
             "tray"
           ];
 
@@ -69,14 +68,6 @@
             "format" = " {}";
             "format-en" = "en";
             "format-ru" = "ру";
-          };
-          "keyboard-state" = {
-            "capslock" = true;
-            "format" = "{name} {icon} ";
-            "format-icons" = {
-              "locked" = " ";
-              "unlocked" = "";
-            };
           };
           "clock" = {
             "tooltip-format" = "<big>{:%Y %B}</big>\n<tt><span size='larger'>{calendar}</span></tt>";

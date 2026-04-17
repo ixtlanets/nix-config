@@ -61,10 +61,10 @@ let
 
     case "$layout" in
       monocle)
-        printf "[M] monocle\n"
+        printf "[M]\n"
         ;;
       master)
-        printf "[T] master\n"
+        printf "[T]\n"
         ;;
       *)
         printf "[?] %s\n" "$layout"
