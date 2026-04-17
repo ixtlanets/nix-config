@@ -180,6 +180,7 @@ in
   '';
   home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text =
     braveManagedPolicy;
+  home.file.".config/openclaw/README.md".source = ../../../dotfiles/openclaw/README.md;
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   home.sessionVariables = {
