@@ -145,11 +145,37 @@ in
     brews = [
       "trippy"
       "emacs-plus"
+      "llama.cpp"
+      "openclaw-cli"
       # "sunshine" it's broken now
     ];
     onActivation = {
       autoUpdate = true;
       upgrade = true;
+    };
+  };
+
+  launchd.user.agents.llama-server = {
+    path = [ "/opt/homebrew/bin" ];
+    serviceConfig = {
+      Label = "ai.llama.server";
+      KeepAlive = true;
+      ProcessType = "Background";
+      ProgramArguments = [
+        "/opt/homebrew/bin/llama-server"
+        "-hf"
+        "HauhauCS/Qwen3.5-35B-A3B-Uncensored-HauhauCS-Aggressive"
+        "--host"
+        "0.0.0.0"
+        "--port"
+        "8080"
+        "--flash-attn"
+        "on"
+      ];
+      RunAtLoad = true;
+      StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
+      StandardOutPath = "/Users/nik/Library/Logs/llama-server.log";
+      WorkingDirectory = "/Users/nik";
     };
   };
 
