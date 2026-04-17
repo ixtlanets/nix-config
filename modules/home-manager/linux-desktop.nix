@@ -36,7 +36,7 @@ in
     kora-icon-theme
     dotool
     wtype
-    voxtype-vulkan
+    voxtype-onnx
     vulkan-tools
   ];
 
@@ -120,6 +120,7 @@ in
   xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
   xdg.configFile."voxtype/config.toml".text = ''
     state_file = "auto"
+    engine = "parakeet"
 
     [hotkey]
     enabled = true
@@ -130,8 +131,8 @@ in
     sample_rate = 16000
     max_duration_secs = 60
 
-    [whisper]
-    model = "large-v3-turbo"
+    [parakeet]
+    model = "parakeet-tdt-0.6b-v3"
     language = ["en", "ru"]
 
     [output]

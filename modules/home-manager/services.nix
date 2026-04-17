@@ -19,13 +19,9 @@
     };
 
     Service = {
-      ExecStart = "${pkgs.voxtype-vulkan}/bin/voxtype";
+      ExecStart = "${pkgs.voxtype-onnx}/bin/voxtype";
       Restart = "on-failure";
       RestartSec = 3;
-      Environment = [
-        "VOXTYPE_VULKAN_DEVICE=nvidia"
-        "VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/nvidia_icd.x86_64.json"
-      ];
     };
 
     Install.WantedBy = [ "graphical-session.target" ];
