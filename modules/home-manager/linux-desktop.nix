@@ -135,6 +135,26 @@ in
     model = "parakeet-tdt-0.6b-v3"
     language = ["en", "ru"]
 
+    [text]
+    spoken_punctuation = true
+
+    [text.replacements]
+    "chrome dev tools" = "Chrome DevTools"
+    "chrome left tools" = "Chrome DevTools"
+    "dev tools" = "DevTools"
+    "devtulz" = "DevTools"
+    "voxtype" = "Voxtype"
+    "вокстайп" = "Voxtype"
+    "и2и" = "e2e"
+    "комит" = "commit"
+    "комита" = "commit"
+    "комитом" = "commit"
+    "комиту" = "commit"
+    "никс оэс" = "NixOS"
+    "хром" = "Chrome"
+    "хромиум" = "chromium"
+    "юайуикс" = "UI/UX"
+
     [output]
     mode = "paste"
     paste_keys = "ctrl+shift+v"
