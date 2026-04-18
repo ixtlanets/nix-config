@@ -458,7 +458,6 @@ in
     opencode = {
       enable = true;
       commands = ../../dotfiles/opencode/commands;
-      skills = ../../dotfiles/opencode/skills;
     };
   };
 
