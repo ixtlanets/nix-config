@@ -164,7 +164,7 @@ in
       ProgramArguments = [
         "/opt/homebrew/bin/llama-server"
         "-hf"
-        "HauhauCS/Qwen3.5-35B-A3B-Uncensored-HauhauCS-Aggressive"
+        "HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive"
         "--host"
         "0.0.0.0"
         "--port"
