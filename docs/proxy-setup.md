@@ -9,46 +9,36 @@ London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenla
   ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
   │ NixOS client                        │   │ macOS client (m1max)                │
   │ (zenbook/x13/x1carbon/um960pro)     │   │                                     │
-  │                                     │   │ sing-box GUI (TUN mode, auto_route) │
-  │ sing-box (TUN mode, auto_route)     │   │   ├─ UDP 443 ────────────► block    │
-  │   ├─ private / Russian IPs ► direct │   │   ├─ private / Russian IPs ► direct │
-  │   ├─ google.com / elevenlabs.io ─► london │   │   └─ everything else ──► proxy      │
-  │   └─ everything else ─────► proxy   │   └──────────────────┬──────────────────┘
-  └──────────┬──────────────┬───────────┘                      │ VLESS+Reality
-             │ VLESS+Reality │ SOCKS5 over                     │ port 443
-             │ port 443      │ Tailscale                        ▼
-             │               │                    ┌─────────────────────┐
-             │               │                    │ Frankfurt            │
-             │               │                    │ wire.nikcode.xyz     │
-             ▼               │                    │ 31.58.85.163         │
-  ┌─────────────────────┐    │                    │                      │
-  │ Frankfurt            │    │                    │ sing-box in Docker  │
-  │ wire.nikcode.xyz     │    │                    │   ├─ geosite-google  │
-  │ 31.58.85.163         │    │                    │   │   UDP 443 ► block│
-  │                      │    │                    │   ├─ geosite-google  │
-  │ sing-box in Docker   │    │                    │   │   TCP ──► london │
-  │ (reality-ezpz)       │    │                    │   ├─ elevenlabs.io  │
-  │                      │    │                    │   │   UDP 443 ► block│
-  │                      │    │                    │   ├─ elevenlabs.io  │
-  │                      │    │                    │   │   TCP ──► london │
-  │                      │    │                    │   └─ else ──► direct│
-  └──────────┬───────────┘    │                    └──────────┬──────────┘
-             │                │                               │ SOCKS5
-             │                │                               │ port 1080
-             │                ▼                               │ (public)
-             │     ┌────────────────────┐                     │
-             │     │ London             │◄────────────────────┘
-             │     │ 132.145.52.74      │
-             │     │ 100.119.182.9      │
-             │     │ (tailscale)        │
-             │     │                    │
-             │     │ microsocks         │
-             │     │ port 1080          │
-             │     └────────┬───────────┘
-             │               │
-             └───────────────┤
-                             ▼
-                        internet
+  │ sing-box (TUN mode, auto_route)     │   │ sing-box GUI (TUN mode, auto_route) │
+  │   ├─ private / Russian IPs ► direct │   │   ├─ UDP 443 ────────────► block    │
+  │   ├─ google.com / elevenlabs.io ─► london │   │   ├─ private / Russian IPs ► direct │
+  │   └─ everything else ─────► proxy   │   │   └─ everything else ──► proxy      │
+  └──────────┬──────────────┬───────────┘   └──────────────────┬──────────────────┘
+             │ VLESS+Reality │ SOCKS5 over                      │ VLESS+Reality
+             │ port 443      │ Tailscale                        │ port 443
+             │               │                                  │
+             ▼               │                                  │
+   ┌────────────────────────────────────────────────────────────────────────────┐
+   │ Frankfurt: wire.nikcode.xyz / 31.58.85.163                                 │
+   │ sing-box in Docker (reality-ezpz)                                           │
+   │   ├─ geosite-google UDP 443 ───────────────► block                          │
+   │   ├─ geosite-google TCP ───────────────────► london                         │
+   │   ├─ elevenlabs.io UDP 443 ────────────────► block                          │
+   │   ├─ elevenlabs.io TCP ────────────────────► london                         │
+   │   └─ everything else ──────────────────────► direct                         │
+   └───────────────────────────────┬──────────────────────────────┬──────────────┘
+                                   │                              │ SOCKS5 port 1080
+                                   │                              │ (public)
+                                   ▼                              │
+                      ┌────────────────────┐                      │
+                      │ London             │◄─────────────────────┘
+                      │ 132.145.52.74      │
+                      │ 100.119.182.9      │
+                      │ microsocks :1080   │
+                      └─────────┬──────────┘
+                                │
+                                ▼
+                             internet
 ```
 
 All machines (NixOS clients, Frankfurt, London) are on the same Tailscale network (`tailf108.ts.net`).
@@ -131,7 +121,7 @@ services.vless = {
 - Google and ElevenLabs routing are handled at Frankfurt, not on the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
 - No Tailscale dependency — London is reached via Frankfurt over the public internet
-- Uses older sing-box config syntax (no `type` field on DNS servers, no `domain_resolver` on outbounds) to match the GUI app's bundled sing-box version
+- Keep config syntax aligned with the sing-box version bundled in the GUI app; older app builds may reject newer config fields
 
 **macOS + Tailscale conflict**: macOS only allows one active VPN Network Extension at a time.
 sing-box GUI and Tailscale.app both use Network Extensions and cannot run simultaneously.
@@ -148,10 +138,26 @@ installer that creates a Docker Compose stack running `sing-box` as a VLESS+Real
 
 **Config location**: `/opt/reality-ezpz/`
 
+**Current status note (2026-04-22)**: the Frankfurt server was upgraded from
+`sing-box 1.8.14` to `1.13.5` after users across multiple ISPs and OSes reported VLESS
+failures. Keeping the same REALITY identity (`private_key`, `short_id`, UUIDs,
+`server_name`) and upgrading the server restored connectivity for at least one previously
+failing client (`zenbook`). Treat server/core version skew as first suspect if a broad
+multi-client outage happens again.
+
 Key files:
 - `config` — reality-ezpz parameters (actual secret values live on the Frankfurt host in `/opt/reality-ezpz/config`)
 - `engine.conf` — sing-box JSON config. **Manually maintained** — `./realityez -m` rewrites this file from reality-ezpz templates and user list, which drops the manually added London routing rules.
 - `docker-compose.yml` — Docker Compose stack definition
+
+**Manual compatibility changes currently present**:
+- `docker-compose.yml` sets `ENABLE_DEPRECATED_LEGACY_DNS_SERVERS="true"`
+- `docker-compose.yml` sets `ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER="true"`
+- `engine.conf` had deprecated inbound fields removed from the VLESS inbound so `sing-box 1.13.5` would start:
+  `sniff`, `sniff_override_destination`, `domain_strategy`
+
+These compatibility env vars are temporary migration aids for the old reality-ezpz-generated
+config. If the config is fully migrated to modern sing-box syntax later, remove them.
 
 **Manually added to `engine.conf`** (beyond what reality-ezpz generates):
 - Outbound `london`: SOCKS5 to `132.145.52.74:1080` with auth
@@ -162,8 +168,18 @@ Key files:
 - Rule: `domain_suffix: elevenlabs.io` + UDP 443 → `block-quic`
 - Rule: `domain_suffix: elevenlabs.io` → `london`
 
-To apply changes: `docker restart reality-ezpz-engine-1`
-Backup is at `/opt/reality-ezpz/engine.conf.bak`
+To apply config-only changes: `docker restart reality-ezpz-engine-1`
+
+To apply Compose/image/env changes:
+```bash
+cd /opt/reality-ezpz
+docker compose up -d --no-deps engine
+```
+
+Backups:
+- historical backup: `/opt/reality-ezpz/engine.conf.bak`
+- before 1.13.5 migration: `/opt/reality-ezpz/engine.conf.pre-1.13-fix-<timestamp>`
+- before compose edits: `/opt/reality-ezpz/docker-compose.yml.bak-<timestamp>`
 
 **Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` / `block-quic` / `geosite-google` / `elevenlabs.io` sections before restarting the container.
 
@@ -208,9 +224,26 @@ safenet=OFF
 warp=OFF
 ```
 
-**Docker container**: `gzxhwq/sing-box:1.8.14`, named `reality-ezpz-engine-1`
+**Docker container**: `gzxhwq/sing-box:1.13.5`, named `reality-ezpz-engine-1`
 - Listens on `0.0.0.0:443` (host) → container port `8443` (VLESS+Reality)
 - Listens on `0.0.0.0:80` (host) → container port `8080` (HTTP redirect / camouflage)
+
+**Upgrade caveat**: `1.13.x` is stricter than `1.8.x`. A straight image bump from
+`1.8.14` caused startup failures until deprecated config paths were handled. Typical symptoms:
+- `legacy DNS servers is deprecated`
+- `missing route.default_domain_resolver or domain_resolver in dial fields is deprecated`
+- `legacy inbound fields are deprecated ... and removed in sing-box 1.13.0`
+
+If the container restarts in a loop after upgrade, inspect with:
+```bash
+cd /opt/reality-ezpz
+docker logs --tail 100 reality-ezpz-engine-1
+docker run --rm \
+  -e ENABLE_DEPRECATED_LEGACY_DNS_SERVERS=true \
+  -e ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER=true \
+  -v /opt/reality-ezpz/engine.conf:/etc/sing-box/config.json \
+  gzxhwq/sing-box:1.13.5 check -c /etc/sing-box/config.json
+```
 
 **To recover from scratch**:
 ```bash
@@ -231,9 +264,49 @@ Also install Tailscale and join the tailnet (see Tailscale section below).
 (www.google.com) as camouflage, making the traffic indistinguishable from normal HTTPS to
 deep-packet-inspection systems.
 
-**Note**: the VLESS server runs inside Docker and does **not** have access to the host's
-Tailscale network. The container cannot reach `100.119.182.9` (London's Tailscale IP) — it
-connects to London via the public IP `132.145.52.74:1080` instead.
+## Troubleshooting notes
+
+### Broad VLESS outage checklist
+
+If multiple users on different ISPs and OSes report that VLESS stopped working, check in this order:
+
+1. Compare client and server sing-box versions first.
+2. Keep REALITY identity unchanged during diagnosis:
+   `private_key`, `public_key`, `short_id`, UUIDs, `server_name`.
+3. Correlate server and client logs for same client attempt.
+4. Only after version/config issues are ruled out, spend time on ISP/DPI theories.
+
+### Log patterns and likely meaning
+
+| Signal | Where | Usually means |
+|--------|-------|---------------|
+| `REALITY: processed invalid connection` | Frankfurt server | Server rejected handshake bytes; suspect client/server mismatch, stale profile, or network-path interference |
+| `reality verification failed` | Client | Client could connect to server socket but REALITY proof/handshake did not validate |
+| Both above at same time for same client | Both ends | Strong signal of handshake-level failure, not simple IP routing failure |
+| `i/o timeout` to `31.58.85.163:443` | Client | Packet path problem, reachability issue, or heavy filtering |
+
+### What 2026-04-22 incident taught
+
+Before server upgrade:
+- Frankfurt server: `sing-box 1.8.14`
+- zenbook client: `sing-box 1.13.5`
+- server logs: `REALITY: processed invalid connection`
+- client logs: `reality verification failed`
+- multiple users reported breakage
+
+After upgrading Frankfurt to `1.13.5` while keeping the same REALITY identity:
+- zenbook recovered without client config changes
+- this strongly suggests server version/config compatibility was at least a major part of the outage
+- nationwide VPN interference remained possible, but was no longer best first explanation
+
+### Future diagnosis workflow
+
+1. Check Frankfurt container status and logs.
+2. Confirm current sing-box image version on server.
+3. Compare one failing client's logs with server logs from same timestamp.
+4. If server is much older than clients, upgrade server before changing REALITY keys.
+5. After upgrade, retest one known failing client immediately.
+6. If failures persist across modern versions, then test alternate networks (home ISP vs hotspot) and only then escalate DPI/interference hypothesis.
 
 ### London — SOCKS5 relay
 
