@@ -138,6 +138,15 @@ installer that creates a Docker Compose stack running `sing-box` as a VLESS+Real
 
 **Config location**: `/opt/reality-ezpz/`
 
+**Encrypted disaster-recovery bundle**: `secrets/proxy/frankfurt/`
+- Store exact copies of live Frankfurt recovery files here:
+  - `secrets/proxy/frankfurt/config`
+  - `secrets/proxy/frankfurt/engine.conf`
+  - `secrets/proxy/frankfurt/docker-compose.yml`
+  - `secrets/proxy/frankfurt/users`
+- These paths are intended to hold the like-for-like recovery state for a replacement VPS while keeping secrets under git-crypt.
+- Status: populated from live Frankfurt host on `2026-04-22`.
+
 **Current status note (2026-04-22)**: the Frankfurt server was upgraded from
 `sing-box 1.8.14` to `1.13.5` after users across multiple ISPs and OSes reported VLESS
 failures. Keeping the same REALITY identity (`private_key`, `short_id`, UUIDs,
@@ -319,6 +328,11 @@ The actual SOCKS password is stored in the per-host client configs under
 `secrets/vless/<host>.json` and in the live unit on the London host at
 `/etc/systemd/system/microsocks.service`.
 
+**Encrypted disaster-recovery bundle**: `secrets/proxy/london/`
+- Store the current `microsocks.service` unit here.
+- Store any firewall/security-list notes that are required for rebuild in `notes.md`.
+- Status: populated from live London host on `2026-04-22`.
+
 **`/etc/systemd/system/microsocks.service`**:
 ```ini
 [Unit]
@@ -384,6 +398,13 @@ curl -fsSL https://tailscale.com/install.sh | sh
 # Join
 sudo tailscale up --authkey <reusable-auth-key-from-admin-console>
 ```
+
+If provider-specific DNS cutover notes or tokens are needed for recovery, store them in the
+encrypted bundle under `secrets/proxy/dns/` rather than in this document.
+
+Current state:
+- `secrets/proxy/dns/wire.nikcode.xyz.md` contains current hostname/IP mapping and cutover requirements.
+- DNS provider-specific control-plane details still need to be filled in manually because they cannot be recovered from the VPS hosts.
 
 ## Design decisions
 
