@@ -3,3 +3,4 @@ secrets/gpg/** filter=git-crypt diff=git-crypt
 secrets/ssh/** filter=git-crypt diff=git-crypt
 secrets/syncthing/** filter=git-crypt diff=git-crypt
 secrets/vless/** filter=git-crypt diff=git-crypt
+secrets/proxy/** filter=git-crypt diff=git-crypt

@@ -118,8 +118,10 @@ Available Darwin hosts: `m1max`, `i9mac`.
 
 Secrets are managed with git-crypt. To unlock: `git-crypt unlock` (requires GPG key).
 
+Encrypted paths currently include `secrets/gpg/**`, `secrets/ssh/**`, `secrets/syncthing/**`,
+`secrets/vless/**`, and `secrets/proxy/**`.
+
 ## Contributing
 
 - Commit messages: Concise, present tense (e.g., `[x1carbon] add package`).
 - PRs: Include summary, affected hosts, and test commands.
-
