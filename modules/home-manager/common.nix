@@ -193,6 +193,7 @@ in
     git = {
       enable = true;
       lfs.enable = true;
+      signing.format = "openpgp";
       settings = {
         user.email = "snikulin@gmail.com";
         user.name = "Sergey Nikulin";
