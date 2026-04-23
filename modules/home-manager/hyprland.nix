@@ -363,6 +363,8 @@ in
     );
   };
 
+  catppuccin.hyprlock.useDefaultConfig = false;
+
   programs.hyprlock = {
     enable = true;
     settings = {
@@ -388,11 +390,6 @@ in
     SDL_VIDEODRIVER = "wayland"; # SDL2 Wayland
     XDG_SESSION_TYPE = "wayland"; # Usually set by display manager/login
     ELECTRON_OZONE_PLATFORM_HINT = "auto"; # Let Electron auto-detect Wayland
-    # NVIDIA PRIME Offload environment variables
-    __NV_PRIME_RENDER_OFFLOAD = "1";
-    __NV_PRIME_RENDER_OFFLOAD_PROVIDER = "NVIDIA-G0";
-    __GLX_VENDOR_LIBRARY_NAME = "nvidia";
-    __VK_LAYER_NV_optimus = "NVIDIA_only";
   };
 
   # Services
