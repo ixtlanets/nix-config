@@ -70,6 +70,16 @@ let
         ;;
     esac
   '';
+  hyprlock-caps-lock = pkgs.writeShellScriptBin "hyprlock-caps-lock" ''
+    set -euo pipefail
+
+    devices="$(${pkgs.hyprland}/bin/hyprctl -j devices 2>/dev/null || true)"
+    [ -n "$devices" ] || exit 0
+
+    if printf '%s' "$devices" | ${pkgs.jq}/bin/jq -e '(.keyboards // []) | any(.capsLock == true)' >/dev/null; then
+      printf "CAPS LOCK\n"
+    fi
+  '';
   hypr-lid-apply = pkgs.writeShellScriptBin "hypr-lid-apply" ''
     set -euo pipefail
 
@@ -385,6 +395,66 @@ in
       };
       background = {
         color = "rgba(25, 20, 50, 1.0)";
+      };
+
+      label = [
+        {
+          text = "cmd[update:1000] date +%H:%M";
+          color = "rgba(205, 214, 244, 1.0)";
+          font_size = 96;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, 120";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "cmd[update:60000] date '+%A, %d %B'";
+          color = "rgba(186, 194, 222, 1.0)";
+          font_size = 20;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, 45";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "$LAYOUT";
+          color = "rgba(137, 180, 250, 1.0)";
+          font_size = 14;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, -105";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "cmd[update:250] ${hyprlock-caps-lock}/bin/hyprlock-caps-lock";
+          color = "rgba(250, 179, 135, 1.0)";
+          font_size = 16;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, -140";
+          halign = "center";
+          valign = "center";
+        }
+      ];
+
+      input-field = {
+        size = "360, 60";
+        outline_thickness = 2;
+        dots_size = 0.25;
+        dots_spacing = 0.3;
+        dots_center = true;
+        outer_color = "rgba(137, 180, 250, 0.8)";
+        inner_color = "rgba(30, 30, 46, 0.85)";
+        font_color = "rgba(205, 214, 244, 1.0)";
+        fade_on_empty = false;
+        placeholder_text = "<i>Password</i>";
+        hide_input = false;
+        check_color = "rgba(249, 226, 175, 1.0)";
+        fail_color = "rgba(243, 139, 168, 1.0)";
+        fail_text = "<i>Authentication failed</i>";
+        capslock_color = "rgba(250, 179, 135, 1.0)";
+        position = "0, -55";
+        halign = "center";
+        valign = "center";
       };
     };
   };
