@@ -1,8 +1,7 @@
-{
-  pkgs,
-  lib,
-  dpi,
-  ...
+{ pkgs
+, lib
+, dpi
+, ...
 }:
 let
   DPI = builtins.toString dpi;
@@ -101,6 +100,15 @@ let
       return 1
     }
 
+    start_release_timer() {
+      if $systemctl_bin --user is-active --quiet "$release_timer_unit"; then
+        return 0
+      fi
+
+      $systemctl_bin --user reset-failed "$release_timer_unit" >/dev/null 2>&1 || true
+      $systemctl_bin --user start "$release_timer_unit" >/dev/null 2>&1 || true
+    }
+
     monitors_json="$($hyprctl_bin -j monitors all)"
     detected_internal="$({ printf '%s' "$monitors_json" | $jq_bin -r 'map(select(.name | test("^eDP"))) | if length > 0 then .[0].name else empty end'; } || true)"
 
@@ -134,11 +142,13 @@ let
     fi
 
     if [ "$external_count" -gt 0 ]; then
-      $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      if ! lid_closed; then
+        $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      fi
       $systemctl_bin --user start "$inhibitor_unit" >/dev/null 2>&1 || true
     elif lid_closed; then
       if $systemctl_bin --user is-active --quiet "$inhibitor_unit"; then
-        $systemctl_bin --user restart "$release_timer_unit" >/dev/null 2>&1 || true
+        start_release_timer
       fi
     else
       $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
@@ -345,20 +355,21 @@ in
       # workspaces
       # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
       builtins.concatLists (
-        builtins.genList (
-          x:
-          let
-            ws =
-              let
-                c = (x + 1) / 10;
-              in
-              builtins.toString (x + 1 - (c * 10));
-          in
-          [
-            "$mod, ${ws}, workspace, ${toString (x + 1)}"
-            "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-          ]
-        ) 10
+        builtins.genList
+          (
+            x:
+            let
+              ws =
+                let
+                  c = (x + 1) / 10;
+                in
+                builtins.toString (x + 1 - (c * 10));
+            in
+            [
+              "$mod, ${ws}, workspace, ${toString (x + 1)}"
+              "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
+            ]
+          ) 10
       )
     );
   };
@@ -477,19 +488,60 @@ in
 
   systemd.user.services.hypr-lid-docked-inhibitor = {
     Unit.Description = "Ignore lid sleep while docked";
-    Service.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch:sleep --why=External-monitor-connected ${pkgs.coreutils}/bin/sleep infinity";
+    Service.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch --why=External-monitor-connected ${pkgs.coreutils}/bin/sleep infinity";
   };
 
   systemd.user.services.hypr-lid-docked-inhibitor-release = {
     Unit.Description = "Release docked lid inhibitor";
     Service = {
       Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl --user stop hypr-lid-docked-inhibitor.service";
+      ExecStart = pkgs.writeShellScript "hypr-lid-docked-inhibitor-release" ''
+        set -euo pipefail
+
+        external_count=0
+
+        for status_file in /sys/class/drm/*/status; do
+          [ -r "$status_file" ] || continue
+
+          connector="''${status_file%/status}"
+          connector="''${connector##*/}"
+
+          case "$connector" in
+            *-eDP-*|*-eDP)
+              continue
+              ;;
+          esac
+
+          if [ "$(<"$status_file")" = "connected" ]; then
+            external_count=$((external_count + 1))
+          fi
+        done
+
+        if [ "$external_count" -gt 0 ]; then
+          exit 0
+        fi
+
+        ${pkgs.systemd}/bin/systemctl --user stop hypr-lid-docked-inhibitor.service
+
+        for state_file in /proc/acpi/button/lid/*/state; do
+          [ -r "$state_file" ] || continue
+
+          case "$(${pkgs.coreutils}/bin/tr '[:upper:]' '[:lower:]' < "$state_file")" in
+            *closed*)
+              ${pkgs.systemd}/bin/systemctl suspend || true
+              exit 0
+              ;;
+          esac
+        done
+      '';
     };
   };
 
   systemd.user.timers.hypr-lid-docked-inhibitor-release = {
-    Unit.Description = "Grace period before lid sleep resumes";
+    Unit = {
+      Description = "Grace period before lid sleep resumes";
+      StartLimitIntervalSec = 0;
+    };
     Timer = {
       AccuracySec = "1s";
       OnActiveSec = "15s";
