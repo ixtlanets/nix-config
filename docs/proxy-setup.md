@@ -92,6 +92,9 @@ Managed by this repo. Affected hosts: `zenbook`, `x13`, `x1carbon`, `um960pro`.
 - Outbound `proxy`: VLESS+Reality to Frankfurt
 - Outbound `london`: SOCKS5 to `100.119.182.9:1080`, `bind_interface: tailscale0`
 - Outbound `direct`: plain direct connection
+- System DNS is pinned to local `dnsmasq` on `127.0.0.1`; `dnsmasq` filters public AAAA
+  answers and forwards `*.tailf108.ts.net` to Tailscale DNS (`100.100.100.100`) so MagicDNS
+  continues to work.
 
 **Key config detail — `bind_interface: tailscale0` on the `london` outbound**:
 sing-box uses `auto_detect_interface: true`, which binds all outbound sockets to the default
@@ -101,6 +104,20 @@ time out. With it, sing-box explicitly uses the Tailscale interface for this out
 
 **Consequence**: the `london` outbound silently fails (per-connection error, not a service
 crash) when Tailscale is not running. All other traffic continues to work via VLESS.
+
+**IPv6 policy**: NixOS VLESS clients are intentionally IPv4-only for public traffic. Kernel IPv6
+stays enabled for local/Tailscale needs, but public AAAA answers are filtered before applications
+see them. This avoids failures where glibc picks an IPv6 result while the host has no usable
+public IPv6 default route. Tailscale DNS injection is disabled with `--accept-dns=false`; MagicDNS
+is preserved by split DNS in local `dnsmasq`.
+
+**IPv6/DNS diagnostics**:
+```bash
+getent ahosts youtube.com          # should return IPv4 only
+ping youtube.com                   # should pick IPv4
+ping -6 youtube.com                # expected to fail without public IPv6
+getent ahosts london.tailf108.ts.net # should resolve via MagicDNS
+```
 
 **NixOS host config snippet** (same for all four hosts):
 ```nix
