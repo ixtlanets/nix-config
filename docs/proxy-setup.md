@@ -154,6 +154,14 @@ failures. Keeping the same REALITY identity (`private_key`, `short_id`, UUIDs,
 failing client (`zenbook`). Treat server/core version skew as first suspect if a broad
 multi-client outage happens again.
 
+**Current status note (2026-04-26)**: running `./realityez` on Frankfurt regenerated
+`engine.conf` and `docker-compose.yml`, which reintroduced removed legacy inbound fields,
+dropped the London routing rules, and reverted the compose image/env settings. The container
+then restarted under `sing-box 1.13.5` with:
+`decode config at config.json: inbounds[1]: legacy inbound fields are deprecated ... removed in sing-box 1.13.0`.
+Recovery was to remove those inbound fields again, restore London routing, restore compose to
+`gzxhwq/sing-box:1.13.5`, and force-recreate the container.
+
 Key files:
 - `config` — reality-ezpz parameters (actual secret values live on the Frankfurt host in `/opt/reality-ezpz/config`)
 - `engine.conf` — sing-box JSON config. **Manually maintained** — `./realityez -m` rewrites this file from reality-ezpz templates and user list, which drops the manually added London routing rules.
@@ -162,6 +170,9 @@ Key files:
 **Manual compatibility changes currently present**:
 - `docker-compose.yml` sets `ENABLE_DEPRECATED_LEGACY_DNS_SERVERS="true"`
 - `docker-compose.yml` sets `ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER="true"`
+- `docker-compose.yml` runs `sing-box run -c /config.json` and mounts `./engine.conf` at
+  `/config.json`; the image creates an anonymous volume at `/etc/sing-box`, which can mask
+  `/etc/sing-box/config.json` if the config is mounted there
 - `engine.conf` had deprecated inbound fields removed from the VLESS inbound so `sing-box 1.13.5` would start:
   `sniff`, `sniff_override_destination`, `domain_strategy`
 
@@ -179,10 +190,10 @@ config. If the config is fully migrated to modern sing-box syntax later, remove 
 
 To apply config-only changes: `docker restart reality-ezpz-engine-1`
 
-To apply Compose/image/env changes:
+To apply Compose/image/env/command changes:
 ```bash
 cd /opt/reality-ezpz
-docker compose up -d --no-deps engine
+docker compose up -d --force-recreate --no-deps engine
 ```
 
 Backups:
