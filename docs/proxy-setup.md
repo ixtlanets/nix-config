@@ -175,6 +175,7 @@ Key files:
   `/etc/sing-box/config.json` if the config is mounted there
 - `engine.conf` had deprecated inbound fields removed from the VLESS inbound so `sing-box 1.13.5` would start:
   `sniff`, `sniff_override_destination`, `domain_strategy`
+- `engine.conf` now restores sniffing with a route action (`{ "action": "sniff", "timeout": "1s" }`) because domain routing rules no longer match after removing the legacy inbound `sniff` field
 
 These compatibility env vars are temporary migration aids for the old reality-ezpz-generated
 config. If the config is fully migrated to modern sing-box syntax later, remove them.
@@ -183,9 +184,12 @@ config. If the config is fully migrated to modern sing-box syntax later, remove 
 - Outbound `london`: SOCKS5 to `132.145.52.74:1080` with auth
 - Outbound `block-quic`: block type
 - Rule set `geosite-google` from SagerNet/sing-geosite
+- Rule: `action: sniff` before domain/rule-set routing, replacing the removed legacy inbound `sniff` field
 - Rule: `geosite-google` + UDP 443 → `block-quic`
+- Rule: `geosite-google` + TCP + IPv6 → `block` (London SOCKS rejects IPv6 targets; this forces client IPv4 fallback)
 - Rule: `geosite-google` → `london`
 - Rule: `domain_suffix: elevenlabs.io` + UDP 443 → `block-quic`
+- Rule: `domain_suffix: elevenlabs.io` + TCP + IPv6 → `block` (same IPv4 fallback reason)
 - Rule: `domain_suffix: elevenlabs.io` → `london`
 
 To apply config-only changes: `docker restart reality-ezpz-engine-1`
