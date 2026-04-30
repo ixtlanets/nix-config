@@ -71,8 +71,10 @@ Google and ElevenLabs traffic are routed to London at the Frankfurt level (see F
 | Traffic | Outbound | Path |
 |---------|----------|------|
 | `geosite-google` UDP 443 | `block-quic` | Dropped |
+| `geosite-google` IPv6 TCP | `internet` | Direct from Frankfurt; London SOCKS has no public IPv6 |
 | `geosite-google` TCP | `london` | London microsocks → internet |
 | `*.elevenlabs.io` / `elevenlabs.io` UDP 443 | `block-quic` | Dropped |
+| `*.elevenlabs.io` / `elevenlabs.io` IPv6 TCP | `internet` | Direct from Frankfurt; London SOCKS has no public IPv6 |
 | `*.elevenlabs.io` / `elevenlabs.io` TCP | `london` | London microsocks → internet |
 | Everything else | `internet` | Direct → internet |
 
