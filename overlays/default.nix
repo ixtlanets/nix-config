@@ -27,8 +27,9 @@
     else
       prev.mailutils;
     codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.77.0";
+      version = "0.125.0";
       buildType = "simple";
+      patchPhase = ":";
       cargoSetupPostPatchHook = ":";
       nativeBuildInputs = [
         prev.zstd
@@ -38,22 +39,22 @@
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-            sha256 = "sha256:95239c16fc26e7a5dae01828370e6cbc62feb991c4502a4c7f7226d721187556";
+            sha256 = "sha256:6b3a751d554197f163a57a440aba86aa4960a1457802a3efaa81e00dca9df6db";
           }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-            sha256 = "sha256:583565a88d3fbb288288662e35663d217285bcafbaf8149545348e7f0fecea31";
+            sha256 = "sha256:30dd06c3d9b86785100ad78c9d468b60dee11968eee8c5dfdbf72a3c7d5457b5";
           }
         else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
-            sha256 = "sha256:4dd08f45e1f980bd3ca57e6b6398eaaa66a16f05d5bbb9cadb8ea693b4c9d2f1";
+            sha256 = "sha256:1e93c0cb1f07dcc08da8982bfc4393453a6327328f9ba8cbef52821c69bc1649";
           }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl {
             url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-            sha256 = "sha256:020b5445eece807277dbe638669558fef4babfba009f82314e5fa575e8761143";
+            sha256 = "sha256:41703b1ae133ddd15d9491b21a2cefdbb248b5fffd6322e835f0b846b6f577ba";
           }
         else
           throw "Unsupported system for codex";
