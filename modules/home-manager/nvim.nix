@@ -47,6 +47,7 @@
       withNodeJs = true;
       withRuby = true;
       withPython3 = true;
+      sideloadInitLua = true;
     };
   };
 }
