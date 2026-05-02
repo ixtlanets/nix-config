@@ -90,7 +90,6 @@ in
         { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
         { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
         { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
-        { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
         { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
         { id = "enboaomnljigfhfjfoalacienlhjlfil"; } # Untrap - Remove YouTube Suggestions
         { id = "hipekcciheckooncpjeljhnekcoolahp"; } # Tabliss - A Beautiful New Tab
