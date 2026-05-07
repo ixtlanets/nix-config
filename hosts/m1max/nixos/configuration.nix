@@ -171,6 +171,10 @@ in
         "8080"
         "--flash-attn"
         "on"
+        "--reasoning"
+        "off"
+        "--chat-template-kwargs"
+        ''{"enable_thinking": false}''
       ];
       RunAtLoad = true;
       StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
