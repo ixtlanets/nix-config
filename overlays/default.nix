@@ -20,12 +20,13 @@
     # nss_wrapper is Linux-only and its store path is referenced in mailutils' preCheck hook.
     # Nix tracks all store paths in derivation attrs, so even with doCheck=false it tries to build it.
     # Clear preCheck on Darwin to drop the reference entirely.
-    mailutils = if prev.stdenv.isDarwin then
-      prev.mailutils.overrideAttrs (_old: {
-        preCheck = "";
-      })
-    else
-      prev.mailutils;
+    mailutils =
+      if prev.stdenv.isDarwin then
+        prev.mailutils.overrideAttrs (_old: {
+          preCheck = "";
+        })
+      else
+        prev.mailutils;
     codex = prev.codex.overrideAttrs (old: rec {
       version = "0.128.0";
       buildType = "simple";
@@ -61,6 +62,14 @@
       dontUnpack = true;
       installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
     });
+    # direnv 2.37.1 checkPhase hangs on Darwin while running shell export tests.
+    direnv =
+      if prev.stdenv.isDarwin then
+        prev.direnv.overrideAttrs (_old: {
+          doCheck = false;
+        })
+      else
+        prev.direnv;
     # Ensure the client understands GSSAPI directives in system ssh_config (e.g., WSL).
     openssh =
       if prev.stdenv.isLinux then
