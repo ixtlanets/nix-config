@@ -1,3 +1,6 @@
 result
 .cache/
+.codex
 firebase-debug.log
+__pycache__/
+*.py[cod]

@@ -1068,6 +1068,99 @@ EOF
   chmod +x "$yt_path"
 }
 
+install_handy_paste_script() {
+  local bin_dir="${HOME}/.local/bin"
+  mkdir -p "$bin_dir"
+  local paste_path="${bin_dir}/handy-paste"
+  log "writing ${paste_path}"
+  cat <<'EOF' >"$paste_path"
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Handy captures helper stdout/stderr. wl-copy daemonizes and can inherit those
+# pipes, causing Handy to wait until the clipboard owner exits.
+exec >/dev/null 2>&1
+
+text=${1-}
+
+if [[ -z "${text}" ]]; then
+  exit 0
+fi
+
+run_with_timeout() {
+  timeout --kill-after=1s 2s "$@"
+}
+
+if ! command -v wl-copy >/dev/null 2>&1; then
+  notify-send -a Handy "Handy paste failed" "wl-copy is not installed" 2>/dev/null || true
+  exit 1
+fi
+
+if ! printf '%s' "$text" | run_with_timeout wl-copy --type text/plain; then
+  notify-send -a Handy "Handy paste failed" "wl-copy timed out or failed" 2>/dev/null || true
+  exit 1
+fi
+
+sleep 0.12
+
+if command -v ydotool >/dev/null 2>&1; then
+  # Ctrl+Shift+V matches the Voxtype config and works in terminal-like apps.
+  run_with_timeout ydotool key 29:1 42:1 47:1 47:0 42:0 29:0
+elif command -v wtype >/dev/null 2>&1; then
+  notify-send -a Handy "Handy paste warning" "Install ydotool for reliable paste; falling back to wtype" 2>/dev/null || true
+  run_with_timeout wtype -M ctrl -M shift -k v
+else
+  notify-send -a Handy "Handy paste failed" "Install ydotool or wtype" 2>/dev/null || true
+  exit 1
+fi
+EOF
+  chmod +x "$paste_path"
+}
+
+configure_handy_settings() {
+  local settings_path="${HOME}/.local/share/com.pais.handy/settings_store.json"
+  local paste_path="${HOME}/.local/bin/handy-paste"
+
+  if [[ ! -f "$settings_path" ]]; then
+    log "Handy settings not found at ${settings_path}; start Handy once, then rerun install.sh"
+    return
+  fi
+
+  if ! command -v jq >/dev/null 2>&1; then
+    log "jq not found; skipping Handy settings migration"
+    return
+  fi
+
+  local tmp
+  tmp="$(mktemp)"
+  jq --arg paste_path "$paste_path" '
+    .settings.keyboard_implementation = "handy_keys"
+    | .settings.push_to_talk = true
+    | .settings.bindings.transcribe.current_binding = "alt_right"
+    | .settings.paste_method = "external_script"
+    | .settings.external_script_path = $paste_path
+    | .settings.paste_delay_ms = 120
+    | .settings.typing_tool = "wtype"
+  ' "$settings_path" >"$tmp"
+  install -m644 "$tmp" "$settings_path"
+  rm -f "$tmp"
+}
+
+enable_ydotool_service() {
+  if ! command -v ydotoold >/dev/null 2>&1; then
+    log "ydotoold not found; skipping ydotool user service"
+    return
+  fi
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    log "systemctl not found; skipping ydotool user service"
+    return
+  fi
+
+  log "enabling and starting ydotool user service"
+  systemctl --user enable --now ydotool.service || log "warning: failed to start ydotool user service"
+}
+
 write_vpn_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1333,7 +1426,10 @@ main() {
     yt-dlp
     zoom
     obsidian
+    handy
     wl-clipboard
+    wtype
+    ydotool
     libreoffice-fresh
     antigravity-bin
     neovim
@@ -1409,6 +1505,9 @@ main() {
   write_yt_dlp_config
   install_yp_script
   install_yt_script
+  install_handy_paste_script
+  configure_handy_settings
+  enable_ydotool_service
   configure_kde_shortcuts
   configure_kde_cursor
   configure_kde_input

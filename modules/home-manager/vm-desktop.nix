@@ -78,7 +78,6 @@ in
         { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
         { id = "mbmgnelfcpoecdepckhlhegpcehmpmji"; } # SponsorBlock for YouTube - Skip Sponsorships
         { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
-        { id = "gebbhagfogifgggkldgodflihgfeippi"; } # Return YouTube Dislike
         { id = "naepdomgkenhinolocfifgehidddafch"; } # Browserpass
         { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
         { id = "fcphghnknhkimeagdglkljinmpbagone"; } # YouTube AutoHD. preselect video resolution

@@ -1,8 +1,7 @@
-{
-  lib,
-  pkgs,
-  config,
-  ...
+{ lib
+, pkgs
+, config
+, ...
 }:
 let
   inherit (lib)
@@ -233,6 +232,12 @@ in
       default = false;
       description = "Whether to start the VLESS tunnel automatically at boot.";
     };
+
+    tailnetDomain = mkOption {
+      type = types.str;
+      default = "tailf108.ts.net";
+      description = "Tailscale MagicDNS domain that should keep resolving via Tailscale DNS.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -304,6 +309,38 @@ in
         ];
       }
     ];
+
+    networking.search = [ cfg.tailnetDomain ];
+
+    services.dnsmasq = {
+      enable = true;
+      settings = {
+        no-resolv = true;
+        filter-AAAA = true;
+        listen-address = [ "127.0.0.1" ];
+        server = [
+          "/${cfg.tailnetDomain}/100.100.100.100"
+          "1.1.1.1"
+          "8.8.8.8"
+        ];
+      };
+    };
+
+    services.tailscale.extraUpFlags = [ "--accept-dns=false" ];
+
+    systemd.services."${serviceName}-tailscale-dns" = mkIf config.services.tailscale.enable {
+      description = "Disable Tailscale system DNS for VLESS";
+      wants = [ "tailscaled.service" ];
+      after = [ "tailscaled.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.tailscale}/bin/tailscale set --accept-dns=false";
+        RemainAfterExit = true;
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
+    };
 
     systemd.services.${serviceName} = {
       description = "VLESS tunnel via sing-box";

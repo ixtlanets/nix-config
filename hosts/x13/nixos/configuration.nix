@@ -2,11 +2,10 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{
-  pkgs,
-  lib,
-  outputs,
-  ...
+{ pkgs
+, lib
+, outputs
+, ...
 }:
 
 {
@@ -41,7 +40,6 @@
   services = {
     asusd = {
       enable = true;
-      enableUserService = true;
     };
 
     supergfxd.enable = true;
@@ -68,7 +66,7 @@
       enable = true;
       extraPackages = with pkgs; [
         intel-media-driver
-        vaapiVdpau
+        libva-vdpau-driver
         libvdpau-va-gl
       ];
     };

@@ -1,8 +1,7 @@
-{
-  pkgs,
-  lib,
-  dpi,
-  ...
+{ pkgs
+, lib
+, dpi
+, ...
 }:
 let
   DPI = builtins.toString dpi;
@@ -71,6 +70,16 @@ let
         ;;
     esac
   '';
+  hyprlock-caps-lock = pkgs.writeShellScriptBin "hyprlock-caps-lock" ''
+    set -euo pipefail
+
+    devices="$(${pkgs.hyprland}/bin/hyprctl -j devices 2>/dev/null || true)"
+    [ -n "$devices" ] || exit 0
+
+    if printf '%s' "$devices" | ${pkgs.jq}/bin/jq -e '(.keyboards // []) | any(.capsLock == true)' >/dev/null; then
+      printf "CAPS LOCK\n"
+    fi
+  '';
   hypr-lid-apply = pkgs.writeShellScriptBin "hypr-lid-apply" ''
     set -euo pipefail
 
@@ -99,6 +108,15 @@ let
       done
 
       return 1
+    }
+
+    start_release_timer() {
+      if $systemctl_bin --user is-active --quiet "$release_timer_unit"; then
+        return 0
+      fi
+
+      $systemctl_bin --user reset-failed "$release_timer_unit" >/dev/null 2>&1 || true
+      $systemctl_bin --user start "$release_timer_unit" >/dev/null 2>&1 || true
     }
 
     monitors_json="$($hyprctl_bin -j monitors all)"
@@ -134,11 +152,13 @@ let
     fi
 
     if [ "$external_count" -gt 0 ]; then
-      $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      if ! lid_closed; then
+        $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
+      fi
       $systemctl_bin --user start "$inhibitor_unit" >/dev/null 2>&1 || true
     elif lid_closed; then
       if $systemctl_bin --user is-active --quiet "$inhibitor_unit"; then
-        $systemctl_bin --user restart "$release_timer_unit" >/dev/null 2>&1 || true
+        start_release_timer
       fi
     else
       $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
@@ -345,20 +365,21 @@ in
       # workspaces
       # binds $mod + [shift +] {1..10} to [move to] workspace {1..10}
       builtins.concatLists (
-        builtins.genList (
-          x:
-          let
-            ws =
-              let
-                c = (x + 1) / 10;
-              in
-              builtins.toString (x + 1 - (c * 10));
-          in
-          [
-            "$mod, ${ws}, workspace, ${toString (x + 1)}"
-            "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
-          ]
-        ) 10
+        builtins.genList
+          (
+            x:
+            let
+              ws =
+                let
+                  c = (x + 1) / 10;
+                in
+                builtins.toString (x + 1 - (c * 10));
+            in
+            [
+              "$mod, ${ws}, workspace, ${toString (x + 1)}"
+              "$mod SHIFT, ${ws}, movetoworkspace, ${toString (x + 1)}"
+            ]
+          ) 10
       )
     );
   };
@@ -374,6 +395,66 @@ in
       };
       background = {
         color = "rgba(25, 20, 50, 1.0)";
+      };
+
+      label = [
+        {
+          text = "cmd[update:1000] date +%H:%M";
+          color = "rgba(205, 214, 244, 1.0)";
+          font_size = 96;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, 120";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "cmd[update:60000] date '+%A, %d %B'";
+          color = "rgba(186, 194, 222, 1.0)";
+          font_size = 20;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, 45";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "$LAYOUT";
+          color = "rgba(137, 180, 250, 1.0)";
+          font_size = 14;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, -105";
+          halign = "center";
+          valign = "center";
+        }
+        {
+          text = "cmd[update:250] ${hyprlock-caps-lock}/bin/hyprlock-caps-lock";
+          color = "rgba(250, 179, 135, 1.0)";
+          font_size = 16;
+          font_family = "JetBrainsMono Nerd Font";
+          position = "0, -140";
+          halign = "center";
+          valign = "center";
+        }
+      ];
+
+      input-field = {
+        size = "360, 60";
+        outline_thickness = 2;
+        dots_size = 0.25;
+        dots_spacing = 0.3;
+        dots_center = true;
+        outer_color = "rgba(137, 180, 250, 0.8)";
+        inner_color = "rgba(30, 30, 46, 0.85)";
+        font_color = "rgba(205, 214, 244, 1.0)";
+        fade_on_empty = false;
+        placeholder_text = "<i>Password</i>";
+        hide_input = false;
+        check_color = "rgba(249, 226, 175, 1.0)";
+        fail_color = "rgba(243, 139, 168, 1.0)";
+        fail_text = "<i>Authentication failed</i>";
+        capslock_color = "rgba(250, 179, 135, 1.0)";
+        position = "0, -55";
+        halign = "center";
+        valign = "center";
       };
     };
   };
@@ -477,19 +558,60 @@ in
 
   systemd.user.services.hypr-lid-docked-inhibitor = {
     Unit.Description = "Ignore lid sleep while docked";
-    Service.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch:sleep --why=External-monitor-connected ${pkgs.coreutils}/bin/sleep infinity";
+    Service.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=handle-lid-switch --why=External-monitor-connected ${pkgs.coreutils}/bin/sleep infinity";
   };
 
   systemd.user.services.hypr-lid-docked-inhibitor-release = {
     Unit.Description = "Release docked lid inhibitor";
     Service = {
       Type = "oneshot";
-      ExecStart = "${pkgs.systemd}/bin/systemctl --user stop hypr-lid-docked-inhibitor.service";
+      ExecStart = pkgs.writeShellScript "hypr-lid-docked-inhibitor-release" ''
+        set -euo pipefail
+
+        external_count=0
+
+        for status_file in /sys/class/drm/*/status; do
+          [ -r "$status_file" ] || continue
+
+          connector="''${status_file%/status}"
+          connector="''${connector##*/}"
+
+          case "$connector" in
+            *-eDP-*|*-eDP)
+              continue
+              ;;
+          esac
+
+          if [ "$(<"$status_file")" = "connected" ]; then
+            external_count=$((external_count + 1))
+          fi
+        done
+
+        if [ "$external_count" -gt 0 ]; then
+          exit 0
+        fi
+
+        ${pkgs.systemd}/bin/systemctl --user stop hypr-lid-docked-inhibitor.service
+
+        for state_file in /proc/acpi/button/lid/*/state; do
+          [ -r "$state_file" ] || continue
+
+          case "$(${pkgs.coreutils}/bin/tr '[:upper:]' '[:lower:]' < "$state_file")" in
+            *closed*)
+              ${pkgs.systemd}/bin/systemctl suspend || true
+              exit 0
+              ;;
+          esac
+        done
+      '';
     };
   };
 
   systemd.user.timers.hypr-lid-docked-inhibitor-release = {
-    Unit.Description = "Grace period before lid sleep resumes";
+    Unit = {
+      Description = "Grace period before lid sleep resumes";
+      StartLimitIntervalSec = 0;
+    };
     Timer = {
       AccuracySec = "1s";
       OnActiveSec = "15s";

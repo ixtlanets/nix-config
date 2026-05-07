@@ -13,7 +13,6 @@ let
     "aeblfdkhhhdcdjpifhhbdiojplfjncoa" # 1Password
     "mnjggcdmjocbbbhaepdhchncahnbgone" # SponsorBlock for YouTube - Skip Sponsorships
     "kcpnkledgcbobhkgimpbmejgockkplob" # Tracking Token Stripper
-    "gebbhagfogifgggkldgodflihgfeippi" # Return YouTube Dislike
     "naepdomgkenhinolocfifgehidddafch" # Browserpass
     "enamippconapkdmgfgjchkhakpfinmaj" # DeArrow. dearrow.ajay.app
     "fcphghnknhkimeagdglkljinmpbagone" # YouTube AutoHD. preselect video resolution
