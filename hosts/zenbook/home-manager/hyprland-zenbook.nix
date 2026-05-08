@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ ... }:
 {
   home.sessionVariables = {
     HYPR_INTERNAL_MONITOR = "eDP-1";
@@ -7,6 +7,10 @@
   };
 
   wayland.windowManager.hyprland.settings = {
+    env = [
+      "GDK_BACKEND,wayland,x11,*"
+      "GDK_SCALE,2"
+    ];
     monitor = [
       "eDP-1,preferred,auto,2.0"
     ];

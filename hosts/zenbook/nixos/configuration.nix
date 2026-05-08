@@ -3,13 +3,15 @@
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
 {
-  config,
   pkgs,
   lib,
   dpi,
   outputs,
   ...
 }:
+let
+  steamScale = toString (dpi / 96.0);
+in
 {
   nix.settings.experimental-features = [
     "nix-command"
@@ -82,6 +84,9 @@
     enable = true;
     remotePlay.openFirewall = true;
     package = pkgs.steam.override {
+      extraEnv = {
+        STEAM_FORCE_DESKTOPUI_SCALING = steamScale;
+      };
       extraPkgs = pkgs: [
         pkgs.libglvnd
       ];
