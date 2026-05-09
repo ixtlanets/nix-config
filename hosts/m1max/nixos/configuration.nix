@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   inputs,
   ...
@@ -7,6 +6,65 @@
 
 let
   floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  convertChatgptImagesToJpg = pkgs.writeShellScript "convert-chatgpt-images-to-jpg" ''
+    set -u
+
+    downloads_dir="$HOME/Downloads"
+    log_file="$HOME/Library/Logs/convert-chatgpt-images-to-jpg.log"
+    now_epoch="$(/bin/date +%s)"
+    max_age_seconds=300
+
+    /bin/mkdir -p "$(/usr/bin/dirname "$log_file")"
+
+    log() {
+      printf '%s %s\n' "$(/bin/date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$log_file"
+    }
+
+    converted=0
+    skipped=0
+    failed=0
+
+    shopt -s nullglob
+    for png_path in "$downloads_dir"/ChatGPT\ Image*.png; do
+      jpg_path="''${png_path%.png}.jpg"
+
+      if [[ -e "$jpg_path" ]]; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+
+      created_epoch="$(/usr/bin/stat -f %B "$png_path" 2>/dev/null || printf '0')"
+      if [[ "$created_epoch" -le 0 ]]; then
+        skipped=$((skipped + 1))
+        log "skip: could not read creation time: $png_path"
+        continue
+      fi
+
+      age_seconds=$((now_epoch - created_epoch))
+      if [[ "$age_seconds" -lt 0 || "$age_seconds" -gt "$max_age_seconds" ]]; then
+        skipped=$((skipped + 1))
+        continue
+      fi
+
+      if /usr/bin/sips -s format jpeg -s formatOptions 90 "$png_path" --out "$jpg_path" >/dev/null 2>&1; then
+        if /bin/rm -- "$png_path"; then
+          converted=$((converted + 1))
+          log "converted: $png_path -> $jpg_path"
+        else
+          failed=$((failed + 1))
+          log "failed: converted but could not delete source: $png_path"
+        fi
+      else
+        failed=$((failed + 1))
+        /bin/rm -f -- "$jpg_path"
+        log "failed: sips conversion failed: $png_path"
+      fi
+    done
+
+    if [[ "$converted" -gt 0 || "$failed" -gt 0 ]]; then
+      log "summary: converted=$converted skipped=$skipped failed=$failed"
+    fi
+  '';
 in
 {
   nix.settings.experimental-features = [
@@ -171,11 +229,26 @@ in
         "8080"
         "--flash-attn"
         "on"
+        "--reasoning"
+        "off"
+        "--chat-template-kwargs"
+        ''{"enable_thinking": false}''
       ];
       RunAtLoad = true;
       StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
       StandardOutPath = "/Users/nik/Library/Logs/llama-server.log";
       WorkingDirectory = "/Users/nik";
+    };
+  };
+
+  launchd.user.agents.convert-chatgpt-images-to-jpg = {
+    serviceConfig = {
+      Label = "com.nik.convert-chatgpt-images-to-jpg";
+      ProgramArguments = [ "${convertChatgptImagesToJpg}" ];
+      RunAtLoad = true;
+      StandardErrorPath = "/Users/nik/Library/Logs/convert-chatgpt-images-to-jpg.launchd.err.log";
+      StandardOutPath = "/Users/nik/Library/Logs/convert-chatgpt-images-to-jpg.launchd.out.log";
+      WatchPaths = [ "/Users/nik/Downloads" ];
     };
   };
 
