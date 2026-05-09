@@ -284,7 +284,6 @@ in
     Unit.Description = "Watch for ChatGPT image downloads";
     Path = {
       PathChanged = "%h/Downloads";
-      PathExistsGlob = "%h/Downloads/ChatGPT Image*.png";
       Unit = "convert-chatgpt-images-to-jpg.service";
     };
     Install.WantedBy = [ "default.target" ];
