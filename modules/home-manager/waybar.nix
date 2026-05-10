@@ -1,7 +1,9 @@
-{
-  pkgs,
-  ...
+{ config
+, ...
 }:
+let
+  thermalZone = config.home.sessionVariables.THERMAL_ZONE or null;
+in
 {
   programs = {
     waybar = {
@@ -105,18 +107,20 @@
             "on-click" = "alacritty --class=Wiremix -e wiremix";
             "min-length" = 13;
           };
-          temperature = {
-            "critical-threshold" = 90;
-            "format" = "{icon} {temperatureC}°C";
-            "format-icons" = [
-              ""
-              ""
-              ""
-              ""
-              ""
-            ];
-            "tooltip" = false;
-          };
+          temperature =
+            {
+              "critical-threshold" = 90;
+              "format" = "{icon} {temperatureC}°C";
+              "format-icons" = [
+                ""
+                ""
+                ""
+                ""
+                ""
+              ];
+              "tooltip" = false;
+            }
+            // (if thermalZone == null then { } else { "thermal-zone" = builtins.fromJSON thermalZone; });
           backlight = {
             "format" = "{icon} {percent}%";
             "format-icons" = [
