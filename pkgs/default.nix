@@ -13,4 +13,7 @@
   codebuddy-code = pkgs.callPackage ./codebuddy-code.nix { };
   opencode = pkgs.callPackage ./opencode.nix { };
   specify-cli = pkgs.callPackage ./specify-cli.nix { };
+  voxtype = pkgs.callPackage ./voxtype.nix { };
+  voxtype-onnx = pkgs.callPackage ./voxtype.nix { voxtype = pkgs.voxtype-onnx; };
+  voxtype-vulkan = pkgs.callPackage ./voxtype.nix { voxtype = pkgs.voxtype-vulkan; };
 }

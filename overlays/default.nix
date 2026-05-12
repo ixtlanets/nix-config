@@ -10,6 +10,9 @@
     surya-ocr = final.callPackage ../pkgs/surya-ocr.nix { };
     codebuddy-code = final.callPackage ../pkgs/codebuddy-code.nix { };
     specify-cli = final.callPackage ../pkgs/specify-cli.nix { };
+    voxtype = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype; };
+    voxtype-onnx = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype-onnx; };
+    voxtype-vulkan = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype-vulkan; };
   };
 
   # This one contains whatever you want to overlay
