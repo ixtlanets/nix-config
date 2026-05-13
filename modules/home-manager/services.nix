@@ -54,6 +54,18 @@ in
 
     Service = {
       ExecStart = "${pkgs.voxtype-onnx}/bin/voxtype";
+      Environment = "PATH=${
+        lib.makeBinPath [
+          pkgs.voxtype-onnx
+          pkgs.coreutils
+          pkgs.wtype
+          pkgs.which
+          pkgs.dotool
+          pkgs.wl-clipboard
+          pkgs.xclip
+          pkgs.xdotool
+        ]
+      }";
       Restart = "on-failure";
       RestartSec = 3;
     };
