@@ -29,6 +29,14 @@ voxtype.overrideAttrs (
       gtk4-layer-shell
     ];
 
+    # Local backport for https://github.com/peteonrails/voxtype/pull/355.
+    # PR is closed unmerged, but equivalent fix is on upstream main as a06f82d.
+    # Drop this once a tagged release includes the GTK4 OSD startup visibility fix.
+    postPatch = (previousAttrs.postPatch or "") + ''
+      substituteInPlace src/bin/voxtype_osd_gtk4.rs \
+        --replace-fail 'let visible = Cell::new(false);' 'let visible = Cell::new(true);'
+    '';
+
     cargoDeps = previousAttrs.cargoDeps.overrideAttrs (previousCargoAttrs: {
       name = "voxtype-${version}-vendor";
       vendorStaging = previousCargoAttrs.vendorStaging.overrideAttrs {
