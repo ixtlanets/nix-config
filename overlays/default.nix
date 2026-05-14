@@ -10,6 +10,7 @@
     surya-ocr = final.callPackage ../pkgs/surya-ocr.nix { };
     codebuddy-code = final.callPackage ../pkgs/codebuddy-code.nix { };
     specify-cli = final.callPackage ../pkgs/specify-cli.nix { };
+    opencode-desktop = final.callPackage ../pkgs/opencode-desktop.nix { };
     voxtype = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype; };
     voxtype-onnx = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype-onnx; };
     voxtype-vulkan = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype-vulkan; };

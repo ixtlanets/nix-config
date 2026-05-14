@@ -91,6 +91,7 @@ in
     font-awesome
     zoom-us
     obsidian
+    opencode-desktop
     wl-clipboard
     vscode
     pkgs.unstable.libreoffice-qt6-fresh
