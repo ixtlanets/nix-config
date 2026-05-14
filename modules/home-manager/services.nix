@@ -23,7 +23,7 @@ in
 
   systemd.user.services.rclone-goar-lbrand = lib.mkIf pkgs.stdenv.isLinux {
     Unit = {
-      Description = "Mount goar-lbrand Google Drive";
+      Description = "Manually mount goar-lbrand Google Drive";
       ConditionPathExists = rcloneConfig;
     };
 
@@ -41,8 +41,6 @@ in
       Restart = "on-failure";
       RestartSec = "10s";
     };
-
-    Install.WantedBy = [ "default.target" ];
   };
 
   systemd.user.services.voxtype = {
