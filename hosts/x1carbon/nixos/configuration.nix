@@ -25,6 +25,19 @@
 
   networking.hostName = "x1carbon"; # Define your hostname.
 
+  networking.wireguard.interfaces.wg-hosts = {
+    ips = [ "198.18.77.5/32" ];
+    privateKeyFile = "/home/nik/nix-config/secrets/wireguard/x1carbon.key";
+    peers = [
+      {
+        publicKey = "Daj7tj5vfs3gIzHWzt9FKadBVrCFf0CyLn0nUc/N5Ug=";
+        allowedIPs = [ "198.18.77.0/24" ];
+        endpoint = "31.58.85.163:51820";
+        persistentKeepalive = 25;
+      }
+    ];
+  };
+
   services.hardware.bolt.enable = true;
 
   services.ollama = {
