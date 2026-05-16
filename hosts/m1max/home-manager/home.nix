@@ -180,6 +180,25 @@ in
   home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text =
     braveManagedPolicy;
   home.file.".config/openclaw/README.md".source = ../../../dotfiles/openclaw/README.md;
+  home.activation.refreshOpenClawGateway = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    openclaw=/opt/homebrew/bin/openclaw
+    state_dir="$HOME/.openclaw"
+    plist="$HOME/Library/LaunchAgents/ai.openclaw.gateway.plist"
+    stamp="$state_dir/.home-manager-openclaw-version"
+
+    if [ ! -x "$openclaw" ] || [ ! -f "$state_dir/openclaw.json" ]; then
+      echo "Skipping OpenClaw LaunchAgent refresh: OpenClaw is not installed or configured."
+    else
+      version="$("$openclaw" --version | /usr/bin/awk '{ print $2 }')"
+      stamped_version="$(/bin/cat "$stamp" 2>/dev/null || true)"
+
+      if [ ! -f "$plist" ] || [ "$version" != "$stamped_version" ] || /usr/bin/grep -q '/Cellar/openclaw-cli/' "$plist"; then
+        echo "Refreshing OpenClaw LaunchAgent for version $version"
+        "$openclaw" gateway install --force --port 18789
+        /bin/printf '%s\n' "$version" > "$stamp"
+      fi
+    fi
+  '';
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;
 
   home.sessionVariables = {
