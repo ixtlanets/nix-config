@@ -1,7 +1,8 @@
 # Proxy Setup
 
 Transparent proxy for bypassing geo-restrictions, using VLESS+Reality for most traffic and a
-London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenlabs.io`).
+London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenlabs.io`). Linux
+hosts also have a separate WireGuard host overlay for private host-to-host access.
 
 ## Architecture
 
@@ -20,7 +21,7 @@ London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenla
              ▼               │                                  │
    ┌────────────────────────────────────────────────────────────────────────────┐
    │ Frankfurt: wire.nikcode.xyz / 31.58.85.163                                 │
-   │ sing-box in Docker (reality-ezpz)                                           │
+   │ sing-box in Docker (reality-ezpz) + WireGuard wg0 hub :51820                │
    │   ├─ geosite-google UDP 443 ───────────────► block                          │
    │   ├─ geosite-google TCP ───────────────────► london                         │
    │   ├─ elevenlabs.io UDP 443 ────────────────► block                          │
@@ -42,6 +43,8 @@ London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenla
 ```
 
 All machines (NixOS clients, Frankfurt, London) are on the same Tailscale network (`tailf108.ts.net`).
+Linux hosts also use the `198.18.77.0/24` WireGuard overlay for direct host-to-host traffic; this
+overlay is intentionally separate from the VLESS/London proxy path.
 
 ## Traffic routing rules
 
@@ -50,6 +53,7 @@ All machines (NixOS clients, Frankfurt, London) are on the same Tailscale networ
 | Traffic | Outbound | Path |
 |---------|----------|------|
 | Private IPs (RFC1918, loopback) | `direct` | Local network |
+| WireGuard overlay (`198.18.77.0/24`) | kernel route | `wg-hosts` → Frankfurt WG hub → peer |
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
 | `*.google.com` / `google.com` | `london` | Tailscale → London microsocks → internet |
 | `*.elevenlabs.io` / `elevenlabs.io` | `london` | Tailscale → London microsocks → internet |
@@ -82,15 +86,15 @@ Google and ElevenLabs traffic are routed to London at the Frankfurt level (see F
 
 ### NixOS clients
 
-Managed by this repo. Affected hosts: `zenbook`, `x13`, `x1carbon`, `um960pro`.
+Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um960pro`.
 
 **Module**: `modules/nixos/vless.nix`
 
 **sing-box config** (per-host JSON in `secrets/vless/<host>.json`):
 - Inbound: TUN (`nekoray-tun`, `auto_route: true`, `strict_route: true`, `auto_redirect: true`)
 - Inbound: Mixed SOCKS5/HTTP on `127.0.0.1:2080` (for manual use / testing)
-- `route_exclude_address` includes `100.64.0.0/10` (Tailscale CGNAT — bypasses TUN so
-  connections to Tailscale peer IPs go directly through the `tailscale0` interface)
+- `route_exclude_address` includes `100.64.0.0/10` (Tailscale CGNAT) and `198.18.77.0/24`
+  (WireGuard host overlay), bypassing the sing-box TUN for those private routes.
 - Outbound `proxy`: VLESS+Reality to Frankfurt
 - Outbound `london`: SOCKS5 to `100.119.182.9:1080`, `bind_interface: tailscale0`
 - Outbound `direct`: plain direct connection
@@ -130,6 +134,33 @@ services.vless = {
 };
 ```
 
+### WireGuard host overlay
+
+The `198.18.77.0/24` WireGuard overlay provides private host-to-host access between Linux machines.
+It is not an internet exit path and does not replace VLESS+Reality.
+
+| Node | Overlay IP | Config source |
+|------|------------|---------------|
+| Frankfurt hub | `198.18.77.1/24` | live `/etc/wireguard/wg0.conf` |
+| x13 | `198.18.77.2/32` | `hosts/x13/nixos/configuration.nix`; manual profile `secrets/wireguard/x13.conf` |
+| zenbook | `198.18.77.3/32` | `hosts/zenbook/nixos/configuration.nix` |
+| x1carbon | `198.18.77.5/32` | `hosts/x1carbon/nixos/configuration.nix` |
+| um790pro | `198.18.77.6/32` | `hosts/um960pro/nixos/configuration.nix` |
+| desktop | `198.18.77.7/32` | manual profile `secrets/wireguard/desktop.conf` |
+
+NixOS hosts use `networking.wireguard.interfaces.wg-hosts` with:
+- endpoint `31.58.85.163:51820`
+- peer allowed IPs `198.18.77.0/24`
+- `persistentKeepalive = 25`
+- private keys from `secrets/wireguard/<host>.key`
+
+The overlay must be excluded from sing-box TUN routing. Linux VLESS configs therefore include
+`198.18.77.0/24` in `route_exclude_address`; without that exclusion, host-to-host overlay traffic
+can be intercepted by the transparent proxy instead of using the kernel WireGuard route.
+
+Manual `wg-quick` profiles under `secrets/wireguard/*.conf` are for non-NixOS or transitional Linux
+installs. If helper-script behavior for those installs changes, keep `install.sh` in sync.
+
 ### macOS client (m1max)
 
 **sing-box GUI app**: `io.nekohasekai.sfavt` (sing-box for Apple platforms)
@@ -140,17 +171,31 @@ services.vless = {
 - Google and ElevenLabs routing are handled at Frankfurt, not on the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
 - No Tailscale dependency — London is reached via Frankfurt over the public internet
+- No WireGuard host overlay — keep m1max on the baseline sing-box GUI/VLESS config for now
 - Keep config syntax aligned with the sing-box version bundled in the GUI app; older app builds may reject newer config fields
 
 **macOS + Tailscale conflict**: macOS only allows one active VPN Network Extension at a time.
 sing-box GUI and Tailscale.app both use Network Extensions and cannot run simultaneously.
 This is why the Mac config offloads London routing to Frankfurt instead of using Tailscale directly.
 
+**macOS + WireGuard status**: a sing-box GUI WireGuard canary was tested and rolled back. With
+`system: true`, sing-box GUI `1.11.4` failed to start the WireGuard outbound from the Network
+Extension. With `system: false`, the Mac could initiate traffic to the overlay but did not provide a
+normal host-visible interface for inbound host-to-host access. Current desired state is no m1max
+WireGuard peer and no `m1max-gui-wg-canary.json` config.
+
 ### Frankfurt — VLESS+Reality server
 
 **Host**: `wire.nikcode.xyz` / `31.58.85.163`
 **Tailscale IP**: `100.76.253.85`
 **SSH**: `ssh -i ~/.ssh/id_rsa_1 root@wire.nikcode.xyz`
+
+Also runs the WireGuard host overlay hub:
+- Interface: `wg0`
+- Address: `198.18.77.1/24`
+- Listen port: UDP `51820`
+- Config: live `/etc/wireguard/wg0.conf`
+- Current peers: Linux hosts only; no m1max peer
 
 Deployed with **[reality-ezpz](https://github.com/aleskxyz/reality-ezpz)**, a shell-script
 installer that creates a Docker Compose stack running `sing-box` as a VLESS+Reality server.
@@ -318,6 +363,27 @@ If multiple users on different ISPs and OSes report that VLESS stopped working, 
    `private_key`, `public_key`, `short_id`, UUIDs, `server_name`.
 3. Correlate server and client logs for same client attempt.
 4. Only after version/config issues are ruled out, spend time on ISP/DPI theories.
+
+### WireGuard overlay checks
+
+Use these when Linux hosts cannot reach each other on `198.18.77.0/24`:
+
+```bash
+# Local host
+systemctl status wg-quick@wg-hosts || systemctl status wireguard-wg-hosts
+wg show wg-hosts
+ip route get 198.18.77.1
+ping -c 3 198.18.77.1
+
+# Frankfurt hub
+ssh root@wire.nikcode.xyz 'systemctl status wg-quick@wg0 --no-pager; wg show wg0'
+```
+
+Expected shape:
+- client routes for `198.18.77.0/24` go to `wg-hosts`
+- Frankfurt `wg0` is active and listens on UDP `51820`
+- active peers show recent handshakes in `wg show wg0`
+- there is no `198.18.77.4/32` m1max peer unless a new macOS approach is intentionally being tested
 
 ### Log patterns and likely meaning
 
