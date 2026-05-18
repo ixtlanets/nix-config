@@ -26,60 +26,74 @@
     # Clear preCheck on Darwin to drop the reference entirely.
     mailutils =
       if prev.stdenv.isDarwin then
-        prev.mailutils.overrideAttrs (_old: {
-          preCheck = "";
-        })
+        prev.mailutils.overrideAttrs
+          (_old: {
+            preCheck = "";
+          })
       else
         prev.mailutils;
-    codex = prev.codex.overrideAttrs (old: rec {
-      version = "0.128.0";
-      buildType = "simple";
-      patchPhase = ":";
-      cargoSetupPostPatchHook = ":";
+    codex = prev.stdenvNoCC.mkDerivation rec {
+      pname = "codex";
+      version = "0.130.0";
       nativeBuildInputs = [
         prev.zstd
         prev.makeWrapper
       ];
       src =
         if prev.stdenv.isLinux && prev.stdenv.isx86_64 then
-          prev.fetchurl {
-            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-            sha256 = "sha256-CAZqYJN7CBMmupuk2soInR6L2iaXKvaFBrPOGs4kNdw=";
-          }
+          prev.fetchurl
+            {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
+              sha256 = "sha256-WQUSg6JKd0+MgURKP0X/C7Ir1TYlRylK7dWpuAkrHCE=";
+            }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
-          prev.fetchurl {
-            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-            sha256 = "sha256-JeN71p0TMdm/KfVv8IH1PCTuj1OUjepGbn3I4ViXSKc=";
-          }
+          prev.fetchurl
+            {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
+              sha256 = "sha256-kro3saDztVMc4qA2uqb/g5+QfUrzCocjcVpyzw1vDhY=";
+            }
         else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
-          prev.fetchurl {
-            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
-            sha256 = "sha256-lPJDwBfigT4WdXayeZ96BqyRU65Rrj5pwzfMd7dmDZo=";
-          }
+          prev.fetchurl
+            {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
+              sha256 = "sha256-RktR/kFId5V0RwCljAke7d0KM2N+XjWxx12dOo6xk8U=";
+            }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
-          prev.fetchurl {
-            url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-            sha256 = "sha256-8Aqj1XTJbJIZ3qiTfNgiT7nUGbxfTXZ3HswiDnolqPk=";
-          }
+          prev.fetchurl
+            {
+              url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
+              sha256 = "sha256-CRJiToCSEzuxKvjcNaQrpUr1KmVy/1nwtT2oEBnfEz0=";
+            }
         else
           throw "Unsupported system for codex";
       dontUnpack = true;
-      installPhase = "mkdir -p $out/bin && zstd -d $src -o $out/bin/codex && chmod +x $out/bin/codex";
-    });
+      installPhase = ''
+        runHook preInstall
+
+        mkdir -p $out/bin
+        zstd -d --stdout $src > $out/bin/codex
+        chmod +x $out/bin/codex
+
+        runHook postInstall
+      '';
+      meta = prev.codex.meta;
+    };
     # direnv 2.37.1 checkPhase hangs on Darwin while running shell export tests.
     direnv =
       if prev.stdenv.isDarwin then
-        prev.direnv.overrideAttrs (_old: {
-          doCheck = false;
-        })
+        prev.direnv.overrideAttrs
+          (_old: {
+            doCheck = false;
+          })
       else
         prev.direnv;
     # Ensure the client understands GSSAPI directives in system ssh_config (e.g., WSL).
     openssh =
       if prev.stdenv.isLinux then
-        prev.openssh.override {
-          withKerberos = true;
-        }
+        prev.openssh.override
+          {
+            withKerberos = true;
+          }
       else
         prev.openssh;
     # example = prev.example.overrideAttrs (oldAttrs: rec {
