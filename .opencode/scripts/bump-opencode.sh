@@ -85,12 +85,40 @@ declare -A URLS=(
 
 declare -A HASHES=()
 
+fetchzip_hash() {
+  local url="$1"
+  local output status
+
+  set +e
+  output="$({
+    nix-build -E "with import <nixpkgs> {}; fetchzip { url = \"${url}\"; sha256 = lib.fakeSha256; stripRoot = false; }"
+  } 2>&1)"
+  status=$?
+  set -e
+
+  if [[ "${status}" -eq 0 ]]; then
+    echo "error: expected fake hash mismatch for ${url}" >&2
+    exit 1
+  fi
+
+  OUTPUT="${output}" python3 - <<'PY'
+import re
+import os
+import sys
+
+text = os.environ["OUTPUT"]
+match = re.search(r'got:\s+(sha256-[A-Za-z0-9+/=]+)', text)
+if not match:
+    print(text, file=sys.stderr)
+    raise SystemExit("failed to parse fetchzip hash")
+print(match.group(1))
+PY
+}
+
 for key in "${ORDER[@]}"; do
   url="${URLS[$key]}"
   echo "prefetching ${key}..." >&2
-  hash="$({
-    nix store prefetch-file --json --unpack "${url}"
-  } | python3 -c 'import json, sys; print(json.load(sys.stdin)["hash"])')"
+  hash="$(fetchzip_hash "${url}")"
   HASHES["$key"]="${hash}"
 done
 
