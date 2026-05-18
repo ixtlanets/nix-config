@@ -1,10 +1,6 @@
-{
-  inputs,
-  outputs,
-  lib,
-  config,
-  pkgs,
-  ...
+{ lib
+, pkgs
+, ...
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
@@ -43,7 +39,6 @@ in
           org
           org-bullets
           visual-fill-column
-          mu4e
           magit
           evil
           evil-collection

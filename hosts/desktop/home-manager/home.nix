@@ -1,10 +1,9 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{
-  pkgs,
-  dpi,
-  ...
+{ pkgs
+, dpi
+, ...
 }:
 {
   # You can import other home-manager modules here
@@ -16,12 +15,11 @@
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/waybar.nix
-     ../../../modules/home-manager/hyprland.nix
-     ../../../modules/home-manager/kbd-backlight.nix
-     ../../../modules/home-manager/email.nix
-     ../../../modules/home-manager/nvim.nix
-     ../../../modules/home-manager/ghostty.nix
-     ../../../modules/home-manager/wezterm.nix
+    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/kbd-backlight.nix
+    ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/ghostty.nix
+    ../../../modules/home-manager/wezterm.nix
   ];
 
   dconf.settings = {

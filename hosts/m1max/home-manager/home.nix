@@ -1,10 +1,9 @@
-{
-  inputs,
-  outputs,
-  lib,
-  config,
-  pkgs,
-  ...
+{ inputs
+, outputs
+, lib
+, config
+, pkgs
+, ...
 }:
 let
   mkTuple = lib.hm.gvariant.mkTuple;
@@ -21,13 +20,15 @@ let
   ];
   braveManagedPolicy = builtins.toJSON {
     ExtensionSettings = lib.listToAttrs (
-      map (id: {
-        name = id;
-        value = {
-          installation_mode = "force_installed";
-          update_url = "https://clients2.google.com/service/update2/crx";
-        };
-      }) braveExtensionIds
+      map
+        (id: {
+          name = id;
+          value = {
+            installation_mode = "force_installed";
+            update_url = "https://clients2.google.com/service/update2/crx";
+          };
+        })
+        braveExtensionIds
     );
   };
 in
@@ -37,7 +38,6 @@ in
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
     ../../../modules/home-manager/services.nix
-    ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
     ./syncthing.nix
   ];

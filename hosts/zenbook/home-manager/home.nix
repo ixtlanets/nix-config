@@ -1,17 +1,15 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{
-  pkgs,
-  lib,
-  dpi,
-  ...
+{ pkgs
+, dpi
+, ...
 }:
 {
   home.sessionVariables =
     let
       scale = dpi / 96.0;
-      scaleStr = builtins.toString scale;
+      scaleStr = toString scale;
     in
     {
       EDITOR = "nvim";
@@ -37,7 +35,6 @@
     ../../../modules/home-manager/linux-desktop.nix
     ../../../modules/home-manager/waybar.nix
     ../../../modules/home-manager/hyprland.nix
-    ../../../modules/home-manager/email.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
