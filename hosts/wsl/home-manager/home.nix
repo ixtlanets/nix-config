@@ -1,5 +1,6 @@
 {
   pkgs,
+  lib,
   ...
 }:
 {
@@ -21,7 +22,7 @@
   home.sessionVariables = {
     LD_LIBRARY_PATH = "/usr/lib/wsl/lib";
     NIXOS_OZONE_WL = "1";
-    BROWSER = "wslview";
+    BROWSER = "xdg-open";
     DISPLAY = ":0";
     WAYLAND_DISPLAY = "wayland-0";
   };
@@ -33,6 +34,8 @@
     "/mnt/c/Users/sniku/AppData/Local/Programs/Microsoft VS Code/bin"
     "/mnt/c/Users/sniku/AppData/Local/Obsidian"
     "/mnt/c/Windows"
+    "/mnt/c/Windows/System32"
+    "/mnt/c/Windows/SysWOW64"
   ];
 
   programs.zsh.initContent = ''
@@ -40,13 +43,15 @@
     # lag in zsh syntax highlighting. Strip all /mnt/ paths and re-add only
     # the Windows tools we actually need.
     export PATH=$(printf '%s' "$PATH" | tr ':' '\n' | grep -v '^/mnt/' | tr '\n' ':' | sed 's/:*$//')
-    export PATH="$PATH:/mnt/c/Windows:/mnt/c/Users/sniku/AppData/Local/Obsidian:/mnt/c/Users/sniku/AppData/Local/Microsoft/WinGet/Packages/equalsraf.win32yank_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/sniku/AppData/Local/Programs/Microsoft VS Code/bin"
+    export PATH="$PATH:/mnt/c/Windows:/mnt/c/Windows/System32:/mnt/c/Windows/SysWOW64:/mnt/c/Users/sniku/AppData/Local/Obsidian:/mnt/c/Users/sniku/AppData/Local/Microsoft/WinGet/Packages/equalsraf.win32yank_Microsoft.Winget.Source_8wekyb3d8bbwe:/mnt/c/Users/sniku/AppData/Local/Programs/Microsoft VS Code/bin"
+
+    # Alias rundll32.exe for xdg-open WSL support
+    alias rundll32.exe='/mnt/c/Windows/System32/rundll32.exe'
   '';
 
   home.packages = with pkgs; [
     bzip2
-    wslu
-    wsl-open
+    xdg-utils
     wl-clipboard
     vanilla-dmz
   ];
