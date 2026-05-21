@@ -2,6 +2,7 @@ result
 .cache/
 .codex
 .sisyphus/
+.omo/
 firebase-debug.log
 __pycache__/
 *.py[cod]
