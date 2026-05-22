@@ -1,71 +1,6 @@
 { pkgs, ... }:
 let
   lmstudio = pkgs.unstable.lmstudio;
-  convertChatgptImagesToJpg = pkgs.writeShellScript "convert-chatgpt-images-to-jpg" ''
-    set -u
-
-    downloads_dir="$HOME/Downloads"
-    state_dir="$HOME/.local/state"
-    log_file="$state_dir/convert-chatgpt-images-to-jpg.log"
-    now_epoch="$(${pkgs.coreutils}/bin/date +%s)"
-    max_age_seconds=300
-
-    ${pkgs.coreutils}/bin/mkdir -p "$state_dir"
-
-    log() {
-      printf '%s %s\n' "$(${pkgs.coreutils}/bin/date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$log_file"
-    }
-
-    converted=0
-    skipped=0
-    failed=0
-
-    shopt -s nullglob
-    for png_path in "$downloads_dir"/ChatGPT\ Image*.png; do
-      jpg_path="''${png_path%.png}.jpg"
-      tmp_jpg="$jpg_path.tmp"
-
-      if [[ -e "$jpg_path" ]]; then
-        skipped=$((skipped + 1))
-        continue
-      fi
-
-      created_epoch="$(${pkgs.coreutils}/bin/stat -c %W "$png_path" 2>/dev/null || printf '0')"
-      if [[ "$created_epoch" -le 0 ]]; then
-        created_epoch="$(${pkgs.coreutils}/bin/stat -c %Y "$png_path" 2>/dev/null || printf '0')"
-      fi
-
-      if [[ "$created_epoch" -le 0 ]]; then
-        skipped=$((skipped + 1))
-        log "skip: could not read creation time: $png_path"
-        continue
-      fi
-
-      age_seconds=$((now_epoch - created_epoch))
-      if [[ "$age_seconds" -lt 0 || "$age_seconds" -gt "$max_age_seconds" ]]; then
-        skipped=$((skipped + 1))
-        continue
-      fi
-
-      if ${pkgs.imagemagick}/bin/magick "$png_path" -quality 90 "$tmp_jpg" >/dev/null 2>&1; then
-        if ${pkgs.coreutils}/bin/mv -f -- "$tmp_jpg" "$jpg_path" && ${pkgs.coreutils}/bin/rm -- "$png_path"; then
-          converted=$((converted + 1))
-          log "converted: $png_path -> $jpg_path"
-        else
-          failed=$((failed + 1))
-          log "failed: converted but could not replace output or delete source: $png_path"
-        fi
-      else
-        failed=$((failed + 1))
-        ${pkgs.coreutils}/bin/rm -f -- "$tmp_jpg"
-        log "failed: ImageMagick conversion failed: $png_path"
-      fi
-    done
-
-    if [[ "$converted" -gt 0 || "$failed" -gt 0 ]]; then
-      log "summary: converted=$converted skipped=$skipped failed=$failed"
-    fi
-  '';
 in
 {
 
@@ -292,23 +227,6 @@ in
   home.file."scripts/set_wallpaper" = {
     text = builtins.readFile scripts/set_wallpaper;
     executable = true;
-  };
-
-  systemd.user.paths.convert-chatgpt-images-to-jpg = {
-    Unit.Description = "Watch for ChatGPT image downloads";
-    Path = {
-      PathChanged = "%h/Downloads";
-      Unit = "convert-chatgpt-images-to-jpg.service";
-    };
-    Install.WantedBy = [ "default.target" ];
-  };
-
-  systemd.user.services.convert-chatgpt-images-to-jpg = {
-    Unit.Description = "Convert recent ChatGPT PNG downloads to JPG";
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${convertChatgptImagesToJpg}";
-    };
   };
 
   gtk = {
