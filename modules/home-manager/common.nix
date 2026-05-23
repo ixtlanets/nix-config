@@ -1,10 +1,9 @@
-{
-  outputs,
-  inputs,
-  lib,
-  config,
-  pkgs,
-  ...
+{ outputs
+, inputs
+, lib
+, config
+, pkgs
+, ...
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
@@ -189,6 +188,34 @@ in
     gh = {
       enable = true;
       gitCredentialHelper.enable = true;
+    };
+    ssh = {
+      enable = true;
+      enableDefaultConfig = false;
+      matchBlocks = {
+        "*" = {
+          addKeysToAgent = "no";
+          checkHostIP = true;
+          compression = false;
+          controlMaster = "no";
+          controlPath = "~/.ssh/master-%r@%n:%p";
+          controlPersist = "no";
+          forwardAgent = false;
+          forwardX11 = false;
+          forwardX11Trusted = false;
+          hashKnownHosts = false;
+          serverAliveCountMax = 3;
+          serverAliveInterval = 0;
+          userKnownHostsFile = "~/.ssh/known_hosts";
+        };
+
+        "goar-tail" = {
+          hostname = "100.94.89.26";
+          user = "goar";
+          identityFile = "~/.ssh/id_rsa_1";
+          identitiesOnly = true;
+        };
+      };
     };
     git = {
       enable = true;
