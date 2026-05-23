@@ -214,6 +214,7 @@ in
     builtins.replaceStrings [ "DPI" "WIDTH" "HEIGHT" ] [ DPI rofi_width rofi_height ]
       (builtins.readFile ../../dotfiles/rofi);
   wayland.windowManager.hyprland.enable = true;
+  wayland.windowManager.hyprland.configType = "hyprlang";
   wayland.windowManager.hyprland.settings = {
     exec-once = [
       "mako"

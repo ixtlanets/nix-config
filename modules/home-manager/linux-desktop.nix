@@ -73,6 +73,7 @@ in
 
     firefox = {
       enable = true;
+      configPath = ".mozilla/firefox";
       policies.ExtensionSettings = {
         "uBlock0@raymondhill.net" = {
           installation_mode = "force_installed";
