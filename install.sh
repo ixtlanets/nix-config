@@ -1326,6 +1326,7 @@ main() {
     alacritty
     telegram-desktop
     moonlight-qt
+    otf-monaspace
     otf-monaspace-nerdfonts
     variety
     prismlauncher
