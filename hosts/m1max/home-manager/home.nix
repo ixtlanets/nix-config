@@ -196,7 +196,7 @@ in
       if [ ! -f "$plist" ] || [ "$version" != "$stamped_version" ] || /usr/bin/grep -q '/Cellar/openclaw-cli/' "$plist"; then
         echo "Refreshing OpenClaw LaunchAgent for version $version"
         "$openclaw" gateway install --force --port 18789
-        /bin/printf '%s\n' "$version" > "$stamp"
+        /usr/bin/printf '%s\n' "$version" > "$stamp"
       fi
     fi
   '';
