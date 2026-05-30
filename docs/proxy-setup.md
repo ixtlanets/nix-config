@@ -2,7 +2,9 @@
 
 Transparent proxy for bypassing geo-restrictions, using VLESS+Reality for most traffic and a
 London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenlabs.io`). Linux
-hosts also have a separate WireGuard host overlay for private host-to-host access.
+hosts also have a separate WireGuard host overlay for private host-to-host access. Windows uses
+the same client-side routing shape as macOS: no local London/Tailscale outbound, with that routing
+handled by Frankfurt instead.
 
 ## Architecture
 
@@ -59,7 +61,7 @@ overlay is intentionally separate from the VLESS/London proxy path.
 | `*.elevenlabs.io` / `elevenlabs.io` | `london` | Tailscale → London microsocks → internet |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
 
-### macOS client (m1max)
+### macOS and Windows GUI clients
 
 | Traffic | Outbound | Path |
 |---------|----------|------|
@@ -183,6 +185,36 @@ This is why the Mac config offloads London routing to Frankfurt instead of using
 Extension. With `system: false`, the Mac could initiate traffic to the overlay but did not provide a
 normal host-visible interface for inbound host-to-host access. Current desired state is no m1max
 WireGuard peer and no `m1max-gui-wg-canary.json` config.
+
+### Windows client (Throne)
+
+**GUI app**: Throne, using the bundled `ThroneCore.exe` sing-box core.
+
+**Config reference**: `secrets/vless/windows-throne.json` — full sing-box config used as the
+source of truth for the desired routing shape.
+
+**Throne setup helper**: `scripts/throne-windows-route.py` — installs a native Throne route profile
+named `Windows macOS-like` into Throne's SQLite config. Throne's regular config import can parse the
+VLESS outbound from a sing-box config, but it does not install the `route.rule_set` section as a
+native route profile.
+
+Run it from WSL with Throne closed:
+
+```bash
+python3 scripts/throne-windows-route.py
+```
+
+**Key differences from NixOS clients**:
+- Google and ElevenLabs routing are handled at Frankfurt, not on the Windows client — the Throne
+  config has no `london` outbound and does not require Tailscale.
+- UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP fallback, matching the macOS GUI
+  behavior and helping Frankfurt sniff domains before applying London routing.
+- The TUN inbound uses `interface_name = "throne-tun"` and omits `auto_redirect`; sing-box
+  documents `auto_redirect` as Linux-only.
+- The WireGuard host overlay is not configured on Windows, so `198.18.77.0/24` is not excluded
+  from the Windows TUN config.
+- Keep this config aligned with the Throne-bundled sing-box version. As of the local Throne install
+  checked on 2026-05-30, `ThroneCore.exe version` reports sing-box `v1.13.6`.
 
 ### Frankfurt — VLESS+Reality server
 
