@@ -3,6 +3,7 @@
 ## Important Notes
 - Do not run `sudo nixos-rebuild build --flake .#zenbook` or similar commands yourself. Always ask the user to execute them.
 - Keep `install.sh` in sync with changes to helper scripts (vpn, vless, tat, etc.) from the Nix configs; replicate behavior updates there for CachyOS/Arch installs.
+- Voice typing words are shared in `dotfiles/voice-typing/words.json` and loaded by `modules/home-manager/voice-typing-words.nix`. When updating `voxtypeReplacements`, keep `handyCustomWords` in sync; every replacement value must be present in Handy custom words, and the Nix assertion should remain strict with no exceptions.
 
 ## Project Structure & Module Organization
 - Root: Nix flake (`flake.nix`, `flake.lock`), overlays (`overlays/`), custom packages (`pkgs/`).

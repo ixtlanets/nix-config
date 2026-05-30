@@ -1,6 +1,10 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 let
   lmstudio = pkgs.unstable.lmstudio;
+  voiceTyping = import ./voice-typing-words.nix { inherit lib; };
+  voxtypeReplacementLines = lib.mapAttrsToList
+    (spoken: replacement: ''    ${builtins.toJSON spoken} = ${builtins.toJSON replacement}'')
+    voiceTyping.voxtypeReplacements;
 in
 {
 
@@ -182,21 +186,7 @@ in
     spoken_punctuation = true
 
     [text.replacements]
-    "chrome dev tools" = "Chrome DevTools"
-    "chrome left tools" = "Chrome DevTools"
-    "dev tools" = "DevTools"
-    "devtulz" = "DevTools"
-    "voxtype" = "Voxtype"
-    "вокстайп" = "Voxtype"
-    "и2и" = "e2e"
-    "комит" = "commit"
-    "комита" = "commit"
-    "комитом" = "commit"
-    "комиту" = "commit"
-    "никс оэс" = "NixOS"
-    "хром" = "Chrome"
-    "хромиум" = "chromium"
-    "юайуикс" = "UI/UX"
+    ${builtins.concatStringsSep "\n" voxtypeReplacementLines}
 
     [output]
     mode = "paste"

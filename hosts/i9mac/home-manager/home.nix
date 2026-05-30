@@ -37,6 +37,7 @@ in
     ../../../modules/home-manager/starship.nix
     ../../../modules/home-manager/tmux.nix
     ../../../modules/home-manager/common.nix
+    ../../../modules/home-manager/handy.nix
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/nvim.nix
   ];

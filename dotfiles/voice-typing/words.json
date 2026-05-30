@@ -1,0 +1,32 @@
+{
+  "handyCustomWords": [
+    "Chrome",
+    "Chrome DevTools",
+    "DevTools",
+    "NixOS",
+    "UI/UX",
+    "Voxtype",
+    "chromium",
+    "codex",
+    "commit",
+    "e2e",
+    "supabase"
+  ],
+  "voxtypeReplacements": {
+    "chrome dev tools": "Chrome DevTools",
+    "chrome left tools": "Chrome DevTools",
+    "dev tools": "DevTools",
+    "devtulz": "DevTools",
+    "voxtype": "Voxtype",
+    "вокстайп": "Voxtype",
+    "и2и": "e2e",
+    "комит": "commit",
+    "комита": "commit",
+    "комитом": "commit",
+    "комиту": "commit",
+    "никс оэс": "NixOS",
+    "хром": "Chrome",
+    "хромиум": "chromium",
+    "юайуикс": "UI/UX"
+  }
+}
