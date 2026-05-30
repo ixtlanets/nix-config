@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex Bump"
+  short_description: "Bump the repo codex package"
+  default_prompt: "Use $codex-bump to update the codex package in overlays/default.nix."
+
+policy:
+  allow_implicit_invocation: true
