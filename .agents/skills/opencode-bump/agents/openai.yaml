@@ -1,0 +1,7 @@
+interface:
+  display_name: "OpenCode Bump"
+  short_description: "Bump the repo opencode package"
+  default_prompt: "Use $opencode-bump to update pkgs/opencode.nix."
+
+policy:
+  allow_implicit_invocation: true
