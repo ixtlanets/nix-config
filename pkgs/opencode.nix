@@ -5,31 +5,31 @@
 }:
 stdenv.mkDerivation rec {
   pname = "opencode";
-  version = "1.15.11";
+  version = "1.15.12";
 
   src =
     if stdenv.isLinux && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-linux-x64.tar.gz";
-        sha256 = "sha256-iJ/T6ZF1mETaedpCEF7nX4QTQCvNwpRnFPegTAFrWc4=";
+        sha256 = "sha256-USYyFJAr8ajyQbuguNamXsjeAT+m4vvoeZMRW5wJWTg=";
         stripRoot = false;
       }
     else if stdenv.isLinux && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-linux-arm64.tar.gz";
-        sha256 = "sha256-5dEPH8LfMox16oid9QAZL56+Jz30yxAPeX3Zf6Wuqkc=";
+        sha256 = "sha256-YOkxA1w7uZLwoaOqPatYYR8+DfxbolRgdwIFFtNFS28=";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isx86_64 then
       fetchzip {
         url = "https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-darwin-x64.zip";
-        sha256 = "sha256-djSbiYDpx3R/sHHTF/uxHElH/NUnuYMSLsm2+zB6aOU=";
+        sha256 = "sha256-7IBYe5si+ejVWBZX3euULmRpF3oLeSiUkl5Q/xQ8140=";
         stripRoot = false;
       }
     else if stdenv.isDarwin && stdenv.isAarch64 then
       fetchzip {
         url = "https://github.com/anomalyco/opencode/releases/download/v${version}/opencode-darwin-arm64.zip";
-        sha256 = "sha256-u0sU8QzO3bJhjf5ysdAqpF3zQy4Li3hb2Kq93qHfoGA=";
+        sha256 = "sha256-MpimnUvQDeL/AXmmnkQPRRdvHeCOvMO9ufXs/86LgPQ=";
         stripRoot = false;
       }
     else
