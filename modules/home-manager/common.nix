@@ -1,9 +1,10 @@
-{ outputs
-, inputs
-, lib
-, config
-, pkgs
-, ...
+{
+  outputs,
+  inputs,
+  lib,
+  config,
+  pkgs,
+  ...
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
@@ -189,7 +190,7 @@ in
       enable = true;
       gitCredentialHelper.enable = true;
     };
-    ssh = {
+    ssh = lib.mkIf isLinux {
       enable = true;
       enableDefaultConfig = false;
       matchBlocks = {
