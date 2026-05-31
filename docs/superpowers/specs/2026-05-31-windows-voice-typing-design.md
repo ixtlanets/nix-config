@@ -23,7 +23,7 @@ Expected commands:
 .\scripts\windows-setup.ps1 -Force
 ```
 
-`windows-setup.ps1` should pass common flags through to specialized scripts.
+`windows-setup.ps1` should pass common flags through to specialized scripts. It should be safe to run repeatedly.
 
 ## Handy Setup
 
@@ -34,7 +34,7 @@ Responsibilities:
 - Verify that it is running on Windows.
 - Resolve the repository root from its own path unless an explicit root is passed for testing.
 - Check for `winget` unless `-SkipInstall` is set.
-- Install or upgrade Handy with package id `cjpais.Handy` via `winget`.
+- Ensure Handy is installed with package id `cjpais.Handy` via `winget`.
 - Read `dotfiles/voice-typing/words.json`.
 - Validate that every value in `voxtypeReplacements` is present in `handyCustomWords`.
 - Update `%APPDATA%\com.pais.handy\settings_store.json`.
@@ -50,6 +50,22 @@ The Windows Handy settings file has the same shape as the macOS settings file:
 ```
 
 The script should only replace `settings.custom_words`. It should preserve every other existing setting.
+
+## Idempotency
+
+All Windows setup scripts must be idempotent. It must be safe to run `windows-setup.ps1` and the specialized scripts any number of times.
+
+Idempotency requirements:
+
+- If Handy is already installed, the default run should not reinstall or upgrade it.
+- Handy installation detection should prefer `winget list --id cjpais.Handy --exact` and may fall back to checking `%LOCALAPPDATA%\Handy\handy.exe`.
+- If `settings.custom_words` already matches `handyCustomWords`, the script should leave `settings_store.json` unchanged and should not create a backup.
+- A backup should be created only immediately before an actual settings write.
+- If the settings file is missing, the script may create it once; later runs should treat it as existing state.
+- Running `windows-setup.ps1` should not duplicate work performed by specialized scripts.
+- Future specialized Windows scripts should follow the same pattern: detect current state, compare desired state, and write only when needed.
+
+Upgrades are not part of the default idempotent path. A future explicit `-Upgrade` flag can be added if Windows setup should also update installed applications.
 
 ## Data Flow
 
