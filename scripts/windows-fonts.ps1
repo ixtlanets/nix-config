@@ -507,6 +507,23 @@ function Test-ArchiveExtractionComplete {
   return $true
 }
 
+function Clear-FontArchiveCache {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ZipPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ExtractPath
+  )
+
+  Remove-Item -LiteralPath $ZipPath -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath (Get-ExtractionMarkerPath -ExtractPath $ExtractPath) -Force -ErrorAction SilentlyContinue
+
+  if (Test-Path -LiteralPath $ExtractPath -PathType Container) {
+    Remove-Item -LiteralPath $ExtractPath -Recurse -Force
+  }
+}
+
 function Expand-FontArchiveIfNeeded {
   param(
     [Parameter(Mandatory = $true)]
@@ -525,27 +542,106 @@ function Expand-FontArchiveIfNeeded {
     return
   }
 
-  if (Test-Path -LiteralPath $ExtractPath -PathType Container) {
-    Write-Host "Clearing incomplete extracted fonts $ExtractPath"
-    Remove-Item -LiteralPath $ExtractPath -Recurse -Force
+  for ($attempt = 1; $attempt -le 2; $attempt++) {
+    if (Test-Path -LiteralPath $ExtractPath -PathType Container) {
+      Write-Host "Clearing incomplete extracted fonts $ExtractPath"
+      Remove-Item -LiteralPath $ExtractPath -Recurse -Force
+    }
+
+    Save-UrlIfMissing -Uri $Source.Uri -Destination $ZipPath
+
+    Write-Host "Expanding $($Source.Name)"
+    try {
+      Expand-ZipToDirectory -ZipPath $ZipPath -Destination $ExtractPath
+
+      $markerPath = Get-ExtractionMarkerPath -ExtractPath $ExtractPath
+      New-Item -ItemType File -Path $markerPath -Force | Out-Null
+
+      if (Test-ArchiveExtractionComplete -ExtractPath $ExtractPath -SelectedFiles $selectedFiles) {
+        return
+      }
+
+      throw "Archive $($Source.Name) did not extract all selected font files."
+    } catch {
+      $message = $_.Exception.Message
+      Clear-FontArchiveCache -ZipPath $ZipPath -ExtractPath $ExtractPath
+
+      if ($attempt -lt 2) {
+        Write-Host "Cached archive for $($Source.Name) is invalid. Downloading again."
+        continue
+      }
+
+      throw "Archive $($Source.Name) failed after retry: $message"
+    }
+  }
+}
+
+function Test-FontFilePlausible {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path
+  )
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+    return $false
   }
 
-  Write-Host "Expanding $($Source.Name)"
+  $extension = [IO.Path]::GetExtension($Path).ToLowerInvariant()
+  if ($extension -ne '.ttf' -and $extension -ne '.otf') {
+    return $false
+  }
+
+  $fontFile = Get-Item -LiteralPath $Path
+  if ($fontFile.Length -lt 12) {
+    return $false
+  }
+
+  $stream = $null
   try {
-    Expand-ZipToDirectory -ZipPath $ZipPath -Destination $ExtractPath
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    $header = New-Object byte[] 4
+    if ($stream.Read($header, 0, $header.Length) -ne $header.Length) {
+      return $false
+    }
   } catch {
-    Remove-Item -LiteralPath $ZipPath -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath (Get-ExtractionMarkerPath -ExtractPath $ExtractPath) -Force -ErrorAction SilentlyContinue
-    throw
+    return $false
+  } finally {
+    if ($null -ne $stream) {
+      $stream.Dispose()
+    }
   }
 
-  $markerPath = Get-ExtractionMarkerPath -ExtractPath $ExtractPath
-  New-Item -ItemType File -Path $markerPath -Force | Out-Null
+  $signature = [Text.Encoding]::ASCII.GetString($header)
+  if ($signature -eq 'true' -or $signature -eq 'ttcf' -or $signature -eq 'OTTO') {
+    return $true
+  }
 
-  if (-not (Test-ArchiveExtractionComplete -ExtractPath $ExtractPath -SelectedFiles $selectedFiles)) {
-    Remove-Item -LiteralPath $ZipPath -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
-    throw "Archive $($Source.Name) did not extract all selected font files."
+  return ($header[0] -eq 0x00 -and $header[1] -eq 0x01 -and $header[2] -eq 0x00 -and $header[3] -eq 0x00)
+}
+
+function Resolve-DirectFontCache {
+  param(
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Source
+  )
+
+  $fontPath = Join-Path $directFileCache $Source.FileName
+
+  for ($attempt = 1; $attempt -le 2; $attempt++) {
+    Save-UrlIfMissing -Uri $Source.Uri -Destination $fontPath
+
+    if (Test-FontFilePlausible -Path $fontPath) {
+      return $fontPath
+    }
+
+    Remove-Item -LiteralPath $fontPath -Force -ErrorAction SilentlyContinue
+
+    if ($attempt -lt 2) {
+      Write-Host "Cached direct font $fontPath is invalid. Downloading again."
+      continue
+    }
+
+    throw "Downloaded direct font $($Source.Name) is not a plausible font file."
   }
 }
 
@@ -626,7 +722,6 @@ function Install-FontArchive {
   $zipPath = Join-Path $archiveCache $Source.FileName
   $extractPath = Join-Path $extractRoot $Source.Name
 
-  Save-UrlIfMissing -Uri $Source.Uri -Destination $zipPath
   Expand-FontArchiveIfNeeded -Source $Source -ZipPath $zipPath -ExtractPath $extractPath
 
   foreach ($selection in @($Source.SelectedFiles)) {
@@ -642,8 +737,7 @@ function Install-DirectFont {
     [hashtable]$Source
   )
 
-  $fontPath = Join-Path $directFileCache $Source.FileName
-  Save-UrlIfMissing -Uri $Source.Uri -Destination $fontPath
+  $fontPath = Resolve-DirectFontCache -Source $Source
   $targetFileName = Get-DirectFontTargetFileName -Source $Source
   Install-FontFile -SourcePath $fontPath -RegistryName $Source.RegistryName -TargetFileName $targetFileName
 }
