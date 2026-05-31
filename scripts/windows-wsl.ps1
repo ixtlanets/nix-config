@@ -9,40 +9,53 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'windows-lib.ps1')
 Assert-Windows
 
-function Get-WslCommand {
-  $commands = @(Get-Command -Name wsl -CommandType Application -All -ErrorAction SilentlyContinue |
-      Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
-      Select-Object -First 1)
+function Get-WslCommandPath {
+  $windowsRoots = @(
+    [Environment]::GetEnvironmentVariable('WINDIR'),
+    [Environment]::GetEnvironmentVariable('SystemRoot')
+  ) |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Select-Object -Unique
 
-  if ($commands.Count -eq 0) {
-    return $null
+  foreach ($windowsRoot in $windowsRoots) {
+    foreach ($systemDirectory in @('System32', 'Sysnative')) {
+      $candidatePath = Join-Path -Path $windowsRoot -ChildPath "$systemDirectory\wsl.exe"
+      if (Test-Path -LiteralPath $candidatePath -PathType Leaf) {
+        return (Resolve-Path -LiteralPath $candidatePath).ProviderPath
+      }
+    }
   }
 
-  return $commands[0]
+  return $null
 }
 
 function Test-WslAvailable {
-  $wsl = Get-WslCommand
-  if ($null -eq $wsl) {
+  $wslPath = Get-WslCommandPath
+  if ($null -eq $wslPath) {
     return $false
   }
 
-  & $wsl.Source --status *> $null
+  & $wslPath --status *> $null
   if ($LASTEXITCODE -eq 0) {
     return $true
   }
 
-  & $wsl.Source --version *> $null
+  & $wslPath --version *> $null
   return ($LASTEXITCODE -eq 0)
 }
 
 function Test-UbuntuDistribution {
-  $wsl = Get-WslCommand
-  if ($null -eq $wsl) {
+  $wslPath = Get-WslCommandPath
+  if ($null -eq $wslPath) {
     return $false
   }
 
-  $distros = @(& $wsl.Source --list --quiet 2>$null |
+  $listOutput = @(& $wslPath --list --quiet)
+  if ($LASTEXITCODE -ne 0) {
+    throw "wsl --list --quiet failed with exit code $LASTEXITCODE. WSL is available, but distro enumeration failed; not installing Ubuntu automatically."
+  }
+
+  $distros = @($listOutput |
       ForEach-Object { $_.Trim() } |
       Where-Object { $_ })
 
@@ -60,12 +73,16 @@ if ($SkipInstall) {
 }
 
 if (-not (Test-Administrator)) {
-  throw 'WSL bootstrap requires administrator rights. Rerun through windows-setup.ps1 so it can elevate with sudo.'
+  throw 'WSL bootstrap requires administrator rights. Rerun from an elevated PowerShell, or run through windows-setup.ps1 after orchestration is enabled.'
 }
 
-$wsl = Get-RequiredCommand -Name wsl
+$wslPath = Get-WslCommandPath
+if ($null -eq $wslPath) {
+  throw 'System WSL executable was not found under %WINDIR%\System32 or %WINDIR%\Sysnative.'
+}
+
 Write-Host 'Installing WSL with Ubuntu. A reboot may be required after this completes.'
-& $wsl.Source --install -d Ubuntu --no-launch
+& $wslPath --install -d Ubuntu --no-launch
 if ($LASTEXITCODE -ne 0) {
   throw "wsl --install -d Ubuntu --no-launch failed with exit code $LASTEXITCODE."
 }
