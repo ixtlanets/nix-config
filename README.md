@@ -38,6 +38,31 @@ For installing or updating NixOS on a machine remotely or locally.
 
 Available NixOS hosts: `x1carbon`, `x1extreme`, `x13`, `um960pro`, `zenbook`, `matebook`, `desktop`.
 
+### Windows Setup
+
+Run from Windows PowerShell:
+
+```powershell
+cd \\wsl.localhost\Ubuntu\home\nik\nix-config
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-setup.ps1
+```
+
+The setup scripts are idempotent and safe to rerun. Use `-Only Apps`, `-Only Fonts`, `-Only Cursors`, `-Only Wsl`, or `-Only VoiceTyping` to run one area. Use `-SkipInstall` to report missing install targets without installing packages, fonts, or cursors.
+
+Some steps need administrator rights. On Windows 11 24H2+, enable Sudo for Windows in Settings, then use the recommended `forceNewWindow` mode:
+
+```powershell
+sudo config --enable forceNewWindow
+```
+
+WSL setup uses:
+
+```powershell
+wsl --install -d Ubuntu --no-launch
+```
+
+It may require a reboot. The script reports this but does not reboot automatically.
+
 ### WSL (Home Manager on Fresh Ubuntu WSL2)
 
 For setting up a fresh Ubuntu WSL2 instance with Home Manager.
