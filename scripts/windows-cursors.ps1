@@ -40,13 +40,11 @@ New-Item -ItemType Directory -Path $script:CursorRoot -Force | Out-Null
 $cursorCache = Join-Path $CacheRoot 'cursors'
 $archiveCache = Join-Path $cursorCache 'archives'
 $extractRoot = Join-Path $cursorCache 'expanded'
-$archivePath = Join-Path $archiveCache 'Bibata-Modern-Ice-Windows.zip'
-$extractPath = Join-Path $extractRoot 'Bibata-Modern-Ice-Windows'
-
-$bibataArchiveUris = @(
-  'https://github.com/ful1e5/Bibata_Cursor/releases/latest/download/Bibata-Modern-Ice-Windows.zip',
-  'https://github.com/ful1e5/Bibata_Cursor/releases/download/v2.0.7/Bibata-Modern-Ice-Windows.zip'
-)
+$script:BibataCursorVersion = 'v2.0.7'
+$script:BibataExpectedSourceDirectoryName = 'Bibata-Modern-Ice-Regular-Windows'
+$bibataArchiveUri = "https://github.com/ful1e5/Bibata_Cursor/releases/download/$script:BibataCursorVersion/Bibata-Modern-Ice-Windows.zip"
+$archivePath = Join-Path $archiveCache "Bibata-Modern-Ice-Windows-$script:BibataCursorVersion.zip"
+$extractPath = Join-Path $extractRoot "Bibata-Modern-Ice-Windows-$script:BibataCursorVersion"
 
 $cursorMap = @{
   Arrow       = 'arrow.cur'
@@ -119,19 +117,13 @@ function Save-BibataArchive {
     [string]$Destination
   )
 
-  $lastErrorMessage = $null
-  foreach ($uri in $bibataArchiveUris) {
-    try {
-      Save-UrlIfMissing -Uri $uri -Destination $Destination
-      return
-    } catch {
-      $lastErrorMessage = $_.Exception.Message
-      Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
-      Write-Host "Failed to download Bibata cursor archive from $uri"
-    }
+  try {
+    Save-UrlIfMissing -Uri $bibataArchiveUri -Destination $Destination
+  } catch {
+    $message = $_.Exception.Message
+    Remove-Item -LiteralPath $Destination -Force -ErrorAction SilentlyContinue
+    throw "Unable to download Bibata cursor archive ${script:BibataCursorVersion}: $message"
   }
-
-  throw "Unable to download Bibata cursor archive: $lastErrorMessage"
 }
 
 function Find-BibataCursorSourceDirectory {
@@ -140,20 +132,12 @@ function Find-BibataCursorSourceDirectory {
     [string]$Path
   )
 
-  $preferred = Join-Path $Path 'Bibata-Modern-Ice-Regular-Windows'
-  if (Test-Path -LiteralPath $preferred -PathType Container) {
-    return $preferred
+  $expected = Join-Path $Path $script:BibataExpectedSourceDirectoryName
+  if (Test-Path -LiteralPath $expected -PathType Container) {
+    return $expected
   }
 
-  $matches = @(Get-ChildItem -LiteralPath $Path -Directory -Recurse -ErrorAction SilentlyContinue |
-      Where-Object { $_.Name -like 'Bibata-Modern-Ice-*-Windows' } |
-      Sort-Object FullName)
-
-  if ($matches.Count -eq 0) {
-    throw "Could not find a Bibata-Modern-Ice Windows cursor directory under $Path."
-  }
-
-  return $matches[0].FullName
+  throw "Expected Bibata cursor directory $expected was not found after extracting $script:BibataCursorVersion."
 }
 
 function Test-BibataExtractionComplete {
@@ -344,8 +328,13 @@ namespace NativeMethods {
 
   $updated = [NativeMethods.CursorScheme]::SystemParametersInfo(0x0057, 0, $null, 0x0001 -bor 0x0002)
   if (-not $updated) {
-    Write-Host 'Cursor registry values changed, but Windows did not confirm a cursor refresh.'
-    return
+    $lastWin32Error = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+    if ($lastWin32Error -ne 0) {
+      $win32Message = ([ComponentModel.Win32Exception]::new($lastWin32Error)).Message
+      throw "Failed to refresh cursor scheme with SystemParametersInfo(SPI_SETCURSORS): Win32 error $lastWin32Error ($win32Message)."
+    }
+
+    throw 'Failed to refresh cursor scheme with SystemParametersInfo(SPI_SETCURSORS).'
   }
 
   Write-Host 'Refreshed cursor scheme.'
