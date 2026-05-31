@@ -54,7 +54,7 @@ if (Test-Selected -Name 'Wsl') {
     $arguments += '-SkipInstall'
   }
 
-  Invoke-WindowsSetupStep -Name 'WSL' -ScriptName 'windows-wsl.ps1' -ArgumentList $arguments -RequiresAdmin
+  Invoke-WindowsSetupStep -Name 'WSL' -ScriptName 'windows-wsl.ps1' -ArgumentList $arguments
 }
 
 if (Test-Selected -Name 'Apps') {
