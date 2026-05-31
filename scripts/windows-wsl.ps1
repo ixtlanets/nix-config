@@ -73,7 +73,8 @@ if ($SkipInstall) {
 }
 
 if (-not (Test-Administrator)) {
-  throw 'WSL bootstrap requires administrator rights. Rerun from an elevated PowerShell, or run through windows-setup.ps1 after orchestration is enabled.'
+  Invoke-WithSudoIfNeeded -ScriptPath $PSCommandPath -ArgumentList @() -RequiresAdmin
+  return
 }
 
 $wslPath = Get-WslCommandPath
