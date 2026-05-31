@@ -33,6 +33,7 @@ if ([string]::IsNullOrWhiteSpace($CacheRoot)) {
 $script:FontRoot = $FontRoot
 $script:NoRegister = $NoRegister.IsPresent
 $script:FontRegistry = 'HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts'
+$script:FontRegistryChanged = $false
 
 New-Item -ItemType Directory -Path $script:FontRoot -Force | Out-Null
 if (-not $script:NoRegister) {
@@ -44,96 +45,183 @@ $archiveCache = Join-Path $fontCache 'archives'
 $extractRoot = Join-Path $fontCache 'expanded'
 $directFileCache = Join-Path $fontCache 'files'
 
+$nerdFontsVersion = 'v3.4.0'
+$monaspaceVersion = 'v1.101'
+$fontAwesomeVersion = '6.7.2'
+$cascadiaCodeVersion = 'v2407.24'
+$googleFontsSnapshot = '2026-05-31'
+
+function New-FontSelection {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Path,
+
+    [Parameter(Mandatory = $true)]
+    [string]$RegistryName,
+
+    [string]$TargetFileName
+  )
+
+  $selection = @{
+    Path = $Path
+    RegistryName = $RegistryName
+  }
+
+  if (-not [string]::IsNullOrWhiteSpace($TargetFileName)) {
+    $selection.TargetFileName = $TargetFileName
+  }
+
+  return $selection
+}
+
+function New-StyleSet {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Prefix,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Family,
+
+    [string]$Extension = 'ttf',
+
+    [string]$Directory = ''
+  )
+
+  $styles = @(
+    @{ Suffix = 'Regular'; Label = 'Regular' },
+    @{ Suffix = 'Bold'; Label = 'Bold' },
+    @{ Suffix = 'Italic'; Label = 'Italic' },
+    @{ Suffix = 'BoldItalic'; Label = 'Bold Italic' }
+  )
+
+  return @($styles | ForEach-Object {
+      $fileName = "$Prefix-$($_.Suffix).$Extension"
+      $path = if ([string]::IsNullOrWhiteSpace($Directory)) { $fileName } else { "$Directory/$fileName" }
+      New-FontSelection -Path $path -RegistryName "$Family $($_.Label) ($(if ($Extension -eq 'otf') { 'OpenType' } else { 'TrueType' }))"
+    })
+}
+
 $archiveFontSources = @(
   @{
     Name = 'Hack Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Hack.zip'
-    FileName = 'Hack.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/Hack.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-Hack.zip"
+    SelectedFiles = @(
+      (New-StyleSet -Prefix 'HackNerdFont' -Family 'Hack Nerd Font')
+      (New-StyleSet -Prefix 'HackNerdFontMono' -Family 'Hack Nerd Font Mono')
+    )
   },
   @{
     Name = 'Ubuntu Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu.zip'
-    FileName = 'Ubuntu.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/Ubuntu.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-Ubuntu.zip"
+    SelectedFiles = @(New-StyleSet -Prefix 'UbuntuNerdFont' -Family 'Ubuntu Nerd Font')
   },
   @{
     Name = 'Ubuntu Mono Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip'
-    FileName = 'UbuntuMono.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/UbuntuMono.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-UbuntuMono.zip"
+    SelectedFiles = @(New-StyleSet -Prefix 'UbuntuMonoNerdFont' -Family 'Ubuntu Mono Nerd Font')
   },
   @{
     Name = 'Ubuntu Sans Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuSans.zip'
-    FileName = 'UbuntuSans.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/UbuntuSans.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-UbuntuSans.zip"
+    SelectedFiles = @(New-StyleSet -Prefix 'UbuntuSansNerdFont' -Family 'Ubuntu Sans Nerd Font')
   },
   @{
     Name = 'SauceCodePro Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/SourceCodePro.zip'
-    FileName = 'SourceCodePro.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/SourceCodePro.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-SourceCodePro.zip"
+    SelectedFiles = @(
+      (New-StyleSet -Prefix 'SauceCodeProNerdFont' -Family 'SauceCodePro Nerd Font')
+      (New-StyleSet -Prefix 'SauceCodeProNerdFontMono' -Family 'SauceCodePro Nerd Font Mono')
+    )
   },
   @{
     Name = 'JetBrainsMono Nerd Font'
-    Uri = 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip'
-    FileName = 'JetBrainsMono.zip'
+    Uri = "https://github.com/ryanoasis/nerd-fonts/releases/download/$nerdFontsVersion/JetBrainsMono.zip"
+    FileName = "nerd-fonts-$nerdFontsVersion-JetBrainsMono.zip"
+    SelectedFiles = @(
+      (New-StyleSet -Prefix 'JetBrainsMonoNerdFont' -Family 'JetBrainsMono Nerd Font')
+      (New-StyleSet -Prefix 'JetBrainsMonoNerdFontMono' -Family 'JetBrainsMono Nerd Font Mono')
+    )
   },
   @{
     Name = 'Monaspace'
-    Uri = 'https://github.com/githubnext/monaspace/releases/download/v1.101/monaspace-v1.101.zip'
-    FileName = 'monaspace-v1.101.zip'
+    Uri = "https://github.com/githubnext/monaspace/releases/download/$monaspaceVersion/monaspace-$monaspaceVersion.zip"
+    FileName = "monaspace-$monaspaceVersion.zip"
+    SelectedFiles = @(
+      (New-StyleSet -Prefix 'MonaspaceNeon' -Family 'Monaspace Neon' -Extension 'otf' -Directory "monaspace-$monaspaceVersion/fonts/otf")
+      (New-StyleSet -Prefix 'MonaspaceKrypton' -Family 'Monaspace Krypton' -Extension 'otf' -Directory "monaspace-$monaspaceVersion/fonts/otf")
+    )
   },
   @{
     Name = 'Cascadia Code'
-    Uri = 'https://github.com/microsoft/cascadia-code/releases/download/v2407.24/CascadiaCode-2407.24.zip'
-    FileName = 'CascadiaCode-2407.24.zip'
+    Uri = "https://github.com/microsoft/cascadia-code/releases/download/$cascadiaCodeVersion/CascadiaCode-2407.24.zip"
+    FileName = "CascadiaCode-$cascadiaCodeVersion.zip"
+    SelectedFiles = @(
+      (New-StyleSet -Prefix 'CascadiaCode' -Family 'Cascadia Code' -Extension 'otf' -Directory 'otf/static')
+      (New-StyleSet -Prefix 'CascadiaMono' -Family 'Cascadia Mono' -Extension 'otf' -Directory 'otf/static')
+    )
   }
 )
 
 $directFontSources = @(
   @{
     Name = 'Font Awesome 6 Brands'
-    Uri = 'https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/otfs/Font%20Awesome%206%20Brands-Regular-400.otf'
-    FileName = 'FontAwesome6Brands-Regular-400.otf'
+    Uri = "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/$fontAwesomeVersion/otfs/Font%20Awesome%206%20Brands-Regular-400.otf"
+    FileName = "FontAwesome-$fontAwesomeVersion-Brands-Regular-400.otf"
+    TargetFileName = 'FontAwesome6Brands-Regular-400.otf'
     RegistryName = 'Font Awesome 6 Brands Regular (OpenType)'
   },
   @{
     Name = 'Font Awesome 6 Free Regular'
-    Uri = 'https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/otfs/Font%20Awesome%206%20Free-Regular-400.otf'
-    FileName = 'FontAwesome6Free-Regular-400.otf'
+    Uri = "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/$fontAwesomeVersion/otfs/Font%20Awesome%206%20Free-Regular-400.otf"
+    FileName = "FontAwesome-$fontAwesomeVersion-Free-Regular-400.otf"
+    TargetFileName = 'FontAwesome6Free-Regular-400.otf'
     RegistryName = 'Font Awesome 6 Free Regular (OpenType)'
   },
   @{
     Name = 'Font Awesome 6 Free Solid'
-    Uri = 'https://raw.githubusercontent.com/FortAwesome/Font-Awesome/6.x/otfs/Font%20Awesome%206%20Free-Solid-900.otf'
-    FileName = 'FontAwesome6Free-Solid-900.otf'
+    Uri = "https://raw.githubusercontent.com/FortAwesome/Font-Awesome/$fontAwesomeVersion/otfs/Font%20Awesome%206%20Free-Solid-900.otf"
+    FileName = "FontAwesome-$fontAwesomeVersion-Free-Solid-900.otf"
+    TargetFileName = 'FontAwesome6Free-Solid-900.otf'
     RegistryName = 'Font Awesome 6 Free Solid (OpenType)'
   },
   @{
     Name = 'Roboto'
     Uri = 'https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto%5Bwdth,wght%5D.ttf'
-    FileName = 'Roboto.ttf'
+    FileName = "google-fonts-$googleFontsSnapshot-Roboto.ttf"
+    TargetFileName = 'Roboto.ttf'
     RegistryName = 'Roboto (TrueType)'
   },
   @{
     Name = 'Source Sans 3'
     Uri = 'https://raw.githubusercontent.com/google/fonts/main/ofl/sourcesans3/SourceSans3%5Bwght%5D.ttf'
-    FileName = 'SourceSans3.ttf'
+    FileName = "google-fonts-$googleFontsSnapshot-SourceSans3.ttf"
+    TargetFileName = 'SourceSans3.ttf'
     RegistryName = 'Source Sans 3 (TrueType)'
   },
   @{
     Name = 'Source Serif 4'
     Uri = 'https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/SourceSerif4%5Bopsz,wght%5D.ttf'
-    FileName = 'SourceSerif4.ttf'
+    FileName = "google-fonts-$googleFontsSnapshot-SourceSerif4.ttf"
+    TargetFileName = 'SourceSerif4.ttf'
     RegistryName = 'Source Serif 4 (TrueType)'
   },
   @{
     Name = 'Source Code Pro'
     Uri = 'https://raw.githubusercontent.com/google/fonts/main/ofl/sourcecodepro/SourceCodePro%5Bwght%5D.ttf'
-    FileName = 'SourceCodePro.ttf'
+    FileName = "google-fonts-$googleFontsSnapshot-SourceCodePro.ttf"
+    TargetFileName = 'SourceCodePro.ttf'
     RegistryName = 'Source Code Pro (TrueType)'
   },
   @{
     Name = 'Fira Code'
     Uri = 'https://raw.githubusercontent.com/google/fonts/main/ofl/firacode/FiraCode%5Bwght%5D.ttf'
-    FileName = 'FiraCode.ttf'
+    FileName = "google-fonts-$googleFontsSnapshot-FiraCode.ttf"
+    TargetFileName = 'FiraCode.ttf'
     RegistryName = 'Fira Code (TrueType)'
   }
 )
@@ -149,19 +237,111 @@ function Get-FontRegistryName {
   return "$([IO.Path]::GetFileNameWithoutExtension($Path)) ($fontType)"
 }
 
-function Get-FontFiles {
+function Get-SelectedFontPath {
   param(
     [Parameter(Mandatory = $true)]
-    [string]$Directory
+    [string]$ExtractPath,
+
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Selection
   )
 
-  if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
-    return @()
+  return Join-Path -Path $ExtractPath -ChildPath $Selection.Path
+}
+
+function Get-ExtractionMarkerPath {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ExtractPath
+  )
+
+  return Join-Path $ExtractPath '.extraction-complete'
+}
+
+function Test-ArchiveExtractionComplete {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ExtractPath,
+
+    [Parameter(Mandatory = $true)]
+    [hashtable[]]$SelectedFiles
+  )
+
+  $markerPath = Get-ExtractionMarkerPath -ExtractPath $ExtractPath
+  if (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+    return $false
   }
 
-  return @(Get-ChildItem -LiteralPath $Directory -Recurse -File |
-      Where-Object { $_.Extension -in @('.ttf', '.otf') } |
-      Sort-Object -Property FullName)
+  foreach ($selection in $SelectedFiles) {
+    $fontPath = Get-SelectedFontPath -ExtractPath $ExtractPath -Selection $selection
+    if (-not (Test-Path -LiteralPath $fontPath -PathType Leaf)) {
+      return $false
+    }
+
+    if ((Get-Item -LiteralPath $fontPath).Length -le 0) {
+      return $false
+    }
+  }
+
+  return $true
+}
+
+function Expand-FontArchiveIfNeeded {
+  param(
+    [Parameter(Mandatory = $true)]
+    [hashtable]$Source,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ZipPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$ExtractPath
+  )
+
+  $selectedFiles = @($Source.SelectedFiles)
+  if (Test-ArchiveExtractionComplete -ExtractPath $ExtractPath -SelectedFiles $selectedFiles) {
+    Write-Host "Using extracted fonts $ExtractPath"
+    return
+  }
+
+  if (Test-Path -LiteralPath $ExtractPath -PathType Container) {
+    Write-Host "Clearing incomplete extracted fonts $ExtractPath"
+    Remove-Item -LiteralPath $ExtractPath -Recurse -Force
+  }
+
+  Write-Host "Expanding $($Source.Name)"
+  Expand-ZipToDirectory -ZipPath $ZipPath -Destination $ExtractPath
+
+  $markerPath = Get-ExtractionMarkerPath -ExtractPath $ExtractPath
+  New-Item -ItemType File -Path $markerPath -Force | Out-Null
+
+  if (-not (Test-ArchiveExtractionComplete -ExtractPath $ExtractPath -SelectedFiles $selectedFiles)) {
+    throw "Archive $($Source.Name) did not extract all selected font files."
+  }
+}
+
+function Test-SameFileContent {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$SourcePath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$TargetPath
+  )
+
+  if (-not (Test-Path -LiteralPath $TargetPath -PathType Leaf)) {
+    return $false
+  }
+
+  $source = Get-Item -LiteralPath $SourcePath
+  $target = Get-Item -LiteralPath $TargetPath
+  if ($source.Length -ne $target.Length) {
+    return $false
+  }
+
+  $sourceHash = (Get-FileHash -LiteralPath $SourcePath -Algorithm SHA256).Hash
+  $targetHash = (Get-FileHash -LiteralPath $TargetPath -Algorithm SHA256).Hash
+  return ($sourceHash -eq $targetHash)
 }
 
 function Install-FontFile {
@@ -169,16 +349,24 @@ function Install-FontFile {
     [Parameter(Mandatory = $true)]
     [string]$SourcePath,
 
-    [string]$RegistryName
+    [string]$RegistryName,
+
+    [string]$TargetFileName
   )
 
   if ([string]::IsNullOrWhiteSpace($RegistryName)) {
     $RegistryName = Get-FontRegistryName -Path $SourcePath
   }
 
-  $target = Join-Path $script:FontRoot (Split-Path -Leaf $SourcePath)
-  if (-not (Test-Path -LiteralPath $target -PathType Leaf)) {
-    Copy-Item -LiteralPath $SourcePath -Destination $target
+  if ([string]::IsNullOrWhiteSpace($TargetFileName)) {
+    $TargetFileName = Split-Path -Leaf $SourcePath
+  }
+
+  $target = Join-Path $script:FontRoot $TargetFileName
+  if (Test-SameFileContent -SourcePath $SourcePath -TargetPath $target) {
+    Write-Host "Font file $target is current."
+  } else {
+    Copy-Item -LiteralPath $SourcePath -Destination $target -Force
     Write-Host "Installed font file $target"
   }
 
@@ -194,26 +382,8 @@ function Install-FontFile {
 
   if ($current -ne $target) {
     New-ItemProperty -Path $script:FontRegistry -Name $RegistryName -Value $target -PropertyType String -Force | Out-Null
+    $script:FontRegistryChanged = $true
     Write-Host "Registered font $RegistryName"
-  }
-}
-
-function Install-FontFilesFromDirectory {
-  param(
-    [Parameter(Mandatory = $true)]
-    [string]$Directory,
-
-    [Parameter(Mandatory = $true)]
-    [string]$Name
-  )
-
-  $fontFiles = @(Get-FontFiles -Directory $Directory)
-  if ($fontFiles.Count -eq 0) {
-    throw "No .ttf or .otf files found for $Name in $Directory."
-  }
-
-  foreach ($fontFile in $fontFiles) {
-    Install-FontFile -SourcePath $fontFile.FullName
   }
 }
 
@@ -227,16 +397,13 @@ function Install-FontArchive {
   $extractPath = Join-Path $extractRoot $Source.Name
 
   Save-UrlIfMissing -Uri $Source.Uri -Destination $zipPath
+  Expand-FontArchiveIfNeeded -Source $Source -ZipPath $zipPath -ExtractPath $extractPath
 
-  $extractedFonts = @(Get-FontFiles -Directory $extractPath)
-  if ($extractedFonts.Count -eq 0) {
-    Write-Host "Expanding $($Source.Name)"
-    Expand-ZipToDirectory -ZipPath $zipPath -Destination $extractPath
-  } else {
-    Write-Host "Using extracted fonts $extractPath"
+  foreach ($selection in @($Source.SelectedFiles)) {
+    $fontPath = Get-SelectedFontPath -ExtractPath $extractPath -Selection $selection
+    $targetFileName = if ($selection.ContainsKey('TargetFileName')) { $selection.TargetFileName } else { Split-Path -Leaf $fontPath }
+    Install-FontFile -SourcePath $fontPath -RegistryName $selection.RegistryName -TargetFileName $targetFileName
   }
-
-  Install-FontFilesFromDirectory -Directory $extractPath -Name $Source.Name
 }
 
 function Install-DirectFont {
@@ -247,7 +414,50 @@ function Install-DirectFont {
 
   $fontPath = Join-Path $directFileCache $Source.FileName
   Save-UrlIfMissing -Uri $Source.Uri -Destination $fontPath
-  Install-FontFile -SourcePath $fontPath -RegistryName $Source.RegistryName
+  $targetFileName = if ($Source.ContainsKey('TargetFileName')) { $Source.TargetFileName } else { Split-Path -Leaf $fontPath }
+  Install-FontFile -SourcePath $fontPath -RegistryName $Source.RegistryName -TargetFileName $targetFileName
+}
+
+function Send-FontChangeNotification {
+  if ($script:NoRegister) {
+    return
+  }
+
+  if (-not $script:FontRegistryChanged) {
+    return
+  }
+
+  if (-not ('NativeMethods.FontBroadcast' -as [type])) {
+    Add-Type -TypeDefinition @'
+namespace NativeMethods {
+  using System;
+  using System.Runtime.InteropServices;
+
+  public static class FontBroadcast {
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern IntPtr SendMessageTimeout(
+      IntPtr hWnd,
+      uint Msg,
+      UIntPtr wParam,
+      IntPtr lParam,
+      uint fuFlags,
+      uint uTimeout,
+      out UIntPtr lpdwResult);
+  }
+}
+'@
+  }
+
+  $result = [UIntPtr]::Zero
+  $null = [NativeMethods.FontBroadcast]::SendMessageTimeout(
+    [IntPtr]0xffff,
+    0x001d,
+    [UIntPtr]::Zero,
+    [IntPtr]::Zero,
+    0x0002,
+    5000,
+    [ref]$result)
+  Write-Host 'Broadcasted WM_FONTCHANGE.'
 }
 
 foreach ($source in $archiveFontSources) {
@@ -257,3 +467,5 @@ foreach ($source in $archiveFontSources) {
 foreach ($source in $directFontSources) {
   Install-DirectFont -Source $source
 }
+
+Send-FontChangeNotification

@@ -138,21 +138,58 @@ function Save-UrlIfMissing {
     [string]$Uri,
 
     [Parameter(Mandatory = $true)]
-    [string]$Destination
+    [string]$Destination,
+
+    [string]$ExpectedSha256
   )
 
   if (Test-Path -LiteralPath $Destination -PathType Leaf) {
-    Write-Host "Using cached download $Destination"
-    return
+    $existing = Get-Item -LiteralPath $Destination
+    $isValid = ($existing.Length -gt 0)
+
+    if ($isValid -and -not [string]::IsNullOrWhiteSpace($ExpectedSha256)) {
+      $existingHash = (Get-FileHash -LiteralPath $Destination -Algorithm SHA256).Hash
+      $isValid = ($existingHash -eq $ExpectedSha256.ToUpperInvariant())
+    }
+
+    if ($isValid) {
+      Write-Host "Using cached download $Destination"
+      return
+    }
+
+    Write-Host "Cached download $Destination is empty or invalid. Downloading again."
   }
 
   $parent = Split-Path -Parent $Destination
   if (-not [string]::IsNullOrWhiteSpace($parent)) {
     New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  } else {
+    $parent = (Get-Location).ProviderPath
   }
 
+  $tempDestination = Join-Path $parent ".$([IO.Path]::GetFileName($Destination)).$([Guid]::NewGuid()).tmp"
+
   Write-Host "Downloading $Uri"
-  Invoke-WebRequest -Uri $Uri -OutFile $Destination
+  try {
+    Invoke-WebRequest -Uri $Uri -OutFile $tempDestination
+
+    $downloaded = Get-Item -LiteralPath $tempDestination
+    if ($downloaded.Length -le 0) {
+      throw "Downloaded $Uri to an empty file."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedSha256)) {
+      $downloadedHash = (Get-FileHash -LiteralPath $tempDestination -Algorithm SHA256).Hash
+      if ($downloadedHash -ne $ExpectedSha256.ToUpperInvariant()) {
+        throw "Downloaded $Uri with SHA256 $downloadedHash, expected $($ExpectedSha256.ToUpperInvariant())."
+      }
+    }
+
+    Move-Item -LiteralPath $tempDestination -Destination $Destination -Force
+  } catch {
+    Remove-Item -LiteralPath $tempDestination -Force -ErrorAction SilentlyContinue
+    throw
+  }
 }
 
 function Expand-ZipToDirectory {
