@@ -1,5 +1,3 @@
-Set-StrictMode -Version Latest
-
 function Assert-Windows {
   if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
     throw 'This script must be run on Windows.'
@@ -27,12 +25,15 @@ function Get-RequiredCommand {
     [string]$Name
   )
 
-  $command = Get-Command -Name $Name -ErrorAction SilentlyContinue
-  if ($null -eq $command) {
-    throw "$Name is required but was not found in PATH."
+  $commands = @(Get-Command -Name $Name -CommandType Application -All -ErrorAction SilentlyContinue |
+      Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
+      Select-Object -First 1)
+
+  if ($commands.Count -eq 0) {
+    throw "$Name is required but no application executable was found in PATH."
   }
 
-  return $command
+  return $commands[0]
 }
 
 function Invoke-WithSudoIfNeeded {
@@ -47,8 +48,10 @@ function Invoke-WithSudoIfNeeded {
 
   Assert-Windows
 
+  $powershell = Get-RequiredCommand -Name powershell.exe
+
   if ((-not $RequiresAdmin) -or (Test-Administrator)) {
-    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ArgumentList
+    & $powershell.Source -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ArgumentList
     if ($LASTEXITCODE -ne 0) {
       throw "$ScriptPath failed with exit code $LASTEXITCODE."
     }
@@ -56,12 +59,15 @@ function Invoke-WithSudoIfNeeded {
     return
   }
 
-  $sudo = Get-Command -Name sudo -ErrorAction SilentlyContinue
-  if ($null -eq $sudo) {
+  $sudoCommands = @(Get-Command -Name sudo -CommandType Application -All -ErrorAction SilentlyContinue |
+      Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
+      Select-Object -First 1)
+
+  if ($sudoCommands.Count -eq 0) {
     throw 'This setup step requires administrator rights. Enable Sudo for Windows as described in README.md, then rerun setup.'
   }
 
-  & $sudo.Source powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ArgumentList
+  & $sudoCommands[0].Source $powershell.Source -NoProfile -ExecutionPolicy Bypass -File $ScriptPath @ArgumentList
   if ($LASTEXITCODE -ne 0) {
     throw "$ScriptPath failed through sudo with exit code $LASTEXITCODE."
   }
@@ -73,12 +79,16 @@ function Test-WingetPackageInstalled {
     [string]$Id
   )
 
-  $winget = Get-Command -Name winget -ErrorAction SilentlyContinue
-  if ($null -eq $winget) {
+  # This only detects packages registered with winget under the exact package id.
+  $wingetCommands = @(Get-Command -Name winget -CommandType Application -All -ErrorAction SilentlyContinue |
+      Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
+      Select-Object -First 1)
+
+  if ($wingetCommands.Count -eq 0) {
     return $false
   }
 
-  & $winget.Source list --id $Id --exact | Out-Null
+  & $wingetCommands[0].Source list --id $Id --exact | Out-Null
   return ($LASTEXITCODE -eq 0)
 }
 
