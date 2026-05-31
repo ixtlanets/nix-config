@@ -131,3 +131,39 @@ function Get-WindowsSetupCacheDirectory {
   New-Item -ItemType Directory -Path $cache -Force | Out-Null
   return $cache
 }
+
+function Save-UrlIfMissing {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$Uri,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Destination
+  )
+
+  if (Test-Path -LiteralPath $Destination -PathType Leaf) {
+    Write-Host "Using cached download $Destination"
+    return
+  }
+
+  $parent = Split-Path -Parent $Destination
+  if (-not [string]::IsNullOrWhiteSpace($parent)) {
+    New-Item -ItemType Directory -Path $parent -Force | Out-Null
+  }
+
+  Write-Host "Downloading $Uri"
+  Invoke-WebRequest -Uri $Uri -OutFile $Destination
+}
+
+function Expand-ZipToDirectory {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string]$ZipPath,
+
+    [Parameter(Mandatory = $true)]
+    [string]$Destination
+  )
+
+  New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+  Expand-Archive -LiteralPath $ZipPath -DestinationPath $Destination -Force
+}
