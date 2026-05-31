@@ -1,3 +1,4 @@
+[CmdletBinding()]
 param(
   [switch]$SkipInstall,
   [switch]$Force,
@@ -111,21 +112,19 @@ Assert-JsonProperty -InputObject $wordsConfig -Name 'handyCustomWords' -SourcePa
 Assert-JsonProperty -InputObject $wordsConfig -Name 'voxtypeReplacements' -SourcePath $wordsPath
 
 $desiredCustomWords = @(ConvertTo-StringArray -Value $wordsConfig.handyCustomWords)
-$desiredWordSet = @{}
+$desiredWordSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
 foreach ($word in $desiredCustomWords) {
-  $desiredWordSet[$word] = $true
+  [void]$desiredWordSet.Add($word)
 }
 
-$replacementValues = @()
+$seenReplacementValues = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+$missingReplacementValues = [System.Collections.Generic.List[string]]::new()
 foreach ($property in $wordsConfig.voxtypeReplacements.PSObject.Properties) {
-  $replacementValues += [string]$property.Value
+  $replacementValue = [string]$property.Value
+  if ($seenReplacementValues.Add($replacementValue) -and -not $desiredWordSet.Contains($replacementValue)) {
+    [void]$missingReplacementValues.Add($replacementValue)
+  }
 }
-
-$missingReplacementValues = @(
-  $replacementValues |
-    Select-Object -Unique |
-    Where-Object { -not $desiredWordSet.ContainsKey($_) }
-)
 
 if ($missingReplacementValues.Count -gt 0) {
   throw "Every voxtypeReplacements value must be present in handyCustomWords. Missing: $($missingReplacementValues -join ', ')"
@@ -193,7 +192,17 @@ if (-not [string]::IsNullOrWhiteSpace($settingsDirectory)) {
 
 if ($settingsExists) {
   $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-  $backupPath = Join-Path $settingsDirectory "settings_store.json.backup-$timestamp"
+  $settingsLeaf = Split-Path -Leaf $resolvedSettingsStorePath
+  if ([string]::IsNullOrWhiteSpace($settingsLeaf)) {
+    throw "Settings store path must include a file name: $resolvedSettingsStorePath"
+  }
+
+  $backupDirectory = $settingsDirectory
+  if ([string]::IsNullOrWhiteSpace($backupDirectory)) {
+    $backupDirectory = '.'
+  }
+
+  $backupPath = Join-Path $backupDirectory "$settingsLeaf.backup-$timestamp"
   Copy-Item -LiteralPath $resolvedSettingsStorePath -Destination $backupPath
 }
 
