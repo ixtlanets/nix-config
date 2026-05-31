@@ -173,7 +173,7 @@ if ($null -ne $settingsDocument.settings.PSObject.Properties['custom_words']) {
 $isUpToDate = $currentCustomWords.Count -eq $desiredCustomWords.Count
 if ($isUpToDate) {
   for ($index = 0; $index -lt $desiredCustomWords.Count; $index++) {
-    if ($currentCustomWords[$index] -ne $desiredCustomWords[$index]) {
+    if ($currentCustomWords[$index] -cne $desiredCustomWords[$index]) {
       $isUpToDate = $false
       break
     }
