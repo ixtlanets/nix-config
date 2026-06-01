@@ -13,7 +13,7 @@ It:
 - reads a URL from the clipboard;
 - requires the clipboard value to start with `http://` or `https://`;
 - creates a user video output directory;
-- clears the clipboard before starting the download;
+- clears the clipboard before starting the download when the Windows clipboard API allows it;
 - runs `yt-dlp` with the repository yt-dlp config and an explicit output template.
 
 On Windows, the command should preserve that behavior using PowerShell and Windows clipboard APIs.
@@ -75,7 +75,7 @@ The `yt` helper should still pass an explicit output template for the one-off co
 3. Read the URL from the Windows clipboard with `Get-Clipboard`.
 4. Trim whitespace and validate that the URL starts with `http://` or `https://`.
 5. Create `%USERPROFILE%\Videos` if needed.
-6. Clear the clipboard with `Set-Clipboard ''`.
+6. Best-effort clear the clipboard with a Windows clipboard clear API. Failure to clear should warn but should not stop the download.
 7. Run:
 
 ```powershell

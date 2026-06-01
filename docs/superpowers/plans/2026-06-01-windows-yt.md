@@ -123,7 +123,8 @@ $outputTemplate = Join-Path $videosDirectory '%(title)s.%(ext)s'
 New-Item -ItemType Directory -Path $videosDirectory -Force | Out-Null
 
 try {
-  Set-Clipboard ''
+  Add-Type -AssemblyName System.Windows.Forms
+  [System.Windows.Forms.Clipboard]::Clear()
 } catch {
   Write-Warning "yt: failed to clear Windows clipboard: $($_.Exception.Message)"
 }
