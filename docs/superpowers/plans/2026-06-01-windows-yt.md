@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a Windows-native `yt` command that reads a video URL from the clipboard and downloads it with nightly `yt-dlp`.
+**Goal:** Add a Windows-native `yt` command that reads a video URL from the clipboard and downloads it with nightly native `yt-dlp.exe`.
 
 **Architecture:** Keep `scripts/windows-yt.ps1` as the repo-owned command implementation. Add `scripts/windows-yt-setup.ps1` to write the Windows yt-dlp config and a user-level `yt.cmd` shim in the winget links directory. Wire that setup script into `scripts/windows-setup.ps1` while keeping package installation in `scripts/windows-apps.ps1`.
 
@@ -82,12 +82,12 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'windows-lib.ps1')
 Assert-Windows
 
-$ytDlp = @(Get-Command -Name 'yt-dlp' -CommandType Application -All -ErrorAction SilentlyContinue |
+$ytDlp = @(Get-Command -Name 'yt-dlp.exe' -CommandType Application -All -ErrorAction SilentlyContinue |
     Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
     Select-Object -First 1)
 
 if ($ytDlp.Count -eq 0) {
-  Write-Error "yt: yt-dlp is not installed or not in PATH. Run scripts/windows-setup.ps1 or install winget package yt-dlp.yt-dlp.nightly."
+  Write-Error "yt: native yt-dlp.exe is not installed or not in PATH. Run scripts/windows-setup.ps1 or install winget package yt-dlp.yt-dlp.nightly."
   exit 1
 }
 
@@ -167,17 +167,24 @@ Run:
 ```powershell
 $fakeBin = Join-Path $env:TEMP "windows-yt-fake-bin-$PID"
 New-Item -ItemType Directory -Path $fakeBin -Force | Out-Null
-$fakeYtDlp = Join-Path $fakeBin 'yt-dlp.cmd'
+$fakeYtDlpCmd = Join-Path $fakeBin 'yt-dlp.cmd'
 @'
 @echo off
-echo %*
+echo CMD_SHIM_SHOULD_NOT_RUN
+exit /b 37
+'@ | Set-Content -LiteralPath $fakeYtDlpCmd -Encoding ASCII
+
+$fakeYtDlpExe = Join-Path $fakeBin 'yt-dlp.exe'
+@'
+@echo off
+echo EXE_SELECTED %*
 exit /b 0
-'@ | Set-Content -LiteralPath $fakeYtDlp -Encoding ASCII
+'@ | Set-Content -LiteralPath $fakeYtDlpExe -Encoding ASCII
 
 $oldPath = $env:PATH
 try {
   $env:PATH = "$fakeBin;$oldPath"
-  Set-Clipboard 'https://example.com/video'
+  Set-Clipboard 'https://example.com/watch?v=1&list=2'
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows-yt.ps1
   if ($LASTEXITCODE -ne 0) { throw "windows-yt.ps1 failed with exit code $LASTEXITCODE" }
 } finally {
@@ -189,11 +196,18 @@ try {
 Expected output includes:
 
 ```text
+EXE_SELECTED
 --config-locations
 yt-dlp\config
 --output
 Videos\%(title)s.%(ext)s
-https://example.com/video
+https://example.com/watch?v=1&list=2
+```
+
+Expected output must not include:
+
+```text
+CMD_SHIM_SHOULD_NOT_RUN
 ```
 
 - [ ] **Step 5: Commit**

@@ -71,7 +71,7 @@ The `yt` helper should still pass an explicit output template for the one-off co
 `scripts/windows-yt.ps1` should:
 
 1. Assert it is running on Windows.
-2. Locate `yt-dlp` on PATH and fail clearly if it is missing.
+2. Locate native `yt-dlp.exe` on PATH and fail clearly if it is missing. Do not invoke `.cmd` or `.bat` shims, because URLs may contain shell metacharacters such as `&`.
 3. Read the URL from the Windows clipboard with `Get-Clipboard`.
 4. Trim whitespace and validate that the URL starts with `http://` or `https://`.
 5. Create `%USERPROFILE%\Videos` if needed.
@@ -79,10 +79,10 @@ The `yt` helper should still pass an explicit output template for the one-off co
 7. Run:
 
 ```powershell
-yt-dlp --config-locations "$env:APPDATA\yt-dlp\config" --output "$env:USERPROFILE\Videos\%(title)s.%(ext)s" "$url"
+yt-dlp.exe --config-locations "$env:APPDATA\yt-dlp\config" --output "$env:USERPROFILE\Videos\%(title)s.%(ext)s" "$url"
 ```
 
-The script should forward the `yt-dlp` exit code.
+The script should forward the `yt-dlp.exe` exit code.
 
 ## Setup Integration
 
@@ -107,7 +107,7 @@ Clipboard validation errors should be clear and use the `yt:` prefix, for exampl
 yt: clipboard does not contain a valid URL: <value>
 ```
 
-Missing `yt-dlp` should also be explicit and tell the user to run the setup or install `yt-dlp.yt-dlp.nightly`.
+Missing native `yt-dlp.exe` should also be explicit and tell the user to run the setup or install `yt-dlp.yt-dlp.nightly`.
 
 ## Verification
 
@@ -118,4 +118,4 @@ Implementation should verify:
 - the setup step writes `%APPDATA%\yt-dlp\config`;
 - the setup step writes `%LOCALAPPDATA%\Microsoft\WinGet\Links\yt.cmd`;
 - running `windows-yt.ps1` with a non-URL clipboard value fails with the expected validation message;
-- a dry command-construction test can run without downloading real video by injecting a harmless fake `yt-dlp` executable or script earlier in PATH.
+- a dry command-construction test can run without downloading real video by injecting a harmless fake native `yt-dlp.exe` earlier in PATH.
