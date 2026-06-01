@@ -321,14 +321,14 @@ namespace NativeMethods {
   using System.Runtime.InteropServices;
 
   public static class CursorScheme {
-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, string pvParam, uint fWinIni);
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, IntPtr pvParam, uint fWinIni);
   }
 }
 '@
   }
 
-  $updated = [NativeMethods.CursorScheme]::SystemParametersInfo(0x0057, 0, $null, 0x0001 -bor 0x0002)
+  $updated = [NativeMethods.CursorScheme]::SystemParametersInfo(0x0057, 0, [IntPtr]::Zero, 0x0002)
   if (-not $updated) {
     $lastWin32Error = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
     if ($lastWin32Error -ne 0) {
