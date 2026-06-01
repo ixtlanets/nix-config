@@ -118,4 +118,4 @@ Implementation should verify:
 - the setup step writes `%APPDATA%\yt-dlp\config`;
 - the setup step writes `%LOCALAPPDATA%\Microsoft\WinGet\Links\yt.cmd`;
 - running `windows-yt.ps1` with a non-URL clipboard value fails with the expected validation message;
-- a dry command-construction test can run without downloading real video by injecting a harmless fake native `yt-dlp.exe` earlier in PATH.
+- a dry command-construction test can run without downloading real video by compiling and injecting a harmless fake native `yt-dlp.exe` earlier in PATH.

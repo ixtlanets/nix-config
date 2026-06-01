@@ -175,11 +175,17 @@ exit /b 37
 '@ | Set-Content -LiteralPath $fakeYtDlpCmd -Encoding ASCII
 
 $fakeYtDlpExe = Join-Path $fakeBin 'yt-dlp.exe'
-@'
-@echo off
-echo EXE_SELECTED %*
-exit /b 0
-'@ | Set-Content -LiteralPath $fakeYtDlpExe -Encoding ASCII
+$fakeExeSource = @'
+using System;
+
+public static class Program {
+  public static int Main(string[] args) {
+    Console.WriteLine("EXE_SELECTED " + string.Join(" ", args));
+    return 0;
+  }
+}
+'@
+Add-Type -TypeDefinition $fakeExeSource -OutputAssembly $fakeYtDlpExe -OutputType ConsoleApplication
 
 $oldPath = $env:PATH
 try {
