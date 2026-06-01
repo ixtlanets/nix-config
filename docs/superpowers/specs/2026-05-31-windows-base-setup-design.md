@@ -155,7 +155,7 @@ The script should install only missing font files and missing registry entries. 
 Desired cursor theme:
 
 ```text
-Bibata-Modern-Ice
+Bibata-Original-Ice
 ```
 
 The script should download Bibata from its upstream release source because `winget` does not expose a Bibata package. It should cache downloads under `%LOCALAPPDATA%\nix-config\downloads`, install cursor files under a user-owned directory, update `HKCU:\Control Panel\Cursors`, and refresh the active cursor scheme.

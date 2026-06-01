@@ -27,7 +27,7 @@ if ([string]::IsNullOrWhiteSpace($CursorRoot)) {
     throw 'LOCALAPPDATA is not set.'
   }
 
-  $CursorRoot = Join-Path $localAppData 'Microsoft\Windows\Cursors\Bibata-Modern-Ice'
+  $CursorRoot = Join-Path $localAppData 'Microsoft\Windows\Cursors\Bibata-Original-Ice'
 }
 
 $script:CursorRoot = $CursorRoot
@@ -42,10 +42,10 @@ $cursorCache = Join-Path $CacheRoot 'cursors'
 $archiveCache = Join-Path $cursorCache 'archives'
 $extractRoot = Join-Path $cursorCache 'expanded'
 $script:BibataCursorVersion = 'v2.0.7'
-$script:BibataExpectedSourceDirectoryName = 'Bibata-Modern-Ice-Regular-Windows'
-$bibataArchiveUri = "https://github.com/ful1e5/Bibata_Cursor/releases/download/$script:BibataCursorVersion/Bibata-Modern-Ice-Windows.zip"
-$archivePath = Join-Path $archiveCache "Bibata-Modern-Ice-Windows-$script:BibataCursorVersion.zip"
-$extractPath = Join-Path $extractRoot "Bibata-Modern-Ice-Windows-$script:BibataCursorVersion"
+$script:BibataExpectedSourceDirectoryName = 'Bibata-Original-Ice-Regular-Windows'
+$bibataArchiveUri = "https://github.com/ful1e5/Bibata_Cursor/releases/download/$script:BibataCursorVersion/Bibata-Original-Ice-Windows.zip"
+$archivePath = Join-Path $archiveCache "Bibata-Original-Ice-Windows-$script:BibataCursorVersion.zip"
+$extractPath = Join-Path $extractRoot "Bibata-Original-Ice-Windows-$script:BibataCursorVersion"
 
 $cursorMap = @{
   Arrow       = 'arrow.cur'
@@ -206,7 +206,7 @@ function Expand-BibataArchiveIfNeeded {
 
     Save-BibataArchive -Destination $ZipPath
 
-    Write-Host 'Expanding Bibata Modern Ice cursors.'
+    Write-Host 'Expanding Bibata Original Ice cursors.'
     try {
       Expand-ZipToDirectory -ZipPath $ZipPath -Destination $Path
       New-Item -ItemType File -Path (Get-ExtractionMarkerPath -Path $Path) -Force | Out-Null
@@ -287,7 +287,9 @@ function Set-CursorRegistryValue {
     return
   }
 
-  New-Item -Path $script:CursorRegistry -Force | Out-Null
+  if (-not (Test-Path -LiteralPath $script:CursorRegistry)) {
+    New-Item -Path $script:CursorRegistry -Force | Out-Null
+  }
   $property = Get-ItemProperty -Path $script:CursorRegistry -Name $Name -ErrorAction SilentlyContinue
   $current = $null
   if ($null -ne $property -and $null -ne $property.PSObject.Properties[$Name]) {

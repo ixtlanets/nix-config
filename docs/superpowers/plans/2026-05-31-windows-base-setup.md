@@ -454,7 +454,7 @@ Expected: commit succeeds.
 
 - [ ] **Step 1: Create `scripts/windows-cursors.ps1`**
 
-Implement user-level Bibata install with `[switch]$SkipInstall`, `[string]$CursorRoot`, and `[string]$CacheRoot`. Use a user-owned default root under `%LOCALAPPDATA%\Microsoft\Windows\Cursors\Bibata-Modern-Ice`. Download Bibata from the upstream GitHub release source `ful1e5/Bibata_Cursor`.
+Implement user-level Bibata install with `[switch]$SkipInstall`, `[string]$CursorRoot`, and `[string]$CacheRoot`. Use a user-owned default root under `%LOCALAPPDATA%\Microsoft\Windows\Cursors\Bibata-Original-Ice`. Download Bibata from the upstream GitHub release source `ful1e5/Bibata_Cursor`.
 
 Core behavior:
 
@@ -481,7 +481,7 @@ if ([string]::IsNullOrWhiteSpace($CacheRoot)) { $CacheRoot = Get-WindowsSetupCac
 if ([string]::IsNullOrWhiteSpace($CursorRoot)) {
   $localAppData = [Environment]::GetEnvironmentVariable('LOCALAPPDATA')
   if ([string]::IsNullOrWhiteSpace($localAppData)) { throw 'LOCALAPPDATA is not set.' }
-  $CursorRoot = Join-Path $localAppData 'Microsoft\Windows\Cursors\Bibata-Modern-Ice'
+  $CursorRoot = Join-Path $localAppData 'Microsoft\Windows\Cursors\Bibata-Original-Ice'
 }
 
 New-Item -ItemType Directory -Path $CursorRoot -Force | Out-Null
