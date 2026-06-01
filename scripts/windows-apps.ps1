@@ -21,7 +21,7 @@ $packages = @(
   @{ Name = 'LibreOffice'; Id = 'TheDocumentFoundation.LibreOffice' },
   @{ Name = 'PowerToys'; Id = 'Microsoft.PowerToys' },
   @{ Name = 'Tailscale'; Id = 'Tailscale.Tailscale' },
-  @{ Name = 'yt-dlp'; Id = 'yt-dlp.yt-dlp' }
+  @{ Name = 'yt-dlp-nightly'; Id = 'yt-dlp.yt-dlp.nightly' }
 )
 
 foreach ($package in $packages) {
