@@ -7,12 +7,12 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'windows-lib.ps1')
 Assert-Windows
 
-$ytDlp = @(Get-Command -Name 'yt-dlp' -CommandType Application -All -ErrorAction SilentlyContinue |
+$ytDlp = @(Get-Command -Name 'yt-dlp.exe' -CommandType Application -All -ErrorAction SilentlyContinue |
     Where-Object { -not [string]::IsNullOrWhiteSpace($_.Source) } |
     Select-Object -First 1)
 
 if ($ytDlp.Count -eq 0) {
-  Write-Error "yt: yt-dlp is not installed or not in PATH. Run scripts/windows-setup.ps1 or install winget package yt-dlp.yt-dlp.nightly."
+  Write-Error "yt: native yt-dlp.exe is not installed or not in PATH. Run scripts/windows-setup.ps1 or install winget package yt-dlp.yt-dlp.nightly."
   exit 1
 }
 
