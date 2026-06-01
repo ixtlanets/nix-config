@@ -54,7 +54,9 @@ cd \\wsl.localhost\Ubuntu\home\nik\nix-config
 powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-setup.ps1
 ```
 
-The setup scripts are idempotent and safe to rerun. Use `-Only Apps`, `-Only Fonts`, `-Only Cursors`, `-Only Wsl`, or `-Only VoiceTyping` to run one area. Use `-SkipInstall` to report missing install targets without acquiring or installing packages, fonts, or cursors; configuration sync steps such as Handy custom words may still run.
+The setup scripts are idempotent and safe to rerun. Use `-Only Apps`, `-Only Yt`, `-Only Fonts`, `-Only Cursors`, `-Only Wsl`, or `-Only VoiceTyping` to run one area. Use `-SkipInstall` to report missing install targets without acquiring or installing packages, fonts, or cursors; configuration sync steps such as the `yt` shim/config and Handy custom words may still run.
+
+The Windows `yt` helper is installed as `%LOCALAPPDATA%\Microsoft\WinGet\Links\yt.cmd`. It reads a URL from the Windows clipboard, clears the clipboard, and downloads with `yt-dlp` into `%USERPROFILE%\Videos`. Windows setup installs `yt-dlp.yt-dlp.nightly` through winget.
 
 Some steps need administrator rights. On Windows 11 24H2+, enable Sudo for Windows in Settings, then use the recommended `forceNewWindow` mode:
 
