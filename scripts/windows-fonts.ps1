@@ -427,9 +427,13 @@ function Remove-StaleManagedFonts {
       continue
     }
 
-    Remove-Item -LiteralPath $fontFile.FullName -Force
-    $script:FontFilesChanged = $true
-    Write-Host "Removed stale managed font file $($fontFile.FullName)"
+    try {
+      Remove-Item -LiteralPath $fontFile.FullName -Force -ErrorAction Stop
+      $script:FontFilesChanged = $true
+      Write-Host "Removed stale managed font file $($fontFile.FullName)"
+    } catch {
+      Write-Warning "Could not remove stale managed font file $($fontFile.FullName): $($_.Exception.Message). It may be in use; leaving it for a later run."
+    }
   }
 
   if ($script:NoRegister) {
