@@ -695,9 +695,18 @@ function Install-FontFile {
   if (Test-SameFileContent -SourcePath $SourcePath -TargetPath $target) {
     Write-Host "Font file $target is current."
   } else {
-    Copy-Item -LiteralPath $SourcePath -Destination $target -Force
-    $script:FontFilesChanged = $true
-    Write-Host "Installed font file $target"
+    $targetExists = Test-Path -LiteralPath $target -PathType Leaf
+    try {
+      Copy-Item -LiteralPath $SourcePath -Destination $target -Force -ErrorAction Stop
+      $script:FontFilesChanged = $true
+      Write-Host "Installed font file $target"
+    } catch {
+      if (-not $targetExists) {
+        throw
+      }
+
+      Write-Warning "Could not update font file ${target}: $($_.Exception.Message). It may be in use; leaving the existing file for a later run."
+    }
   }
 
   if ($script:NoRegister) {
