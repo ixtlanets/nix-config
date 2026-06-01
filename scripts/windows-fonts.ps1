@@ -773,7 +773,7 @@ namespace NativeMethods {
   }
 
   $result = [UIntPtr]::Zero
-  $null = [NativeMethods.FontBroadcast]::SendMessageTimeout(
+  $sendMessageResult = [NativeMethods.FontBroadcast]::SendMessageTimeout(
     [IntPtr]0xffff,
     0x001d,
     [UIntPtr]::Zero,
@@ -781,6 +781,17 @@ namespace NativeMethods {
     0x0002,
     5000,
     [ref]$result)
+
+  if ($sendMessageResult -eq [IntPtr]::Zero) {
+    $lastWin32Error = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+    if ($lastWin32Error -ne 0) {
+      $win32Message = ([ComponentModel.Win32Exception]::new($lastWin32Error)).Message
+      throw "Failed to broadcast WM_FONTCHANGE with SendMessageTimeout: Win32 error $lastWin32Error ($win32Message)."
+    }
+
+    throw 'Failed to broadcast WM_FONTCHANGE with SendMessageTimeout.'
+  }
+
   Write-Host 'Broadcasted WM_FONTCHANGE.'
 }
 

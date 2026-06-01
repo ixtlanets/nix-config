@@ -40,7 +40,14 @@ Available NixOS hosts: `x1carbon`, `x1extreme`, `x13`, `um960pro`, `zenbook`, `m
 
 ### Windows Setup
 
-Run from Windows PowerShell:
+Run from Windows PowerShell. On a fresh Windows install where Ubuntu WSL does not exist yet, clone this repository somewhere on Windows first, such as `C:\Users\nik\src\nix-config`, and run the setup script from that checkout:
+
+```powershell
+cd C:\Users\nik\src\nix-config
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\windows-setup.ps1
+```
+
+If Ubuntu WSL already exists and the repository is checked out there, run it from the WSL UNC path instead:
 
 ```powershell
 cd \\wsl.localhost\Ubuntu\home\nik\nix-config
@@ -61,7 +68,7 @@ WSL setup uses:
 wsl --install -d Ubuntu --no-launch
 ```
 
-It may require a reboot. The script reports this but does not reboot automatically.
+It may require a reboot. The script reports this but does not reboot automatically. This WSL setup can create Ubuntu after running from a Windows checkout, so the `\\wsl.localhost\Ubuntu` path is only required when using an existing WSL checkout.
 
 ### WSL (Home Manager on Fresh Ubuntu WSL2)
 

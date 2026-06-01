@@ -33,6 +33,7 @@ if ([string]::IsNullOrWhiteSpace($CursorRoot)) {
 $script:CursorRoot = $CursorRoot
 $script:NoActivate = $NoActivate.IsPresent
 $script:CursorRegistry = 'HKCU:\Control Panel\Cursors'
+$script:CursorFilesChanged = $false
 $script:CursorRegistryChanged = $false
 
 New-Item -ItemType Directory -Path $script:CursorRoot -Force | Out-Null
@@ -269,6 +270,7 @@ function Install-CursorFile {
   }
 
   Copy-Item -LiteralPath $SourcePath -Destination $targetPath -Force
+  $script:CursorFilesChanged = $true
   Write-Host "Installed cursor file $targetPath"
 }
 
@@ -307,8 +309,8 @@ function Update-CursorScheme {
     return
   }
 
-  if (-not $script:CursorRegistryChanged) {
-    Write-Host 'Cursor registry values are already current.'
+  if (-not $script:CursorFilesChanged -and -not $script:CursorRegistryChanged) {
+    Write-Host 'Cursor files and registry values are already current.'
     return
   }
 
