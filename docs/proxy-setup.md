@@ -186,6 +186,14 @@ Extension. With `system: false`, the Mac could initiate traffic to the overlay b
 normal host-visible interface for inbound host-to-host access. Current desired state is no m1max
 WireGuard peer and no `m1max-gui-wg-canary.json` config.
 
+**Future candidate: Lima router VM**: the next macOS architecture under consideration is to run a
+small NixOS router VM under Lima. The VM would run `tailscaled`, `sing-box`, DNS policy, and
+optionally Docker Engine. macOS would route public and tailnet traffic through the VM while keeping
+local connected networks direct. The goal is to reproduce the Linux client routing policy on macOS:
+private/local direct, `geoip-ru` direct, Google/London traffic over Tailscale to London, and
+everything else through Frankfurt. Tailnet peers would reach services running on the Mac through a
+route advertised by the VM. Detailed design: `docs/superpowers/specs/2026-06-02-macos-lima-router-vm-design.md`.
+
 ### Windows client (Throne)
 
 **GUI app**: Throne, using the bundled `ThroneCore.exe` sing-box core.
