@@ -187,12 +187,15 @@ normal host-visible interface for inbound host-to-host access. Current desired s
 WireGuard peer and no `m1max-gui-wg-canary.json` config.
 
 **Future candidate: Lima router VM**: the next macOS architecture under consideration is to run a
-small NixOS router VM under Lima. The VM would run `tailscaled`, `sing-box`, DNS policy, and
-optionally Docker Engine. macOS would route public and tailnet traffic through the VM while keeping
-local connected networks direct. The goal is to reproduce the Linux client routing policy on macOS:
-private/local direct, `geoip-ru` direct, Google/London traffic over Tailscale to London, and
-everything else through Frankfurt. Tailnet peers would reach services running on the Mac through a
-route advertised by the VM. Detailed design: `docs/superpowers/specs/2026-06-02-macos-lima-router-vm-design.md`.
+small NixOS router VM under Lima, starting with an `m1max` canary. The VM would run `tailscaled`,
+`sing-box`, DNS policy, and eventually Docker Engine. macOS would route public and tailnet traffic
+through the VM while keeping local connected networks direct. The goal is to reproduce the Linux
+client routing policy on macOS: private/local direct, `geoip-ru` direct, Google/London traffic over
+Tailscale to London, and everything else through Frankfurt. Tailnet peers would reach selected Mac
+services through explicit forwarding from the VM, not through the Mac's current LAN address. The
+host control path must include `enable`, `disable`, `status`, and `panic` commands so the user can
+return to the current sing-box GUI setup. Detailed design:
+`docs/superpowers/specs/2026-06-02-macos-lima-router-vm-design.md`.
 
 ### Windows client (Throne)
 
