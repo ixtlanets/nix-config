@@ -100,10 +100,42 @@ function Install-WingetPackageIfMissing {
     [Parameter(Mandatory = $true)]
     [string]$Name,
 
+    [string[]]$RemoveBeforeInstallIds = @(),
+
     [switch]$SkipInstall
   )
 
-  if (Test-WingetPackageInstalled -Id $Id) {
+  $removedConflictingPackage = $false
+
+  foreach ($removeId in $RemoveBeforeInstallIds) {
+    if ([string]::IsNullOrWhiteSpace($removeId)) {
+      continue
+    }
+
+    if ($removeId -eq $Id) {
+      throw "Refusing to remove $removeId before installing the same winget package for $Name."
+    }
+
+    if (-not (Test-WingetPackageInstalled -Id $removeId)) {
+      continue
+    }
+
+    if ($SkipInstall) {
+      Write-Host "$Name has conflicting winget package $removeId installed. Skipping uninstall because -SkipInstall was passed."
+      continue
+    }
+
+    $winget = Get-RequiredCommand -Name winget
+    Write-Host "Removing conflicting winget package $removeId before managing $Name."
+    & $winget.Source uninstall --id $removeId --exact --source winget --accept-source-agreements
+    if ($LASTEXITCODE -ne 0) {
+      throw "winget uninstall for conflicting package $removeId before $Name failed with exit code $LASTEXITCODE."
+    }
+
+    $removedConflictingPackage = $true
+  }
+
+  if ((-not $removedConflictingPackage) -and (Test-WingetPackageInstalled -Id $Id)) {
     Write-Host "$Name is already installed. Skipping install."
     return
   }
@@ -114,8 +146,25 @@ function Install-WingetPackageIfMissing {
   }
 
   $winget = Get-RequiredCommand -Name winget
-  Write-Host "Installing $Name via winget package $Id."
-  & $winget.Source install --id $Id --exact --source winget --accept-package-agreements --accept-source-agreements
+  $installArguments = @(
+    'install'
+    '--id'
+    $Id
+    '--exact'
+    '--source'
+    'winget'
+    '--accept-package-agreements'
+    '--accept-source-agreements'
+  )
+
+  if ($removedConflictingPackage) {
+    $installArguments += '--force'
+    Write-Host "Refreshing $Name via winget package $Id after removing conflicting packages."
+  } else {
+    Write-Host "Installing $Name via winget package $Id."
+  }
+
+  & $winget.Source @installArguments
   if ($LASTEXITCODE -ne 0) {
     throw "winget install for $Name ($Id) failed with exit code $LASTEXITCODE."
   }

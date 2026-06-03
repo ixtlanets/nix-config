@@ -21,9 +21,23 @@ $packages = @(
   @{ Name = 'LibreOffice'; Id = 'TheDocumentFoundation.LibreOffice' },
   @{ Name = 'PowerToys'; Id = 'Microsoft.PowerToys' },
   @{ Name = 'Tailscale'; Id = 'Tailscale.Tailscale' },
-  @{ Name = 'yt-dlp'; Id = 'yt-dlp.yt-dlp' }
+  @{
+    Name = 'yt-dlp-nightly'
+    Id = 'yt-dlp.yt-dlp.nightly'
+    RemoveBeforeInstallIds = @('yt-dlp.yt-dlp')
+  }
 )
 
 foreach ($package in $packages) {
-  Install-WingetPackageIfMissing -Name $package.Name -Id $package.Id -SkipInstall:$SkipInstall
+  $installArguments = @{
+    Name = $package.Name
+    Id = $package.Id
+    SkipInstall = $SkipInstall
+  }
+
+  if ($package.ContainsKey('RemoveBeforeInstallIds')) {
+    $installArguments.RemoveBeforeInstallIds = $package.RemoveBeforeInstallIds
+  }
+
+  Install-WingetPackageIfMissing @installArguments
 }

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [ValidateSet('All', 'Wsl', 'Apps', 'Fonts', 'Cursors', 'VoiceTyping')]
+  [ValidateSet('All', 'Wsl', 'Apps', 'Apps,Yt', 'Yt', 'Fonts', 'Cursors', 'VoiceTyping')]
   [string[]]$Only = @('All'),
   [switch]$SkipInstall,
   [switch]$Force
@@ -13,6 +13,16 @@ $ErrorActionPreference = 'Stop'
 Assert-Windows
 
 $repositoryRoot = Get-RepositoryRootFromScript -ScriptRoot $PSScriptRoot
+$Only = @(
+  foreach ($selection in $Only) {
+    foreach ($name in ($selection -split ',')) {
+      $trimmedName = $name.Trim()
+      if (-not [string]::IsNullOrWhiteSpace($trimmedName)) {
+        $trimmedName
+      }
+    }
+  }
+)
 $runAll = $Only -contains 'All'
 
 function Test-Selected {
@@ -64,6 +74,10 @@ if (Test-Selected -Name 'Apps') {
   }
 
   Invoke-WindowsSetupStep -Name 'apps' -ScriptName 'windows-apps.ps1' -ArgumentList $arguments
+}
+
+if (Test-Selected -Name 'Yt') {
+  Invoke-WindowsSetupStep -Name 'yt' -ScriptName 'windows-yt-setup.ps1'
 }
 
 if (Test-Selected -Name 'Fonts') {
