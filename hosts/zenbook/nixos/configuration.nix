@@ -29,6 +29,7 @@ in
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
+  time.timeZone = lib.mkForce null;
 
   networking.wireguard.interfaces.wg-hosts = {
     ips = [ "198.18.77.3/32" ];
