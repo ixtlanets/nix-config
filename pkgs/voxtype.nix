@@ -32,6 +32,10 @@ voxtype.overrideAttrs (
 
     nativeBuildInputs = previousAttrs.nativeBuildInputs ++ [ perl ];
 
+    patches = (previousAttrs.patches or [ ]) ++ [
+      ./voxtype-paste-dotool.patch
+    ];
+
     # Local backport for https://github.com/peteonrails/voxtype/pull/355.
     # PR is closed unmerged, but equivalent fix is on upstream main as a06f82d.
     # Drop this once a tagged release includes the GTK4 OSD startup visibility fix.

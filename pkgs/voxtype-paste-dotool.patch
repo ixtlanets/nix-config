@@ -1,0 +1,165 @@
+diff --git a/src/output/paste.rs b/src/output/paste.rs
+index 6326b5f..fcace16 100644
+--- a/src/output/paste.rs
++++ b/src/output/paste.rs
+@@ -5,10 +5,11 @@
+ //!
+ //! Requires:
+ //! - wl-copy installed (for clipboard access)
+-//! - wtype OR eitype OR ydotool installed (for keystroke simulation)
++//! - wtype OR eitype OR dotool OR ydotool installed (for keystroke simulation)
+ //!   - wtype: Wayland-native, no daemon needed (preferred)
+ //!   - eitype: EI protocol, works on GNOME/KDE/Sway with libei
+-//!   - ydotool: Works on X11/Wayland/TTY, requires ydotoold daemon
++//!   - dotool: Works on X11/Wayland/TTY via uinput
++//!   - ydotool: Works on X11/Wayland/TTY, requires ydotoold daemon
+ 
+ use super::TextOutput;
+ use crate::error::OutputError;
+@@ -95,6 +96,14 @@ impl ParsedKeystroke {
+ 
+         args
+     }
++
++    /// Convert to dotool chord
++    /// e.g., "ctrl+v" -> "ctrl+v"
++    fn to_dotool_chord(&self) -> String {
++        let mut parts = self.modifiers.clone();
++        parts.push(self.key.clone());
++        parts.join("+")
++    }
+ 
+     /// Convert to ydotool key arguments using evdev codes
+     /// e.g., "ctrl+v" -> ["29:1", "47:1", "47:0", "29:0"]
+@@ -548,6 +557,18 @@ impl PasteOutput {
+             .unwrap_or(false)
+     }
+ 
++    /// Check if dotool is available
++    async fn is_dotool_available(&self) -> bool {
++        Command::new("which")
++            .arg("dotool")
++            .stdout(Stdio::null())
++            .stderr(Stdio::null())
++            .status()
++            .await
++            .map(|s| s.success())
++            .unwrap_or(false)
++    }
++
+     /// Check if ydotool is available (installed and daemon running)
+     async fn is_ydotool_available(&self) -> bool {
+         // Check if ydotool exists
+@@ -634,6 +655,47 @@ impl PasteOutput {
+         Ok(())
+     }
+ 
++    /// Simulate paste keystroke using dotool
++    async fn simulate_paste_dotool(&self) -> Result<(), OutputError> {
++        let chord = self.keystroke.to_dotool_chord();
++        tracing::debug!("Running: dotool key {}", chord);
++
++        let mut child = Command::new("dotool")
++            .stdin(Stdio::piped())
++            .stdout(Stdio::null())
++            .stderr(Stdio::piped())
++            .spawn()
++            .map_err(|e| {
++                if e.kind() == std::io::ErrorKind::NotFound {
++                    OutputError::CtrlVFailed("dotool not found".to_string())
++                } else {
++                    OutputError::CtrlVFailed(e.to_string())
++                }
++            })?;
++
++        if let Some(stdin) = child.stdin.as_mut() {
++            stdin
++                .write_all(format!("key {}\n", chord).as_bytes())
++                .await
++                .map_err(|e| OutputError::CtrlVFailed(e.to_string()))?;
++        }
++
++        let output = child
++            .wait_with_output()
++            .await
++            .map_err(|e| OutputError::CtrlVFailed(e.to_string()))?;
++
++        if !output.status.success() {
++            let stderr = String::from_utf8_lossy(&output.stderr);
++            return Err(OutputError::CtrlVFailed(format!(
++                "dotool failed: {}",
++                stderr
++            )));
++        }
++
++        Ok(())
++    }
++
+     /// Simulate paste keystroke using ydotool
+     async fn simulate_paste_ydotool(&self) -> Result<(), OutputError> {
+         let args = self.keystroke.to_ydotool_args().map_err(|e| {
+@@ -681,7 +739,7 @@ impl PasteOutput {
+         Ok(())
+     }
+ 
+-    /// Simulate paste keystroke, trying wtype first, then eitype, then ydotool
++    /// Simulate paste keystroke, trying wtype first, then eitype, then dotool, then ydotool
+     async fn simulate_paste_keystroke(&self) -> Result<(), OutputError> {
+         // Try wtype first (preferred - no daemon needed)
+         if self.is_wtype_available().await {
+@@ -708,6 +766,19 @@ impl PasteOutput {
+             }
+         }
+ 
++        // Try dotool (uinput - works on GNOME/KDE Wayland)
++        if self.is_dotool_available().await {
++            match self.simulate_paste_dotool().await {
++                Ok(()) => {
++                    tracing::debug!("Paste keystroke sent via dotool");
++                    return Ok(());
++                }
++                Err(e) => {
++                    tracing::debug!("dotool paste failed: {}, trying ydotool", e);
++                }
++            }
++        }
++
+         // Fall back to ydotool
+         if self.is_ydotool_available().await {
+             match self.simulate_paste_ydotool().await {
+@@ -724,6 +796,6 @@ impl PasteOutput {
+ 
+         Err(OutputError::CtrlVFailed(
+-            "No keystroke tool available (tried wtype, eitype, ydotool)".to_string(),
++            "No keystroke tool available (tried wtype, eitype, dotool, ydotool)".to_string(),
+         ))
+     }
+ 
+@@ -755,6 +827,27 @@ impl PasteOutput {
+             }
+         }
+ 
++        // Try dotool
++        if self.is_dotool_available().await {
++            let child = Command::new("dotool")
++                .stdin(Stdio::piped())
++                .stdout(Stdio::null())
++                .stderr(Stdio::piped())
++                .spawn();
++
++            if let Ok(mut child) = child {
++                if let Some(stdin) = child.stdin.as_mut() {
++                    let _ = stdin.write_all(b"key enter\n").await;
++                }
++
++                if let Ok(out) = child.wait_with_output().await {
++                    if out.status.success() {
++                        return Ok(());
++                    }
++                }
++            }
++        }
++
+         // Fall back to ydotool
+         if self.is_ydotool_available().await {
+             let mut cmd = Command::new("ydotool");

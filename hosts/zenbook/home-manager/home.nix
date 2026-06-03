@@ -1,7 +1,8 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ pkgs
+{ lib
+, pkgs
 , dpi
 , ...
 }:
@@ -19,7 +20,6 @@
       HWMON_PATH = "/sys/devices/platform/coretemp.0/hwmon/hwmon5/temp1_input";
       THERMAL_ZONE = "10";
       BACKLIGHT_CARD = "intel_backlight";
-      GDK_SCALE = "1";
       OLLAMA_SERVICE_URL = "http://localhost:11434";
       QT_AUTO_SCREEN_SCALE_FACTOR = "1";
       QT_SCALE_FACTOR_ROUNDING_POLICY = "PassThrough";
@@ -33,12 +33,10 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/waybar.nix
-    ../../../modules/home-manager/hyprland.nix
+    ../../../modules/home-manager/gnome.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
-    ./hyprland-zenbook.nix
     ./syncthing.nix
   ];
 
@@ -51,6 +49,11 @@
     asusctl
     nvtopPackages.full
   ];
+  dconf.settings = {
+    "org/gnome/desktop/interface" = {
+      scaling-factor = lib.hm.gvariant.mkUint32 2;
+    };
+  };
   xresources.properties = {
     "Xft.dpi" = dpi;
   };
