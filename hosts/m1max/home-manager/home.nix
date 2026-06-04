@@ -89,6 +89,7 @@ in
   };
 
   home.packages = with pkgs; [
+    ghostty.terminfo
     nixpkgs-fmt
     opencode
     ripgrep
