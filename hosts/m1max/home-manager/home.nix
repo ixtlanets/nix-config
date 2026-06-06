@@ -89,7 +89,6 @@ in
   };
 
   home.packages = with pkgs; [
-    ghostty.terminfo
     nixpkgs-fmt
     opencode
     ripgrep
@@ -154,6 +153,7 @@ in
     quit-after-last-window-closed = true
     macos-non-native-fullscreen = true
     macos-option-as-alt = true
+    shell-integration-features = ssh-env,ssh-terminfo
   '';
   home.file.".config/ghostty/themes/catppuccin-mocha".text = ''
     palette = 0=#45475a
@@ -181,24 +181,15 @@ in
   '';
   home.file."Library/Application Support/BraveSoftware/Brave-Browser/Managed Policies/managed_policies.json".text =
     braveManagedPolicy;
-  home.file.".config/openclaw/README.md".source = ../../../dotfiles/openclaw/README.md;
-  home.activation.refreshOpenClawGateway = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    openclaw=/opt/homebrew/bin/openclaw
-    state_dir="$HOME/.openclaw"
-    plist="$HOME/Library/LaunchAgents/ai.openclaw.gateway.plist"
-    stamp="$state_dir/.home-manager-openclaw-version"
+  home.activation.installGhosttyTerminfo = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ghostty_terminfo_dir="/Applications/Ghostty.app/Contents/Resources/terminfo"
 
-    if [ ! -x "$openclaw" ] || [ ! -f "$state_dir/openclaw.json" ]; then
-      echo "Skipping OpenClaw LaunchAgent refresh: OpenClaw is not installed or configured."
+    if [ -r "$ghostty_terminfo_dir/78/xterm-ghostty" ]; then
+      /bin/mkdir -p "$HOME/.terminfo"
+      /usr/bin/infocmp -A "$ghostty_terminfo_dir" -x xterm-ghostty |
+        /usr/bin/tic -x -o "$HOME/.terminfo" -
     else
-      version="$("$openclaw" --version | /usr/bin/awk '{ print $2 }')"
-      stamped_version="$(/bin/cat "$stamp" 2>/dev/null || true)"
-
-      if [ ! -f "$plist" ] || [ "$version" != "$stamped_version" ] || /usr/bin/grep -q '/Cellar/openclaw-cli/' "$plist"; then
-        echo "Refreshing OpenClaw LaunchAgent for version $version"
-        "$openclaw" gateway install --force --port 18789
-        /usr/bin/printf '%s\n' "$version" > "$stamp"
-      fi
+      echo "Skipping Ghostty terminfo install: $ghostty_terminfo_dir/78/xterm-ghostty is missing."
     fi
   '';
   #home.file.".config/linearmouse/linearmouse.json" .source = ../../../dotfiles/linearmouse.json;

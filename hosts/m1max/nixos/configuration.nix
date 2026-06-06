@@ -145,7 +145,6 @@ in
       "trippy"
       "emacs-plus"
       "llama.cpp"
-      "openclaw-cli"
       # "sunshine" it's broken now
     ];
     onActivation = {
