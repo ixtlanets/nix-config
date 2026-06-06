@@ -146,38 +146,6 @@ in
     };
   };
 
-  launchd.user.agents.llama-server = {
-    path = [ "/opt/homebrew/bin" ];
-    serviceConfig = {
-      Label = "ai.llama.server";
-      KeepAlive = true;
-      ProcessType = "Background";
-      ProgramArguments = [
-        "/opt/homebrew/bin/llama-server"
-        "-hf"
-        "unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL"
-        "--host"
-        "0.0.0.0"
-        "--port"
-        "8080"
-        "--flash-attn"
-        "on"
-        "--temp"
-        "1.0"
-        "--top-p"
-        "0.95"
-        "--top-k"
-        "64"
-        "--reasoning"
-        "off"
-      ];
-      RunAtLoad = true;
-      StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
-      StandardOutPath = "/Users/nik/Library/Logs/llama-server.log";
-      WorkingDirectory = "/Users/nik";
-    };
-  };
-
   # nix 2.31.2+1 fails the nix-shell shebang functional test on aarch64-darwin;
   # stick to the previous release until upstream fixes the regression.
   nix.package = pkgs.nixVersions.nix_2_30;
