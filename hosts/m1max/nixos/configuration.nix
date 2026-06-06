@@ -162,21 +162,21 @@ in
       ProgramArguments = [
         "/opt/homebrew/bin/llama-server"
         "-hf"
-        "unsloth/Qwen3.6-35B-A3B-MTP-GGUF"
+        "unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL"
         "--host"
         "0.0.0.0"
         "--port"
         "8080"
         "--flash-attn"
         "on"
-        "--spec-type"
-        "draft-mtp"
-        "--spec-draft-n-max"
-        "3"
+        "--temp"
+        "1.0"
+        "--top-p"
+        "0.95"
+        "--top-k"
+        "64"
         "--reasoning"
         "off"
-        "--chat-template-kwargs"
-        ''{"enable_thinking": false}''
       ];
       RunAtLoad = true;
       StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
