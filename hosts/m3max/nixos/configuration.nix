@@ -25,6 +25,8 @@ in
   ];
   nix.settings.trusted-users = [ "nik" ];
 
+  ids.gids.nixbld = 350;
+
   networking.hostName = "m3max"; # Define your hostname.
 
   # Set your time zone.
@@ -98,7 +100,7 @@ in
     menuExtraClock.ShowDayOfMonth = true;
     menuExtraClock.ShowDayOfWeek = true;
     spaces.spans-displays = false;
-    universalaccess.reduceMotion = false; # less animations
+    # universalaccess.reduceMotion = false; # fails to write on fresh macOS activation
   };
 
   security.pam.services.sudo_local = {
@@ -110,7 +112,6 @@ in
   # programms installed by homebrew
   homebrew = {
     enable = true;
-    caskArgs.no_quarantine = true;
     global.brewfile = true;
     masApps = { };
     casks = [
@@ -131,12 +132,10 @@ in
     ];
     taps = [
       "fujiapple852/trippy"
-      "d12frosted/emacs-plus"
       "LizardByte/homebrew"
     ];
     brews = [
       "trippy"
-      "emacs-plus"
       "llama.cpp"
       # "sunshine" it's broken now
     ];
