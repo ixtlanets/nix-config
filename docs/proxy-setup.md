@@ -10,7 +10,7 @@ handled by Frankfurt instead.
 
 ```
   ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
-  │ NixOS client                        │   │ macOS client (m1max)                │
+  │ NixOS client                        │   │ macOS client (m1max/m3max)          │
   │ (zenbook/x13/x1carbon/um960pro)     │   │                                     │
   │ sing-box (TUN mode, auto_route)     │   │ sing-box GUI (TUN mode, auto_route) │
   │   ├─ private / Russian IPs ► direct │   │   ├─ UDP 443 ────────────► block    │
@@ -163,17 +163,19 @@ can be intercepted by the transparent proxy instead of using the kernel WireGuar
 Manual `wg-quick` profiles under `secrets/wireguard/*.conf` are for non-NixOS or transitional Linux
 installs. If helper-script behavior for those installs changes, keep `install.sh` in sync.
 
-### macOS client (m1max)
+### macOS clients (m1max, m3max)
 
 **sing-box GUI app**: `io.nekohasekai.sfavt` (sing-box for Apple platforms)
 
-**Config**: `secrets/vless/m1max-gui.json` — load manually in the sing-box GUI app.
+**Configs**: `secrets/vless/m1max-gui.json`, `secrets/vless/m3max-gui.json` — load manually in the sing-box GUI app.
+
+Each Mac uses a separate Frankfurt VLESS user/UUID. Do not copy another Mac's UUID into a new GUI config; add a new Frankfurt client with `/opt/reality-ezpz/reality-user add <host>` and use the generated UUID in `secrets/vless/<host>-gui.json`.
 
 **Key differences from NixOS clients**:
 - Google and ElevenLabs routing are handled at Frankfurt, not on the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
 - No Tailscale dependency — London is reached via Frankfurt over the public internet
-- No WireGuard host overlay — keep m1max on the baseline sing-box GUI/VLESS config for now
+- No WireGuard host overlay — keep Macs on the baseline sing-box GUI/VLESS config for now
 - Keep config syntax aligned with the sing-box version bundled in the GUI app; older app builds may reject newer config fields
 
 **macOS + Tailscale conflict**: macOS only allows one active VPN Network Extension at a time.

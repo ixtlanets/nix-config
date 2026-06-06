@@ -195,6 +195,16 @@ For Macs managed by Nix-Darwin. Example host: `m3max`.
 
    Do not reuse this identity on another machine while `m3max` is running Syncthing.
 
+8. **VLESS GUI config**:
+
+   `m3max` uses its own Frankfurt VLESS client UUID. Load this config manually in sing-box GUI:
+
+   ```text
+   secrets/vless/m3max-gui.json
+   ```
+
+   Do not copy another Mac's GUI config without replacing the UUID and adding the matching user on Frankfurt.
+
 Available Darwin hosts: `m1max`, `m3max`, `i9mac`.
 
 To add another Apple Silicon Mac, copy `hosts/m3max`, rename host-specific paths and hostname, add a matching `darwinConfigurations.<host>` entry in `flake.nix`, then add a unique Syncthing identity under `secrets/syncthing/<host>/` if Syncthing should be enabled.
