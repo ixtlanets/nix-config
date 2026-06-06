@@ -50,17 +50,16 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      home-manager,
-      plasma-manager,
-      hardware,
-      darwin,
-      catppuccin,
-      ghostty,
-      disko,
-      ...
+    { self
+    , nixpkgs
+    , home-manager
+    , plasma-manager
+    , hardware
+    , darwin
+    , catppuccin
+    , ghostty
+    , disko
+    , ...
     }@inputs:
     let
       inherit (self) outputs;
@@ -493,6 +492,42 @@
               users.nik.imports = [
                 catppuccin.homeModules.catppuccin
                 ./hosts/m1max/home-manager/home.nix
+              ];
+            };
+          }
+        ];
+      };
+
+      darwinConfigurations.m3max = darwin.lib.darwinSystem {
+        specialArgs = {
+          inherit
+            inputs
+            outputs
+            darwin
+            ghostty
+            ;
+        };
+        system = "aarch64-darwin";
+        pkgs = import nixpkgs {
+          system = "aarch64-darwin";
+          overlays = [ outputs.overlays.modifications ];
+          config = {
+            allowUnfree = true;
+            # nss_wrapper is broken on Darwin but pulled in as a transitive dep by home-manager fonts
+            problems.handlers.nss_wrapper.broken = "ignore";
+          };
+        };
+
+        modules = [
+          ./hosts/m3max/nixos/configuration.nix
+          home-manager.darwinModules.home-manager
+          {
+            home-manager = {
+              useUserPackages = true;
+              extraSpecialArgs = { inherit inputs outputs ghostty; };
+              users.nik.imports = [
+                catppuccin.homeModules.catppuccin
+                ./hosts/m3max/home-manager/home.nix
               ];
             };
           }

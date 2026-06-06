@@ -6,6 +6,7 @@
     um790pro = "OKR2QCL-FLJ7JE5-HPWXEKY-SV2BHIA-I24BTUD-CJRVW4Y-VUFRT7H-YFPWOQL";
     x13 = "NZ4IHCR-OW6F44P-FPNHA6M-PE44VY7-ZXPCEEB-QSLKP6J-I56KPSA-4AX5VQX";
     m1max = "A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV";
+    m3max = "NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV";
     zenbook = "H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7";
     desktop = "6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS";
     um790pro-wsl = "6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL";
@@ -19,6 +20,7 @@
     "um790pro"
     "x13"
     "m1max"
+    "m3max"
     "zenbook"
     "desktop"
     "um790pro-wsl"
@@ -39,6 +41,7 @@
         "matebook"
         "x13"
         "m1max"
+        "m3max"
         "zenbook"
         "desktop"
         "android-phone"
@@ -56,6 +59,7 @@
         "matebook"
         "x13"
         "m1max"
+        "m3max"
         "zenbook"
         "desktop"
         "android-phone"
@@ -70,6 +74,7 @@
         "um790pro"
         "x13"
         "m1max"
+        "m3max"
         "zenbook"
         "desktop"
       ];
@@ -82,6 +87,7 @@
       devices = [
         "x1carbon"
         "m1max"
+        "m3max"
       ];
     };
   };

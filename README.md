@@ -119,21 +119,85 @@ This sets up your user environment with dotfiles, packages, and services.
 
 ### macOS (Nix-Darwin)
 
-For Macs running macOS.
+For Macs managed by Nix-Darwin. Example host: `m3max`.
 
-1. **Install Nix**: Use the installer from nixos.org.
-
-2. **Enable flakes**: As above.
-
-3. **Clone repo**: `git clone <this-repo> && cd nix-config`
-
-4. **Switch**:
+1. **Install Nix**: Install Nix with the official multi-user installer:
 
    ```bash
-   darwin-rebuild switch --flake .#<host>
+   sh <(curl -L https://nixos.org/nix/install) --daemon
    ```
 
-Available Darwin hosts: `m1max`, `i9mac`.
+   Restart the shell after installation, or load Nix manually:
+
+   ```bash
+   . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+   ```
+
+2. **Enable flakes**: Ensure Nix has flakes enabled:
+
+   ```bash
+   mkdir -p ~/.config/nix
+   printf 'experimental-features = nix-command flakes\n' >> ~/.config/nix/nix.conf
+   ```
+
+3. **Clone the repo**:
+
+   ```bash
+   git clone git@github.com:ixtlanets/nix-config.git ~/nix-config
+   cd ~/nix-config
+   ```
+
+4. **Unlock secrets**: Required for Syncthing identities and other encrypted material:
+
+   ```bash
+   git-crypt unlock
+   ```
+
+   If this fails, import the required GPG key first.
+
+5. **Bootstrap or switch Nix-Darwin**:
+
+   On a fresh Mac without `darwin-rebuild` yet, run:
+
+   ```bash
+   nix run github:lnl7/nix-darwin -- switch --flake .#m3max
+   ```
+
+   After Nix-Darwin is installed, use:
+
+   ```bash
+   darwin-rebuild switch --flake .#m3max
+   ```
+
+6. **Verify the active host**:
+
+   ```bash
+   scutil --get HostName
+   nix eval .#darwinConfigurations.m3max.config.networking.hostName
+   ```
+
+   Expected Nix output: `"m3max"`.
+
+7. **Syncthing on `m3max`**:
+
+   `m3max` has a pre-generated Syncthing identity stored in:
+
+   ```text
+   secrets/syncthing/m3max/cert.pem
+   secrets/syncthing/m3max/key.pem
+   ```
+
+   Device ID:
+
+   ```text
+   NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV
+   ```
+
+   Do not reuse this identity on another machine while `m3max` is running Syncthing.
+
+Available Darwin hosts: `m1max`, `m3max`, `i9mac`.
+
+To add another Apple Silicon Mac, copy `hosts/m3max`, rename host-specific paths and hostname, add a matching `darwinConfigurations.<host>` entry in `flake.nix`, then add a unique Syncthing identity under `secrets/syncthing/<host>/` if Syncthing should be enabled.
 
 ## Development
 
