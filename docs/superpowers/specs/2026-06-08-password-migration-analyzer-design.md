@@ -13,10 +13,15 @@ item already exists.
 
 ## Inputs
 
-The analyzer reads two local plaintext export files supplied by the user:
+The analyzer reads two required local plaintext export files supplied by the
+user:
 
 - Apple Passwords CSV, exported from Passwords.app.
 - 1Password `.1pux`, exported from 1Password.
+
+It may also read one optional source:
+
+- `pass` password store, typically `~/.password-store`.
 
 Both files are sensitive. The tool should treat every input field as secret by
 default and should avoid printing or persisting raw passwords, OTP secrets,
@@ -35,6 +40,8 @@ The report should contain:
   safe to import into Apple Passwords. This file is still sensitive because it
   contains passwords and OTPAuth URLs.
 - `conflicts.csv`: review table with conflict categories and redacted evidence.
+- `pass-coverage.csv`: optional review table for `pass` coverage and drift when
+  a password store path is supplied.
 - `review.md`: human-readable review notes grouped by conflict class.
 
 The analyzer should not commit these outputs. The report directory should be
@@ -92,6 +99,9 @@ The analyzer should assign each 1Password login item to one primary class:
 Apple-only records should be counted and summarized separately. They should not
 appear in `safe-import.csv`.
 
+Existing `pass` records should be counted and summarized separately. They should
+not create Apple import candidates by themselves.
+
 ## 1Password Mapping
 
 The analyzer should read `.1pux` as a zip archive and parse its JSON contents.
@@ -120,6 +130,29 @@ Title, URL, Username, Password, Notes, OTPAuth
 
 The tool should validate the header and stop with a clear error if required
 columns are missing. It should preserve Apple rows only in memory for matching.
+
+## Pass Mapping
+
+The analyzer should support an optional `--pass-store` argument. In the default
+mode it should only inspect encrypted entry names on disk and should not decrypt
+any `pass` entries.
+
+Default `pass` analysis should:
+
+- count entries in the password store;
+- derive normalized domain and username hints from entry paths;
+- classify obvious non-login namespaces such as `api`, `cards`, `notes`, `ssh`,
+  `server`, and `secrets`;
+- report likely coverage where a 1Password or Apple item appears to have a
+  matching `pass` path;
+- report `pass_only` entries separately so migration work does not delete or
+  duplicate them.
+
+The analyzer may later add an explicit deep mode, such as
+`--pass-decrypt-readonly`. Deep mode may decrypt entries read-only to detect
+password and OTP presence, compare values in memory, and improve drift
+classification. Even in deep mode, reports must not include raw passwords,
+OTPAuth URLs, OTP secrets, notes, or recovery codes.
 
 ## Redaction
 
@@ -160,6 +193,7 @@ Initial validation should cover:
 
 - parsing a real Apple Passwords CSV header;
 - parsing a real `.1pux` archive structure without printing secrets;
+- optionally scanning a real `pass` store without decrypting entries;
 - producing a report from the supplied exports;
 - confirming that generated reports contain no raw password or OTPAuth values
   except for `safe-import.csv`, which is intentionally importable and sensitive;
