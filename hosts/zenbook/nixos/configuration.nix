@@ -29,7 +29,79 @@ in
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
   networking.hostName = "zenbook"; # Define your hostname.
+  networking.firewall.interfaces = {
+    tailscale0.allowedTCPPorts = [ 4096 ];
+    wlo1.allowedTCPPorts = [ 4096 ];
+  };
   time.timeZone = lib.mkForce null;
+
+  services.logind.settings.Login.HandleLidSwitchExternalPower = "ignore";
+
+  systemd.services.lid-ac-inhibitor = {
+    description = "Ignore lid switch while external power is connected";
+    after = [ "systemd-logind.service" ];
+    wantedBy = [ "multi-user.target" ];
+    path = with pkgs; [
+      coreutils
+      systemd
+    ];
+    script = ''
+      set -eu
+
+      inhibitor_pid=""
+
+      on_external_power() {
+        for supply in /sys/class/power_supply/*; do
+          if [ -r "$supply/type" ] \
+            && [ "$(cat "$supply/type")" = "Mains" ] \
+            && [ -r "$supply/online" ] \
+            && [ "$(cat "$supply/online")" = "1" ]; then
+            return 0
+          fi
+        done
+
+        return 1
+      }
+
+      start_inhibitor() {
+        if [ -n "$inhibitor_pid" ] && kill -0 "$inhibitor_pid" 2>/dev/null; then
+          return
+        fi
+
+        systemd-inhibit \
+          --what=handle-lid-switch \
+          --why="External power connected" \
+          --mode=block \
+          sleep infinity &
+        inhibitor_pid="$!"
+      }
+
+      stop_inhibitor() {
+        if [ -n "$inhibitor_pid" ] && kill -0 "$inhibitor_pid" 2>/dev/null; then
+          kill "$inhibitor_pid"
+          wait "$inhibitor_pid" 2>/dev/null || true
+        fi
+
+        inhibitor_pid=""
+      }
+
+      trap stop_inhibitor INT TERM EXIT
+
+      while true; do
+        if on_external_power; then
+          start_inhibitor
+        else
+          stop_inhibitor
+        fi
+
+        sleep 5
+      done
+    '';
+    serviceConfig = {
+      Restart = "always";
+      RestartSec = "5s";
+    };
+  };
 
   networking.wireguard.interfaces.wg-hosts = {
     ips = [ "198.18.77.3/32" ];
