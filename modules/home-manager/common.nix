@@ -105,6 +105,9 @@ in
 
   home.sessionVariables = {
     TZ_LIST = "Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office;Europe/Berlin,Berlin";
+    LANG = "en_US.UTF-8";
+    LC_ALL = "en_US.UTF-8";
+    TERM = "xterm-256color";
   };
 
   home.packages =
