@@ -41,12 +41,12 @@ in
           };
           "custom/vless" = {
             "exec" =
-              "sh -c 'if command -v vless-waybar >/dev/null 2>&1; then exec vless-waybar; else printf '\''{\"text\":\"󱚡\",\"class\":\"inactive\",\"tooltip\":\"VLESS: Inactive\"}\\n'\''; fi'";
+              "sh -c 'if command -v vless-waybar > /dev/null 2>&1; then exec vless-waybar; else printf '\''{\"text\":\"󱚡\",\"class\":\"inactive\",\"tooltip\":\"VLESS: Inactive\"}\n'\''; fi'";
             "return-type" = "json";
             "format" = "{text}";
             "tooltip" = true;
             "interval" = 5;
-            "on-click" = "sh -c 'command -v vless-waybar >/dev/null 2>&1 && exec vless-waybar toggle || true'";
+            "on-click" = "sh -c 'command -v vless-waybar > /dev/null 2>&1 && exec vless-waybar toggle || true'";
           };
           "custom/voxtype" = {
             "exec" = "voxtype status --follow --format json";

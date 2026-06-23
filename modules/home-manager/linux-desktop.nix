@@ -194,20 +194,10 @@ in
     restore_clipboard = true
 
     [output.notification]
-    on_transcription = true
+    on_transcription = false
 
     [osd]
-    enabled = true
-    frontend = "gtk4"
-    position = "bottom-center"
-    width_px = 400
-    height_px = 48
-    margin_px = 24
-    top_margin = 0.85
-    opacity = 0.95
-    waveform_window_secs = 3.0
-    peak_decay_db_per_sec = 6.0
-    waveform_gain = 10.0
+    enabled = false
 
     [meeting]
     enabled = true

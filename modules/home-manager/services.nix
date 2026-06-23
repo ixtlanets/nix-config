@@ -21,28 +21,6 @@ in
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
 
-  systemd.user.services.rclone-goar-lbrand = lib.mkIf pkgs.stdenv.isLinux {
-    Unit = {
-      Description = "Manually mount goar-lbrand Google Drive";
-      ConditionPathExists = rcloneConfig;
-    };
-
-    Service = {
-      Type = "simple";
-      Environment = "PATH=/run/wrappers/bin:${pkgs.fuse3}/bin";
-      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${mountPoint}";
-      ExecStart = ''
-        ${pkgs.rclone}/bin/rclone mount goar-lbrand: ${mountPoint} \
-          --config ${rcloneConfig} \
-          --vfs-cache-mode writes \
-          --log-level INFO
-      '';
-      ExecStop = "/run/wrappers/bin/fusermount3 -u ${mountPoint}";
-      Restart = "on-failure";
-      RestartSec = "10s";
-    };
-  };
-
   systemd.user.services.voxtype = {
     Unit = {
       Description = "Voxtype voice typing daemon";
@@ -69,5 +47,27 @@ in
     };
 
     Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  systemd.user.services.rclone-goar-lbrand = lib.mkIf pkgs.stdenv.isLinux {
+    Unit = {
+      Description = "Manually mount goar-lbrand Google Drive";
+      ConditionPathExists = rcloneConfig;
+    };
+
+    Service = {
+      Type = "simple";
+      Environment = "PATH=/run/wrappers/bin:${pkgs.fuse3}/bin";
+      ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${mountPoint}";
+      ExecStart = ''
+        ${pkgs.rclone}/bin/rclone mount goar-lbrand: ${mountPoint} \
+          --config ${rcloneConfig} \
+          --vfs-cache-mode writes \
+          --log-level INFO
+      '';
+      ExecStop = "/run/wrappers/bin/fusermount3 -u ${mountPoint}";
+      Restart = "on-failure";
+      RestartSec = "10s";
+    };
   };
 }
