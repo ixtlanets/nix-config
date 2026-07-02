@@ -1,6 +1,7 @@
-{ lib
-, pkgs
-, ...
+{
+  lib,
+  pkgs,
+  ...
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
@@ -15,7 +16,6 @@ in
       nerd-fonts.ubuntu-sans
       nerd-fonts.sauce-code-pro
       nerd-fonts.hack
-      cantarell-fonts
       cmake
       libtool
       texliveFull
