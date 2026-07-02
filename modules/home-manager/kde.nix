@@ -1,9 +1,9 @@
 { pkgs, dpi, ... }:
 
 let
-  DPI = builtins.toString dpi;
-  rofi_width = builtins.toString (dpi * 5);
-  rofi_height = builtins.toString (dpi * 3);
+  DPI = toString dpi;
+  rofi_width = toString (dpi * 5);
+  rofi_height = toString (dpi * 3);
 in
 {
   home.stateVersion = "24.11";
@@ -58,6 +58,11 @@ in
         name = "Rofi";
         key = "Meta+D";
         command = "rofi -show run";
+      };
+      "launch-file-manager" = {
+        name = "Launch File Manager";
+        key = "Meta+E";
+        command = "dolphin";
       };
       "kbd-backlight" = {
         name = "kbd-backlight";

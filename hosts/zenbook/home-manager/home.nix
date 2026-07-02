@@ -1,8 +1,7 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ lib
-, pkgs
+{ pkgs
 , dpi
 , ...
 }:
@@ -33,7 +32,7 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/gnome.nix
+    ../../../modules/home-manager/kde.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
@@ -49,14 +48,11 @@
     asusctl
     nvtopPackages.full
   ];
-  dconf.settings = {
-    "org/gnome/desktop/interface" = {
-      scaling-factor = lib.hm.gvariant.mkUint32 2;
-    };
-  };
   xresources.properties = {
     "Xft.dpi" = dpi;
   };
+
+  xdg.mimeApps.defaultApplications."inode/directory" = [ "org.kde.dolphin.desktop" ];
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "24.11";

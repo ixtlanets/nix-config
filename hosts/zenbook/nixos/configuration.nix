@@ -2,12 +2,11 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{
-  pkgs,
-  lib,
-  dpi,
-  outputs,
-  ...
+{ pkgs
+, lib
+, dpi
+, outputs
+, ...
 }:
 let
   steamScale = toString (dpi / 96.0);
@@ -21,8 +20,7 @@ in
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/gnome.nix
-    ../../../modules/nixos/nautilus.nix
+    ../../../modules/nixos/kde.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
@@ -36,6 +34,8 @@ in
   time.timeZone = lib.mkForce null;
 
   services.logind.settings.Login.HandleLidSwitchExternalPower = "ignore";
+
+  programs.ssh.askPassword = lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
   systemd.services.lid-ac-inhibitor = {
     description = "Ignore lid switch while external power is connected";
