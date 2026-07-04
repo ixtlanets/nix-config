@@ -2,11 +2,12 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ pkgs
-, lib
-, dpi
-, outputs
-, ...
+{
+  pkgs,
+  lib,
+  dpi,
+  outputs,
+  ...
 }:
 let
   steamScale = toString (dpi / 96.0);
@@ -20,7 +21,8 @@ in
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ../../../modules/nixos/common.nix
-    ../../../modules/nixos/kde.nix
+    ../../../modules/nixos/hyprland.nix
+    ../../../modules/nixos/nautilus.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];

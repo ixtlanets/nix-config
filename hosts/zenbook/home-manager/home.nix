@@ -1,9 +1,10 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ pkgs
-, dpi
-, ...
+{
+  pkgs,
+  dpi,
+  ...
 }:
 {
   home.sessionVariables =
@@ -32,10 +33,12 @@
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/linux-desktop.nix
-    ../../../modules/home-manager/kde.nix
+    ../../../modules/home-manager/waybar.nix
+    ../../../modules/home-manager/hyprland.nix
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ./hyprland-zenbook.nix
     ./syncthing.nix
   ];
 
@@ -52,7 +55,7 @@
     "Xft.dpi" = dpi;
   };
 
-  xdg.mimeApps.defaultApplications."inode/directory" = [ "org.kde.dolphin.desktop" ];
+  xdg.mimeApps.defaultApplications."inode/directory" = [ "thunar.desktop" ];
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   home.stateVersion = "24.11";
