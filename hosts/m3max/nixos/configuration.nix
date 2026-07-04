@@ -62,6 +62,7 @@ in
     nerd-fonts.ubuntu-sans
     nerd-fonts.sauce-code-pro
     nerd-fonts.hack
+    nerd-fonts.symbols-only
     roboto
   ];
   system.primaryUser = "nik";
