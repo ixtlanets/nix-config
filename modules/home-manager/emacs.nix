@@ -5,6 +5,7 @@
 }:
 let
   isLinux = pkgs.stdenv.isLinux;
+  emacsPackage = if isLinux then pkgs.emacs-pgtk else pkgs.emacs30;
 in
 {
 
@@ -31,7 +32,7 @@ in
   programs = {
     emacs = {
       enable = true;
-      package = pkgs.emacs-pgtk;
+      package = emacsPackage;
       extraPackages =
         epkgs: with epkgs; [
           use-package

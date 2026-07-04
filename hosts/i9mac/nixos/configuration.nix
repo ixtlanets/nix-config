@@ -58,6 +58,7 @@ in
     nerd-fonts.ubuntu-sans
     nerd-fonts.sauce-code-pro
     nerd-fonts.hack
+    roboto
   ];
   system.primaryUser = "nik";
   # mac defaults
