@@ -1,9 +1,10 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ pkgs
-, dpi
-, ...
+{
+  pkgs,
+  dpi,
+  ...
 }:
 {
   home.sessionVariables = {
@@ -44,9 +45,8 @@
     nvtopPackages.full
   ];
 
-  home.sessionVariables = {
-    OLLAMA_SERVICE_URL = "http://localhost:11434";
-  };
+  _module.args.linuxDesktopEnableMoonlight = false;
+
   xresources.properties = {
     "Xft.dpi" = dpi;
   };

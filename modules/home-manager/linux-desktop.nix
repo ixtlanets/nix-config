@@ -1,49 +1,57 @@
-{ lib, pkgs, ... }:
+{
+  lib,
+  linuxDesktopEnableMoonlight ? true,
+  pkgs,
+  ...
+}:
 let
   lmstudio = pkgs.unstable.lmstudio;
   voiceTyping = import ./voice-typing-words.nix { inherit lib; };
-  voxtypeReplacementLines = lib.mapAttrsToList
-    (spoken: replacement: ''    ${builtins.toJSON spoken} = ${builtins.toJSON replacement}'')
-    voiceTyping.voxtypeReplacements;
+  voxtypeReplacementLines = lib.mapAttrsToList (
+    spoken: replacement: "    ${builtins.toJSON spoken} = ${builtins.toJSON replacement}"
+  ) voiceTyping.voxtypeReplacements;
 in
 {
-
-  home.packages = with pkgs; [
-    browserpass
-    google-chrome
-    telegram-desktop
-    moonlight-qt
-    nerd-fonts.ubuntu
-    nerd-fonts.ubuntu-mono
-    nerd-fonts.ubuntu-sans
-    nerd-fonts.sauce-code-pro
-    nerd-fonts.hack
-    monaspace
-    variety
-    prismlauncher
-    zathura
-    brightnessctl
-    pamixer
-    wireplumber
-    mpv
-    liberation_ttf
-    font-awesome
-    zoom-us
-    obsidian
-    opencode-desktop
-    wl-clipboard
-    vscode
-    pkgs.unstable.libreoffice-qt6-fresh
-    lmstudio
-    google-antigravity
-    code-cursor-fhs
-    papirus-icon-theme
-    kora-icon-theme
-    dotool
-    wtype
-    voxtype-onnx
-    vulkan-tools
-  ];
+  home.packages =
+    with pkgs;
+    [
+      browserpass
+      google-chrome
+      telegram-desktop
+      nerd-fonts.ubuntu
+      nerd-fonts.ubuntu-mono
+      nerd-fonts.ubuntu-sans
+      nerd-fonts.sauce-code-pro
+      nerd-fonts.hack
+      monaspace
+      variety
+      prismlauncher
+      zathura
+      brightnessctl
+      pamixer
+      wireplumber
+      mpv
+      liberation_ttf
+      font-awesome
+      zoom-us
+      obsidian
+      opencode-desktop
+      wl-clipboard
+      vscode
+      pkgs.unstable.libreoffice-qt6-fresh
+      lmstudio
+      google-antigravity
+      code-cursor-fhs
+      papirus-icon-theme
+      kora-icon-theme
+      dotool
+      wtype
+      voxtype-onnx
+      vulkan-tools
+    ]
+    ++ lib.optionals linuxDesktopEnableMoonlight [
+      moonlight-qt
+    ];
 
   catppuccin.flavor = "mocha";
   catppuccin.enable = true;

@@ -19,7 +19,6 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
-    outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
 
@@ -39,10 +38,6 @@
   };
 
   services.hardware.bolt.enable = true;
-
-  services.ollama = {
-    enable = true;
-  };
 
   services.vless = {
     enable = true;
