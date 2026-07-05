@@ -45,7 +45,7 @@
     nvtopPackages.full
   ];
 
-  _module.args.linuxDesktopEnableMoonlight = false;
+  linuxDesktop.enableMoonlight = false;
 
   xresources.properties = {
     "Xft.dpi" = dpi;
