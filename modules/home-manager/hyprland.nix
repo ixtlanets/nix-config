@@ -130,6 +130,11 @@ let
     external_count="$(printf '%s' "$monitors_json" | $jq_bin '[.[] | select(((.name | test("^eDP")) | not) and ((.disabled // false) == false))] | length')"
     internal_disabled="$(printf '%s' "$monitors_json" | $jq_bin -r --arg internal "$internal_monitor" '([.[] | select(.name == $internal) | (.disabled // false)] | .[0]) // false')"
 
+    refresh_internal_disabled() {
+      monitors_json="$($hyprctl_bin -j monitors all)"
+      internal_disabled="$(printf '%s' "$monitors_json" | $jq_bin -r --arg internal "$internal_monitor" '([.[] | select(.name == $internal) | (.disabled // false)] | .[0]) // false')"
+    }
+
     if [ "$policy" = "external-only" ]; then
       if [ "$external_count" -gt 0 ]; then
         desired_internal_state="disabled"
@@ -150,6 +155,12 @@ let
 
     if [ "$desired_internal_state" = "enabled" ] && [ "$internal_disabled" != "false" ]; then
       $hyprctl_bin keyword monitor "$internal_monitor,preferred,auto,$internal_scale" >/dev/null
+      ${pkgs.coreutils}/bin/sleep 0.2
+      refresh_internal_disabled
+
+      if [ "$internal_disabled" != "false" ]; then
+        $hyprctl_bin reload >/dev/null
+      fi
     fi
 
     if [ "$external_count" -gt 0 ]; then
@@ -484,7 +495,7 @@ in
     settings = {
       general = {
         # before_sleep_cmd = "loginctl lock-session"; # Example: lock before sleep
-        after_sleep_cmd = "hyprctl dispatch dpms on"; # Wake up monitors after sleep
+        after_sleep_cmd = "hypr-lid-apply || true; hyprctl dispatch dpms on"; # Wake up monitors after sleep
         ignore_dbus_inhibit = false; # Respect apps requestion inhibition (e.g. video players)
         lock_cmd = "pidof hyprlock || hyprlock"; # Lock command, ensure only one instance runs
       };
@@ -498,7 +509,7 @@ in
         {
           timeout = 1200; # 20 minutes
           on-timeout = "hyprctl dispatch dpms off"; # Turn off displays
-          on-resume = "hyprctl dispatch dpms on"; # Turn displays back on
+          on-resume = "hypr-lid-apply || true; hyprctl dispatch dpms on"; # Turn displays back on
         }
       ];
     };
