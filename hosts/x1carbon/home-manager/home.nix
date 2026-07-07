@@ -26,6 +26,7 @@
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ../../../modules/home-manager/vaultwarden-backup-pull.nix
     ./hyprland-x1carbon.nix
     ./syncthing.nix
   ];
@@ -35,6 +36,8 @@
       text-scaling-factor = 1;
     };
   };
+
+  services.vaultwardenBackupPull.enable = true;
 
   home = {
     username = "nik";

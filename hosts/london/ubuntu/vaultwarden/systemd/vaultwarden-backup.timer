@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily encrypted Vaultwarden backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 UTC
+Persistent=true
+Unit=vaultwarden-backup.service
+
+[Install]
+WantedBy=timers.target

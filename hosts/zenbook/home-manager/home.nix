@@ -38,9 +38,12 @@
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ../../../modules/home-manager/vaultwarden-backup-pull.nix
     ./hyprland-zenbook.nix
     ./syncthing.nix
   ];
+
+  services.vaultwardenBackupPull.enable = true;
 
   home = {
     username = "nik";

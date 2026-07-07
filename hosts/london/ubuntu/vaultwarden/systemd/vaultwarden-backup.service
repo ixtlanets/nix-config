@@ -1,0 +1,8 @@
+[Unit]
+Description=Create encrypted Vaultwarden backup
+Requires=docker.service
+After=docker.service vaultwarden.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vaultwarden/scripts/backup.sh

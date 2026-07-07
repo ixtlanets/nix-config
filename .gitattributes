@@ -5,4 +5,5 @@ secrets/syncthing/** filter=git-crypt diff=git-crypt
 secrets/vless/** filter=git-crypt diff=git-crypt
 secrets/proxy/** filter=git-crypt diff=git-crypt
 secrets/rclone/** filter=git-crypt diff=git-crypt
+secrets/vaultwarden/** filter=git-crypt diff=git-crypt
 secrets/wireguard/** filter=git-crypt diff=git-crypt

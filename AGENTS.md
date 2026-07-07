@@ -4,6 +4,9 @@
 - Do not run `sudo nixos-rebuild build --flake .#zenbook` or similar commands yourself. Always ask the user to execute them.
 - Keep `install.sh` in sync with changes to helper scripts (vpn, vless, tat, etc.) from the Nix configs; replicate behavior updates there for CachyOS/Arch installs.
 - Voice typing words are shared in `dotfiles/voice-typing/words.json` and loaded by `modules/home-manager/voice-typing-words.nix`. When updating `voxtypeReplacements`, keep `handyCustomWords` in sync; every replacement value must be present in Handy custom words, and the Nix assertion should remain strict with no exceptions.
+- `london` is an Ubuntu VPS, not a NixOS host. Keep reproducible Ubuntu-managed service bundles under `hosts/london/ubuntu/<service>/`. Do not add `london` to `nixosConfigurations` unless explicitly requested.
+- For Vaultwarden on `london`, keep Docker/Caddy/systemd/deploy assets under `hosts/london/ubuntu/vaultwarden/` and secrets under `secrets/vaultwarden/london/`.
+- Be careful with the existing London proxy setup (`microsocks`, Tailscale Serve, and related proxy docs/secrets). Do not change or restart it unless the task explicitly requires it.
 
 ## Project Structure & Module Organization
 - Root: Nix flake (`flake.nix`, `flake.lock`), overlays (`overlays/`), custom packages (`pkgs/`).

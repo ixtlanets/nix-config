@@ -1,9 +1,10 @@
 # This is your home-manager configuration file
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 
-{ pkgs
-, dpi
-, ...
+{
+  pkgs,
+  dpi,
+  ...
 }:
 {
   home.sessionVariables = {
@@ -27,6 +28,7 @@
     ../../../modules/home-manager/nvim.nix
     ../../../modules/home-manager/ghostty.nix
     ../../../modules/home-manager/wezterm.nix
+    ../../../modules/home-manager/vaultwarden-backup-pull.nix
   ];
 
   dconf.settings = {
@@ -34,6 +36,9 @@
       text-scaling-factor = 1.0;
     };
   };
+
+  services.vaultwardenBackupPull.enable = true;
+
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
