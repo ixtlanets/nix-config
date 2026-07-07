@@ -26,6 +26,14 @@
   ];
 
   boot.loader.efi.efiSysMountPoint = lib.mkForce "/boot";
+  boot.loader.grub.extraEntries = ''
+    menuentry "Windows Boot Manager" {
+      insmod part_gpt
+      insmod fat
+      search --no-floppy --fs-uuid --set=root 1A63-5E50
+      chainloader /EFI/Microsoft/Boot/bootmgfw.efi
+    }
+  '';
   networking.hostName = "um790pro"; # Define your hostname.
 
   networking.wireguard.interfaces.wg-hosts = {
