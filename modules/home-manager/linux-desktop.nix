@@ -23,7 +23,6 @@ in
     home.packages =
       with pkgs;
       [
-        browserpass
         google-chrome
         telegram-desktop
         nerd-fonts.ubuntu
@@ -81,16 +80,6 @@ in
       zed-editor = {
         enable = true;
       };
-      browserpass = {
-        enable = true;
-        browsers = [
-          "brave"
-          "firefox"
-          "chromium"
-          "chrome"
-        ];
-      };
-
       firefox = {
         enable = true;
         configPath = ".mozilla/firefox";
@@ -99,9 +88,9 @@ in
             installation_mode = "force_installed";
             install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
           };
-          "{d634138d-c276-4fc8-924b-40a0ea21d284}" = {
+          "446900e4-71c2-419f-a6a7-df9c091e268b" = {
             installation_mode = "force_installed";
-            install_url = "https://addons.mozilla.org/firefox/downloads/latest/1password-x-password-manager/latest.xpi";
+            install_url = "https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi";
           };
           "sponsorBlocker@ajay.app" = {
             installation_mode = "force_installed";
@@ -138,7 +127,7 @@ in
         enable = true;
         extensions = [
           { id = "ddkjiahejlhfcafbddmgiahcphecmpfh"; } # ublock origin lite, since Google broken proper extensions
-          { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
+          { id = "nngceckbapebfimnlniiiahkandclblb"; } # Bitwarden
           { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
           { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app
           { id = "enboaomnljigfhfjfoalacienlhjlfil"; } # Untrap - Remove YouTube Suggestions
@@ -151,7 +140,7 @@ in
         enable = true;
         extensions = [
           { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; } # ublock origin
-          { id = "aeblfdkhhhdcdjpifhhbdiojplfjncoa"; } # 1Password
+          { id = "nngceckbapebfimnlniiiahkandclblb"; } # Bitwarden
           { id = "mnjggcdmjocbbbhaepdhchncahnbgone"; } # SponsorBlock for YouTube - Skip Sponsorships
           { id = "kcpnkledgcbobhkgimpbmejgockkplob"; } # Tracking Token Stripper
           { id = "enamippconapkdmgfgjchkhakpfinmaj"; } # DeArrow. dearrow.ajay.app

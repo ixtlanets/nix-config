@@ -44,6 +44,11 @@ let
     fi
 
   '';
+  bitwardenCliDataFile =
+    if isDarwin then
+      "${config.home.homeDirectory}/Library/Application Support/Bitwarden CLI/data.json"
+    else
+      "${config.xdg.configHome}/Bitwarden CLI/data.json";
   tat-script = pkgs.writeShellScriptBin "tat" ''
     #!/bin/sh
     #
@@ -143,6 +148,7 @@ in
       speedtest-rs # speedtest
       fabric-ai
       acli # Atlassian CLI
+      bitwarden-cli
     ]
     ++ lib.optionals (!isDarwin) [
       qwen-code # AI coding agent by Qwen
@@ -543,6 +549,55 @@ in
   };
 
   home.activation = {
+    configureBitwardenCli = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      bw_data_file=${lib.escapeShellArg bitwardenCliDataFile}
+      bw_data_dir="$(dirname "$bw_data_file")"
+      bw_data_tmp="$(mktemp)"
+
+      mkdir -p "$bw_data_dir"
+
+      if [ -f "$bw_data_file" ]; then
+        ${pkgs.jq}/bin/jq '
+          .stateVersion = 78
+          | .global_environment_environment = {
+              region: "Self-hosted",
+              urls: {
+                base: "https://vault.nikcode.xyz",
+                api: null,
+                identity: null,
+                webVault: null,
+                icons: null,
+                notifications: null,
+                events: null,
+                keyConnector: null
+              }
+            }
+        ' "$bw_data_file" > "$bw_data_tmp"
+      else
+        ${pkgs.jq}/bin/jq -n '
+          {
+            stateVersion: 78,
+            global_environment_environment: {
+              region: "Self-hosted",
+              urls: {
+                base: "https://vault.nikcode.xyz",
+                api: null,
+                identity: null,
+                webVault: null,
+                icons: null,
+                notifications: null,
+                events: null,
+                keyConnector: null
+              }
+            }
+          }
+        ' > "$bw_data_tmp"
+      fi
+
+      mv "$bw_data_tmp" "$bw_data_file"
+      chmod 600 "$bw_data_file"
+    '';
+
     importGpgKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       if ! ${pkgs.gnupg}/bin/gpg --list-secret-keys | grep -q "${config.programs.git.settings.user.email}"; then
         echo "${gpgPublicKey}" | ${pkgs.gnupg}/bin/gpg --import
