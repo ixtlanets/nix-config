@@ -27,5 +27,7 @@
     xwayland.enable = true;
   };
 
+  services.gnome.gnome-keyring.enable = true;
+
   programs.hyprlock.enable = true;
 }
