@@ -135,6 +135,10 @@ let
       internal_disabled="$(printf '%s' "$monitors_json" | $jq_bin -r --arg internal "$internal_monitor" '([.[] | select(.name == $internal) | (.disabled // false)] | .[0]) // false')"
     }
 
+    wake_outputs() {
+      $hyprctl_bin dispatch dpms on >/dev/null 2>&1 || true
+    }
+
     if [ "$policy" = "external-only" ]; then
       if [ "$external_count" -gt 0 ]; then
         desired_internal_state="disabled"
@@ -163,6 +167,8 @@ let
       fi
     fi
 
+    wake_outputs
+
     if [ "$external_count" -gt 0 ]; then
       if ! lid_closed; then
         $systemctl_bin --user stop "$release_timer_unit" >/dev/null 2>&1 || true
@@ -180,13 +186,18 @@ let
   hypr-lid-monitor = pkgs.writeShellScriptBin "hypr-lid-monitor" ''
     set -euo pipefail
 
-    ${hypr-lid-apply}/bin/hypr-lid-apply
+    apply_lid_state() {
+      ${hypr-lid-apply}/bin/hypr-lid-apply || true
+    }
+
+    apply_lid_state
 
     ${pkgs.socat}/bin/socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
       | while read -r line; do
           case "$line" in
             monitoradded*|monitorremoved*)
-              ${hypr-lid-apply}/bin/hypr-lid-apply
+              ${pkgs.coreutils}/bin/sleep 0.5
+              apply_lid_state
               ;;
           esac
         done
