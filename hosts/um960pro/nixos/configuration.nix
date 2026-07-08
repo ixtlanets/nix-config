@@ -21,6 +21,7 @@
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    ../../../modules/nixos/timezone-picker.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];

@@ -23,6 +23,7 @@ in
     ../../../modules/nixos/common.nix
     ../../../modules/nixos/hyprland.nix
     ../../../modules/nixos/nautilus.nix
+    ../../../modules/nixos/timezone-picker.nix
     outputs.nixosModules.ollama
     outputs.nixosModules.vless
   ];
@@ -33,8 +34,6 @@ in
     tailscale0.allowedTCPPorts = [ 4096 ];
     wlo1.allowedTCPPorts = [ 4096 ];
   };
-  time.timeZone = lib.mkForce null;
-
   services.logind.settings.Login.HandleLidSwitchExternalPower = "ignore";
 
   programs.ssh.askPassword = lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";

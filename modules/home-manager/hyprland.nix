@@ -335,6 +335,10 @@ in
       # clipse - clipboard manager
       "float on, match:class ^(clipse)$"
       "size 622 652, match:class ^(clipse)$"
+      # timezone-picker - Waybar clock timezone selector
+      "float on, match:class ^(timezone-picker)$"
+      "center on, match:class ^(timezone-picker)$"
+      "size 720 420, match:class ^(timezone-picker)$"
     ];
     bindm = [
       "$mod, mouse:272, movewindow"
