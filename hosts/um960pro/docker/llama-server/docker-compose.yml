@@ -1,0 +1,40 @@
+services:
+  llama-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-vulkan
+    container_name: llama-server
+    restart: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card1:/dev/dri/card1
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    command:
+      - -hf
+      - unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - -c
+      - "16348"
+      - --parallel
+      - "1"
+      - --flash-attn
+      - "on"
+      - --spec-type
+      - draft-mtp
+      - --spec-draft-n-max
+      - "2"
+      - --cache-ram
+      - "1024"
+      - --n-gpu-layers
+      - "999"
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: "3"
+
+volumes:
+  hf-cache:
