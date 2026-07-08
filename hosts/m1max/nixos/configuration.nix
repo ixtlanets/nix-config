@@ -156,7 +156,7 @@ in
       ProgramArguments = [
         "/opt/homebrew/bin/llama-server"
         "-hf"
-        "unsloth/Qwen3.6-35B-A3B-MTP-GGUF"
+        "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M"
         "--host"
         "0.0.0.0"
         "--port"
