@@ -362,7 +362,7 @@ fi
 
 export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/bin:$HOME/go/bin:$PATH"
 # Time zone list for tz (keep in sync with home-manager common.nix)
-export TZ_LIST="Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office;Europe/Berlin,Berlin"
+export TZ_LIST="Europe/London,London;America/New_York,NY;America/Los_Angeles,GR-office;Europe/Berlin,Berlin;Europe/Moscow,Moscow"
 export PASSWORD_STORE_DIR="$HOME/.password-store"
 export GPG_TTY="$(tty)"
 
