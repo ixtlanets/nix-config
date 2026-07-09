@@ -30,6 +30,7 @@ services:
       - "1024"
       - --n-gpu-layers
       - "999"
+      - --metrics
     logging:
       driver: local
       options:
