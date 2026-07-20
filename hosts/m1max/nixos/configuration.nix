@@ -163,6 +163,7 @@ in
         "8080"
         "--flash-attn"
         "on"
+        "--metrics"
         "--spec-type"
         "draft-mtp"
         "--spec-draft-n-max"
