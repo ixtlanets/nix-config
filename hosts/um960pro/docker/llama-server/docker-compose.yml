@@ -6,7 +6,7 @@ services:
     network_mode: host
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
-      - /dev/dri/card1:/dev/dri/card1
+      - /dev/dri/card0:/dev/dri/card0
     volumes:
       - hf-cache:/root/.cache/huggingface
     command:
