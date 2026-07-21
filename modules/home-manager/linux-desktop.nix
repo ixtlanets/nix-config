@@ -7,12 +7,10 @@
 let
   cfg = config.linuxDesktop;
   lmstudio = pkgs.unstable.lmstudio;
-  voiceTyping = import ./voice-typing-words.nix { inherit lib; };
-  voxtypeReplacementLines = lib.mapAttrsToList (
-    spoken: replacement: "    ${builtins.toJSON spoken} = ${builtins.toJSON replacement}"
-  ) voiceTyping.voxtypeReplacements;
 in
 {
+  imports = [ ./handy.nix ];
+
   options.linuxDesktop.enableMoonlight = lib.mkOption {
     type = lib.types.bool;
     default = true;
@@ -20,6 +18,9 @@ in
   };
 
   config = {
+    voiceTyping.handy.enable = lib.mkDefault true;
+    voiceTyping.voxtype.enable = lib.mkDefault false;
+
     home.packages =
       with pkgs;
       [
@@ -43,7 +44,6 @@ in
         zoom-us
         obsidian
         opencode-desktop
-        wl-clipboard
         vscode
         pkgs.unstable.libreoffice-qt6-fresh
         lmstudio
@@ -51,9 +51,6 @@ in
         code-cursor-fhs
         papirus-icon-theme
         kora-icon-theme
-        dotool
-        wtype
-        voxtype-onnx
         vulkan-tools
       ]
       ++ lib.optionals cfg.enableMoonlight [
@@ -170,43 +167,6 @@ in
     };
 
     xresources.extraConfig = builtins.readFile ../../dotfiles/Xresources;
-    xdg.configFile."voxtype/config.toml".text = ''
-      state_file = "auto"
-      engine = "parakeet"
-
-      [hotkey]
-      enabled = true
-      key = "RIGHTALT"
-
-      [audio]
-      device = "default"
-      sample_rate = 16000
-      max_duration_secs = 60
-
-      [parakeet]
-      model = "parakeet-tdt-0.6b-v3"
-      language = ["en", "ru"]
-
-      [text]
-      spoken_punctuation = true
-
-      [text.replacements]
-      ${builtins.concatStringsSep "\n" voxtypeReplacementLines}
-
-      [output]
-      mode = "paste"
-      paste_keys = "ctrl+shift+v"
-      restore_clipboard = true
-
-      [output.notification]
-      on_transcription = false
-
-      [osd]
-      enabled = false
-
-      [meeting]
-      enabled = true
-    '';
     xdg.configFile."variety/variety.conf".text = builtins.readFile ../../dotfiles/variety.conf;
     xdg.configFile."variety/pluginconfig/quotes/quotes.txt".text =
       builtins.readFile ../../dotfiles/quotes.txt;

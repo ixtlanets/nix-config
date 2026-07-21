@@ -28,6 +28,8 @@
 
     ghostty.url = "github:ghostty-org/ghostty";
 
+    handy.url = "github:cjpais/Handy/v0.9.4";
+
     disko.url = "github:nix-community/disko/latest";
     disko.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -50,16 +52,17 @@
   };
 
   outputs =
-    { self
-    , nixpkgs
-    , home-manager
-    , plasma-manager
-    , hardware
-    , darwin
-    , catppuccin
-    , ghostty
-    , disko
-    , ...
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      plasma-manager,
+      hardware,
+      darwin,
+      catppuccin,
+      ghostty,
+      disko,
+      ...
     }@inputs:
     let
       inherit (self) outputs;

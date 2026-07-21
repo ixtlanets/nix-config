@@ -83,7 +83,6 @@ in
           modules-center = [ "clock" ];
           modules-right = [
             "custom/vless"
-            "custom/voxtype"
             "custom/hyprlayout"
             "hyprland/language"
             "pulseaudio"
@@ -111,19 +110,6 @@ in
             "tooltip" = true;
             "interval" = 5;
             "on-click" = "sh -c 'command -v vless-waybar > /dev/null 2>&1 && exec vless-waybar toggle || true'";
-          };
-          "custom/voxtype" = {
-            "exec" = "voxtype status --follow --format json";
-            "return-type" = "json";
-            "format" = "{icon}";
-            "format-icons" = {
-              "idle" = "󰍬";
-              "recording" = "󰍫";
-              "transcribing" = "󰔟";
-              "stopped" = "󰍭";
-            };
-            "tooltip" = true;
-            "on-click" = "systemctl --user restart voxtype";
           };
           "custom/hyprlayout" = {
             "exec" = "hypr-layout-waybar";

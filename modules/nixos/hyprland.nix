@@ -3,6 +3,8 @@
   ...
 }:
 {
+  boot.kernelModules = [ "uinput" ];
+
   xdg.portal = {
     enable = true;
     config = {
@@ -28,6 +30,9 @@
   };
 
   services.gnome.gnome-keyring.enable = true;
+  services.udev.extraRules = ''
+    KERNEL=="uinput", GROUP="input", MODE="0660"
+  '';
 
   programs.hyprlock.enable = true;
 }
