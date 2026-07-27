@@ -45,6 +45,7 @@ end
     end
   )
 | .settings.keyboard_implementation = "handy_keys"
+| .settings.model_unload_timeout = "never"
 | .settings.push_to_talk = true
 | .settings.paste_method = "ctrl_shift_v"
 | .settings.autostart_enabled = false

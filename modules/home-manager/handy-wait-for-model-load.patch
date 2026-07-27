@@ -1,0 +1,44 @@
+diff --git a/src-tauri/src/managers/transcription.rs b/src-tauri/src/managers/transcription.rs
+--- a/src-tauri/src/managers/transcription.rs
++++ b/src-tauri/src/managers/transcription.rs
+@@ -719,17 +719,20 @@ impl TranscriptionManager {
+         *is_loading = true;
++        drop(is_loading);
++        let loading_guard = LoadingGuard {
++            is_loading: Arc::clone(&self.is_loading),
++            loading_condvar: Arc::clone(&self.loading_condvar),
++        };
+         let self_clone = self.clone();
+         thread::spawn(move || {
++            let _loading_guard = loading_guard;
+             if reload_pending {
+                 self_clone
+                     .reload_model_on_next_use
+                     .store(false, Ordering::Release);
+             }
+             let settings = get_settings(&self_clone.app_handle);
+             if let Err(e) = self_clone.load_model(&settings.selected_model) {
+                 error!("Failed to load model: {}", e);
+             }
+-            let mut is_loading = self_clone.is_loading.lock().unwrap();
+-            *is_loading = false;
+-            self_clone.loading_condvar.notify_all();
+         });
+     }
+@@ -1062,6 +1065,16 @@ impl TranscriptionManager {
+         if tx.send(StreamCmd::Finalize(reply_tx)).is_err() {
+             return Ok(None);
+         }
++
++        // Large streaming models can take longer to load than the finalize
++        // timeout. Only charge actual stream finalization against that limit.
++        {
++            let mut is_loading = self.is_loading.lock().unwrap();
++            while *is_loading {
++                is_loading = self.loading_condvar.wait(is_loading).unwrap();
++            }
++        }
++
+         let raw = match reply_rx.recv_timeout(STREAM_FINALIZE_REPLY_TIMEOUT) {
+             Ok(Some(text)) => text,
+             Ok(None) => return Ok(None),

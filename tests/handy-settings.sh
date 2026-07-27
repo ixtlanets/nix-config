@@ -72,6 +72,7 @@ cat > "$tmp_dir/existing.json" <<'JSON'
   },
   "settings": {
     "selected_model": "keep-this-model",
+    "model_unload_timeout": "min5",
     "selected_microphone": "keep-this-microphone",
     "overlay_style": "live",
     "provider": {
@@ -127,6 +128,7 @@ cat > "$tmp_dir/existing.expected.json" <<'JSON'
   },
   "settings": {
     "selected_model": "keep-this-model",
+    "model_unload_timeout": "never",
     "selected_microphone": "keep-this-microphone",
     "overlay_style": "live",
     "provider": {
@@ -199,6 +201,7 @@ cat > "$tmp_dir/partial-binding.expected.json" <<'JSON'
       }
     },
     "keyboard_implementation": "handy_keys",
+    "model_unload_timeout": "never",
     "push_to_talk": true,
     "paste_method": "ctrl_shift_v",
     "autostart_enabled": false,
@@ -230,6 +233,7 @@ cat > "$tmp_dir/seeded-binding.expected.json" <<'JSON'
       }
     },
     "keyboard_implementation": "handy_keys",
+    "model_unload_timeout": "never",
     "push_to_talk": true,
     "paste_method": "ctrl_shift_v",
     "autostart_enabled": false,

@@ -10,7 +10,14 @@ let
   handyCustomWordsJson = pkgs.writeText "handy-custom-words.json" (
     builtins.toJSON voiceTyping.handyCustomWords
   );
-  handyPackage = inputs.handy.packages.${pkgs.stdenv.hostPlatform.system}.handy;
+  handyPackage =
+    inputs.handy.packages.${pkgs.stdenv.hostPlatform.system}.handy.overrideAttrs
+      (oldAttrs: {
+        postPatch = (oldAttrs.postPatch or "") + ''
+          patch --fuzz=0 -p1 < ${./handy-wait-for-model-load.patch}
+          grep -Fq "Only charge actual stream finalization" src-tauri/src/managers/transcription.rs
+        '';
+      });
   updateLinuxHandySettings = pkgs.writeShellApplication {
     name = "update-handy-settings";
     runtimeInputs = [
