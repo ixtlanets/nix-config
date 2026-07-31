@@ -31,6 +31,10 @@ services:
       - --n-gpu-layers
       - "999"
       - --metrics
+      - --reasoning
+      - "off"
+      - --chat-template-kwargs
+      - '{"enable_thinking": false}'
     logging:
       driver: local
       options:
