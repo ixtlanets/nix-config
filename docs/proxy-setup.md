@@ -10,8 +10,8 @@ handled by Frankfurt instead.
 
 ```
   ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
-  │ NixOS client                        │   │ macOS client (m1max/m3max)          │
-  │ (zenbook/x13/x1carbon/um790pro)     │   │                                     │
+  │ Linux client                        │   │ macOS client (m1max/m3max)          │
+  │ (zenbook/x1carbon/um790pro)         │   │                                     │
   │ sing-box (TUN mode, auto_route)     │   │ sing-box GUI (TUN mode, auto_route) │
   │   ├─ private / Russian IPs ► direct │   │   ├─ UDP 443 ────────────► block    │
   │   ├─ google.com / elevenlabs.io ─► london │   │   ├─ private / Russian IPs ► direct │
@@ -36,7 +36,7 @@ handled by Frankfurt instead.
                       ┌────────────────────┐                      │
                       │ London             │◄─────────────────────┘
                       │ 132.145.52.74      │
-                      │ 100.119.182.9      │
+                       │ london (MagicDNS)  │
                       │ microsocks :1080   │
                       └─────────┬──────────┘
                                 │
@@ -44,7 +44,8 @@ handled by Frankfurt instead.
                              internet
 ```
 
-All machines (NixOS clients, Frankfurt, London) are on the same Tailscale network (`tailf108.ts.net`).
+Linux clients and London are on the same Tailscale network (`tailf108.ts.net`). Frankfurt reaches
+London through its public endpoint instead.
 Linux hosts also use the `198.18.77.0/24` WireGuard overlay for direct host-to-host traffic; this
 overlay is intentionally separate from the VLESS/London proxy path.
 
@@ -98,7 +99,7 @@ Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um790
 - `route_exclude_address` includes `100.64.0.0/10` (Tailscale CGNAT) and `198.18.77.0/24`
   (WireGuard host overlay), bypassing the sing-box TUN for those private routes.
 - Outbound `proxy`: VLESS+Reality to Frankfurt
-- Outbound `london`: SOCKS5 to `100.119.182.9:1080`, `bind_interface: tailscale0`
+- Outbound `london`: SOCKS5 to `london.tailf108.ts.net:1080`, `bind_interface: tailscale0`
 - Outbound `direct`: plain direct connection
 - System DNS is pinned to local `dnsmasq` on `127.0.0.1`; `dnsmasq` filters public AAAA
   answers and forwards `*.tailf108.ts.net` to Tailscale DNS (`100.100.100.100`) so MagicDNS
@@ -106,9 +107,10 @@ Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um790
 
 **Key config detail — `bind_interface: tailscale0` on the `london` outbound**:
 sing-box uses `auto_detect_interface: true`, which binds all outbound sockets to the default
-internet interface (e.g. `wlo1`). The Tailscale peer IP `100.119.182.9` is not reachable via
-`wlo1` — it requires `tailscale0`. Without `bind_interface`, connections to the London SOCKS5
-time out. With it, sing-box explicitly uses the Tailscale interface for this outbound.
+internet interface (e.g. `wlo1`). The London MagicDNS name resolves to a Tailscale peer address,
+which is not reachable via `wlo1` and requires `tailscale0`. Without `bind_interface`, connections
+to the London SOCKS5 time out. With it, sing-box explicitly uses the Tailscale interface for this
+outbound.
 
 **Consequence**: the `london` outbound silently fails (per-connection error, not a service
 crash) when Tailscale is not running. All other traffic continues to work via VLESS.
@@ -465,6 +467,7 @@ After upgrading Frankfurt to `1.13.5` while keeping the same REALITY identity:
 ### London — SOCKS5 relay
 
 **Host**: `132.145.52.74` (Oracle Cloud, Ubuntu)
+**MagicDNS**: `london.tailf108.ts.net`
 **Tailscale IP**: `100.119.182.9`
 **SSH**: `ssh ubuntu@132.145.52.74`
 
@@ -500,7 +503,7 @@ WantedBy=multi-user.target
 Listens on `0.0.0.0:1080` with username/password authentication.
 
 **Network access**:
-- NixOS clients connect via Tailscale (`100.119.182.9:1080`)
+- Linux clients connect via Tailscale (`london.tailf108.ts.net:1080`)
 - Frankfurt Docker container connects via public IP (`132.145.52.74:1080`) — Oracle Cloud security list and host iptables both have port 1080 open. The iptables rule is persisted via `netfilter-persistent`.
 - The macOS client connects to London indirectly — via Frankfurt (VLESS) → London (SOCKS5)
 
@@ -527,21 +530,31 @@ Also install Tailscale and join the tailnet (see Tailscale section below).
 
 **Tailnet**: `tailf108.ts.net`
 
-| Node | Hostname | Tailscale IP | Role |
-|------|----------|-------------|------|
-| zenbook | zenbook | 100.73.33.90 | NixOS client |
-| x13 | x13 | — | NixOS client |
-| x1carbon | x1carbon | — | NixOS client |
-| um790pro | um790pro | — | NixOS client |
-| Frankfurt | frankfurt | 100.76.253.85 | VLESS server |
-| London | london | 100.119.182.9 | SOCKS5 relay |
+| Device | MagicDNS name | OS / role |
+|--------|---------------|-----------|
+| Zenbook | `zenbook` | NixOS client |
+| X13 | `x13` | Windows 11 client |
+| X1 Carbon | `x1carbon` | NixOS client |
+| UM790 Pro | `um790pro` | CachyOS primary client |
+| UM790 Pro | `um790pro-win` | Windows 11 secondary client |
+| M1 Max | `m1max` | macOS client |
+| Intel MacBook | `i9mac` | macOS client |
+| M3 Max | `m3max` | macOS client |
+| London VPS | `london` | SOCKS5 relay / exit node |
+| Moscow RPi | `moscow` | Exit node |
+
+Machine names use lowercase ASCII and identify physical devices. A primary OS owns the unsuffixed
+name; a secondary dual-boot OS uses an OS suffix. Mobile and external devices are not part of this
+managed naming scheme. Disable **Auto-generate from OS hostname** for managed devices. NixOS hosts
+also enforce `networking.hostName` through `services.tailscale.extraSetFlags`.
 
 **To add a new node to the tailnet**:
 ```bash
 # Install
 curl -fsSL https://tailscale.com/install.sh | sh
 # Join
-sudo tailscale up --authkey <reusable-auth-key-from-admin-console>
+sudo tailscale up --auth-key <reusable-auth-key-from-admin-console>
+sudo tailscale set --hostname=<canonical-name>
 ```
 
 If provider-specific DNS cutover notes or tokens are needed for recovery, store them in the
@@ -568,7 +581,7 @@ system traffic through London. This conflicted with sing-box's TUN transparent p
 ### Why not chain through Frankfurt for NixOS clients (zenbook → VLESS → Frankfurt → London)?
 
 Frankfurt's sing-box runs inside Docker, which does not share the host's Tailscale network
-namespace. The container cannot reach `100.119.182.9` (London's Tailscale IP). NixOS clients
+namespace. The container cannot reach `london.tailf108.ts.net` (London's MagicDNS name). NixOS clients
 therefore connect to London directly over Tailscale.
 
 For the macOS client, this constraint is handled differently: London's public port 1080 was
@@ -579,8 +592,8 @@ where `geosite-google` and `elevenlabs.io` traffic are forwarded to London over 
 ### Why `bind_interface: tailscale0`?
 
 sing-box's `auto_detect_interface: true` detects the default internet interface (`wlo1`) and
-binds all outbound sockets to it. `100.119.182.9` is a Tailscale CGNAT address, only reachable
-via `tailscale0`. Without an explicit `bind_interface`, the connection times out because the
+binds all outbound sockets to it. `london.tailf108.ts.net` resolves to a Tailscale CGNAT address,
+only reachable via `tailscale0`. Without an explicit `bind_interface`, the connection times out because the
 packet is sent out through `wlo1` where there is no route to `100.64.0.0/10`.
 
 ### Why microsocks with password auth?

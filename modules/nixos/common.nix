@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   pkgs,
   lib,
@@ -173,6 +174,7 @@ in
   services = {
     tailscale = {
       enable = true;
+      extraSetFlags = [ "--hostname=${config.networking.hostName}" ];
     };
     fwupd.enable = true;
     dbus.enable = true;
