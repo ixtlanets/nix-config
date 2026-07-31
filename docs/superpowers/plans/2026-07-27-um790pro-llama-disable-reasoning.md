@@ -1,8 +1,8 @@
-# UM960Pro Llama Disable Reasoning Implementation Plan
+# UM790Pro Llama Disable Reasoning Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Disable Qwen hidden reasoning on the UM960Pro llama.cpp endpoint used by Odysseus.
+**Goal:** Disable Qwen hidden reasoning on the UM790Pro llama.cpp endpoint used by Odysseus.
 
 **Architecture:** Add llama.cpp's server-wide reasoning controls to the existing standalone Compose command, mirroring the working `m1max` configuration. Recreate only `llama-server`, then verify visible completions and native tool calls through its OpenAI-compatible API.
 
@@ -13,11 +13,11 @@
 ### Task 1: Add Reasoning Controls
 
 **Files:**
-- Modify: `hosts/um960pro/docker/llama-server/docker-compose.yml:12-33`
+- Modify: `hosts/um790pro/docker/llama-server/docker-compose.yml:12-33`
 
 - [ ] **Step 1: Verify the current configuration lacks the controls**
 
-Run from `hosts/um960pro/docker/llama-server`:
+Run from `hosts/um790pro/docker/llama-server`:
 
 ```bash
 docker compose config --format json | python3 -c 'import json,sys; c=json.load(sys.stdin)["services"]["llama-server"]["command"]; assert c[c.index("--reasoning") + 1] == "off"; assert json.loads(c[c.index("--chat-template-kwargs") + 1])["enable_thinking"] is False'
@@ -48,8 +48,8 @@ Run:
 
 ```bash
 docker compose config --quiet
-git -C /home/nik/nix-config diff --check -- hosts/um960pro/docker/llama-server/docker-compose.yml
-git -C /home/nik/nix-config diff -- hosts/um960pro/docker/llama-server/docker-compose.yml
+git -C /home/nik/nix-config diff --check -- hosts/um790pro/docker/llama-server/docker-compose.yml
+git -C /home/nik/nix-config diff -- hosts/um790pro/docker/llama-server/docker-compose.yml
 ```
 
 Expected: Compose and whitespace checks exit 0; the diff contains only the four command entries.
@@ -63,7 +63,7 @@ Commit is intentionally omitted because the user did not request one.
 
 - [ ] **Step 1: Recreate only the model server**
 
-Run from `hosts/um960pro/docker/llama-server`:
+Run from `hosts/um790pro/docker/llama-server`:
 
 ```bash
 docker compose up -d --force-recreate llama-server

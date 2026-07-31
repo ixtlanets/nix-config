@@ -1,4 +1,4 @@
-# UM960Pro Llama Reasoning Control Design
+# UM790Pro Llama Reasoning Control Design
 
 ## Goal
 
@@ -7,7 +7,7 @@ Odysseus, prioritizing reliable tool calls, visible answers, and lower latency.
 
 ## Current State
 
-- `hosts/um960pro/docker/llama-server/docker-compose.yml` runs
+- `hosts/um790pro/docker/llama-server/docker-compose.yml` runs
   `unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M` with llama.cpp on host port 8080.
 - The server defaults to `--reasoning auto`; the Qwen template therefore opens
   a `<think>` block for each completion.
@@ -18,7 +18,7 @@ Odysseus, prioritizing reliable tool calls, visible answers, and lower latency.
 
 ## Design
 
-Add both supported llama.cpp controls to the UM960Pro Compose command:
+Add both supported llama.cpp controls to the UM790Pro Compose command:
 
 ```yaml
       - --reasoning

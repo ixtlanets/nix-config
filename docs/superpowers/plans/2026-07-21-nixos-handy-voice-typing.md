@@ -126,7 +126,7 @@ Expected: jq exits zero and the exact udev rule is printed.
 Run:
 
 ```bash
-rg -l 'modules/nixos/hyprland\.nix' hosts/{x1carbon,x1extreme,x13,um960pro,zenbook,matebook,desktop}/nixos/configuration.nix
+rg -l 'modules/nixos/hyprland\.nix' hosts/{x1carbon,x1extreme,x13,um790pro,zenbook,matebook,desktop}/nixos/configuration.nix
 rg 'modules/nixos/hyprland\.nix' hosts/vmmac/nixos/configuration.nix
 ```
 
@@ -505,7 +505,7 @@ Expected: exit zero.
 Run:
 
 ```bash
-for host in x1carbon x1extreme x13 um960pro zenbook matebook desktop; do
+for host in x1carbon x1extreme x13 um790pro zenbook matebook desktop; do
   nix eval --raw ".#nixosConfigurations.$host.config.system.build.toplevel.drvPath"
 done
 ```

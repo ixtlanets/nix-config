@@ -36,7 +36,7 @@ For installing or updating NixOS on a machine remotely or locally.
    sudo nixos-rebuild switch --flake .#<host>
    ```
 
-Available NixOS hosts: `x1carbon`, `x1extreme`, `x13`, `um960pro`, `zenbook`, `matebook`, `desktop`.
+Available NixOS hosts: `x1carbon`, `x1extreme`, `x13`, `um790pro`, `zenbook`, `matebook`, `desktop`.
 
 ### Windows Setup
 

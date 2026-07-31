@@ -11,7 +11,7 @@ handled by Frankfurt instead.
 ```
   ┌─────────────────────────────────────┐   ┌─────────────────────────────────────┐
   │ NixOS client                        │   │ macOS client (m1max/m3max)          │
-  │ (zenbook/x13/x1carbon/um960pro)     │   │                                     │
+  │ (zenbook/x13/x1carbon/um790pro)     │   │                                     │
   │ sing-box (TUN mode, auto_route)     │   │ sing-box GUI (TUN mode, auto_route) │
   │   ├─ private / Russian IPs ► direct │   │   ├─ UDP 443 ────────────► block    │
   │   ├─ google.com / elevenlabs.io ─► london │   │   ├─ private / Russian IPs ► direct │
@@ -88,7 +88,7 @@ Google and ElevenLabs traffic are routed to London at the Frankfurt level (see F
 
 ### NixOS clients
 
-Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um960pro`.
+Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um790pro`.
 
 **Module**: `modules/nixos/vless.nix`
 
@@ -147,7 +147,7 @@ It is not an internet exit path and does not replace VLESS+Reality.
 | x13 | `198.18.77.2/32` | `hosts/x13/nixos/configuration.nix`; manual profile `secrets/wireguard/x13.conf` |
 | zenbook | `198.18.77.3/32` | `hosts/zenbook/nixos/configuration.nix` |
 | x1carbon | `198.18.77.5/32` | `hosts/x1carbon/nixos/configuration.nix` |
-| um790pro | `198.18.77.6/32` | `hosts/um960pro/nixos/configuration.nix` |
+| um790pro | `198.18.77.6/32` | `hosts/um790pro/nixos/configuration.nix` |
 | desktop | `198.18.77.7/32` | manual profile `secrets/wireguard/desktop.conf` |
 
 NixOS hosts use `networking.wireguard.interfaces.wg-hosts` with:
@@ -532,7 +532,7 @@ Also install Tailscale and join the tailnet (see Tailscale section below).
 | zenbook | zenbook | 100.73.33.90 | NixOS client |
 | x13 | x13 | — | NixOS client |
 | x1carbon | x1carbon | — | NixOS client |
-| um960pro | um960pro | — | NixOS client |
+| um790pro | um790pro | — | NixOS client |
 | Frankfurt | frankfurt | 100.76.253.85 | VLESS server |
 | London | london | 100.119.182.9 | SOCKS5 relay |
 

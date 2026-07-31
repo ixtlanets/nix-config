@@ -7,7 +7,7 @@ Replace Voxtype with Handy on the seven active NixOS desktop hosts that currentl
 - `x1carbon`
 - `x1extreme`
 - `x13`
-- `um960pro`
+- `um790pro`
 - `zenbook`
 - `matebook`
 - `desktop`

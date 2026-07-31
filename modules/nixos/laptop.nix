@@ -8,7 +8,7 @@
   services.thermald.enable = true;
 
   # Optimize sleep/resume behavior to prevent slow unlock
-  # Use mkDefault so hosts can override if needed (e.g., um960pro disables sleep)
+  # Use mkDefault so hosts can override if needed (e.g., um790pro disables sleep)
   services.logind.settings.Login = {
     HandleLidSwitch = lib.mkDefault "suspend";
     HandleLidSwitchExternalPower = lib.mkDefault "suspend";

@@ -277,7 +277,7 @@
               }
             ];
           };
-        um960pro =
+        um790pro =
           let
             dpi = 144;
           in
@@ -285,10 +285,10 @@
             specialArgs = { inherit inputs outputs dpi; };
             modules = [
               catppuccin.nixosModules.catppuccin
-              ./hosts/um960pro/nixos/configuration.nix
+              ./hosts/um790pro/nixos/configuration.nix
               ./modules/nixos/laptop.nix
               disko.nixosModules.disko
-              ./hosts/um960pro/nixos/disko-config.nix
+              ./hosts/um790pro/nixos/disko-config.nix
               hardware.nixosModules.common-cpu-amd
               hardware.nixosModules.common-cpu-amd-pstate
               hardware.nixosModules.common-gpu-amd
@@ -310,7 +310,7 @@
                   sharedModules = [ plasma-manager.homeModules.plasma-manager ];
                   users.nik.imports = [
                     catppuccin.homeModules.catppuccin
-                    ./hosts/um960pro/home-manager/home.nix
+                    ./hosts/um790pro/home-manager/home.nix
                   ];
                 };
               }
