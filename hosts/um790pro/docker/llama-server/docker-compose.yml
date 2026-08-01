@@ -6,7 +6,7 @@ services:
     network_mode: host
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
-      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/card1:/dev/dri/card1
     volumes:
       - hf-cache:/root/.cache/huggingface
     command:
@@ -41,5 +41,81 @@ services:
         max-size: 200m
         max-file: "3"
 
+  llama-dashboard:
+    build:
+      context: /home/nik/pro/llama-dashboard
+      network: host
+    image: llama-dashboard:local
+    container_name: llama-dashboard
+    restart: unless-stopped
+    init: true
+    network_mode: host
+    depends_on:
+      llama-server:
+        condition: service_healthy
+    environment:
+      LLD_UPSTREAM_URL: http://127.0.0.1:8080
+      LLD_PROXY_PORT: "8081"
+      LLD_UI_PORT: "8082"
+      LLD_HOST: 0.0.0.0
+      LLD_DB_PATH: /data/llama-dashboard.db
+    volumes:
+      - dashboard-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8082/api/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: "3"
+
+  embedding-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-vulkan
+    container_name: embedding-server
+    restart: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card1:/dev/dri/card1
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    command:
+      - -hf
+      - Qwen/Qwen3-Embedding-4B-GGUF:Q4_K_M
+      - --host
+      - 100.95.213.117
+      - --port
+      - "8083"
+      - -c
+      - "8192"
+      - --parallel
+      - "1"
+      - --flash-attn
+      - "on"
+      - --embedding
+      - --pooling
+      - last
+      - --embd-normalize
+      - "2"
+      - --n-gpu-layers
+      - auto
+      - --metrics
+      - --no-webui
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://100.95.213.117:8083/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: "3"
+
 volumes:
   hf-cache:
+  dashboard-data:
