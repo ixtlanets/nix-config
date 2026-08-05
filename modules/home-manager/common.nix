@@ -211,28 +211,25 @@ in
     ssh = lib.mkIf isLinux {
       enable = true;
       enableDefaultConfig = false;
-      matchBlocks = {
+      settings = {
         "*" = {
-          addKeysToAgent = "no";
-          checkHostIP = true;
-          compression = false;
-          controlMaster = "no";
-          controlPath = "~/.ssh/master-%r@%n:%p";
-          controlPersist = "no";
-          forwardAgent = false;
-          forwardX11 = false;
-          forwardX11Trusted = false;
-          hashKnownHosts = false;
-          serverAliveCountMax = 3;
-          serverAliveInterval = 0;
-          userKnownHostsFile = "~/.ssh/known_hosts";
+          AddKeysToAgent = "no";
+          Compression = false;
+          ControlMaster = "no";
+          ControlPath = "~/.ssh/master-%r@%n:%p";
+          ControlPersist = "no";
+          ForwardAgent = false;
+          HashKnownHosts = false;
+          ServerAliveCountMax = 3;
+          ServerAliveInterval = 0;
+          UserKnownHostsFile = "~/.ssh/known_hosts";
         };
 
         "goar-tail" = {
-          hostname = "100.94.89.26";
-          user = "goar";
-          identityFile = "~/.ssh/id_rsa_1";
-          identitiesOnly = true;
+          HostName = "100.94.89.26";
+          User = "goar";
+          IdentityFile = "~/.ssh/id_rsa_1";
+          IdentitiesOnly = true;
         };
       };
     };

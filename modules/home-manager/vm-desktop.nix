@@ -103,6 +103,7 @@ in
     executable = true;
   };
   home.pointerCursor = {
+    enable = true;
     name = "Vanilla-DMZ";
     package = pkgs.vanilla-dmz;
     size = 32;

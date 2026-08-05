@@ -100,6 +100,7 @@ in
 
   catppuccin.flavor = "mocha";
   catppuccin.enable = true;
+  catppuccin.autoEnable = true;
   catppuccin.nvim.enable = false;
   catppuccin.alacritty.enable = true;
 

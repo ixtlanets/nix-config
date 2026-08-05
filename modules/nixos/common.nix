@@ -52,6 +52,11 @@ let
   '';
 in
 {
+  catppuccin = {
+    autoEnable = false;
+    enable = true;
+  };
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"

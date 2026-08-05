@@ -59,6 +59,7 @@ in
 
     catppuccin.flavor = "mocha";
     catppuccin.enable = true;
+    catppuccin.autoEnable = true;
     catppuccin.gtk.icon.enable = false;
     catppuccin.nvim.enable = false;
     catppuccin.alacritty.enable = true;
@@ -203,6 +204,7 @@ in
     qt.style.name = "kvantum";
     qt.platformTheme.name = "kvantum";
     home.pointerCursor = {
+      enable = true;
       name = "Bibata-Original-Ice";
       package = pkgs.bibata-cursors;
       gtk.enable = true;
