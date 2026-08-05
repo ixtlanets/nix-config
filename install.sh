@@ -1243,6 +1243,8 @@ DeviceAllow=/dev/net/tun rw
 RuntimeDirectory=${service_name}
 StateDirectory=${service_name}
 LimitNOFILE=65535
+LogRateLimitIntervalSec=30s
+LogRateLimitBurst=200
 
 [Install]
 WantedBy=multi-user.target

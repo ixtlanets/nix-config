@@ -375,6 +375,8 @@ in
         RuntimeDirectory = serviceName;
         StateDirectory = serviceName;
         LimitNOFILE = 65535;
+        LogRateLimitIntervalSec = 30;
+        LogRateLimitBurst = 200;
       };
       unitConfig = {
         StartLimitBurst = 5;

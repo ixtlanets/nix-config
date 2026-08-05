@@ -78,6 +78,11 @@ in
   ];
   nix.nixPath = [ "nixpkgs=${inputs.nixpkgs}" ];
 
+  services.journald.extraConfig = ''
+    SystemMaxUse=1G
+    SystemMaxFileSize=128M
+  '';
+
   # Bootloader.
   boot.loader.grub.enable = true;
   boot.loader.grub.configurationLimit = 8;
