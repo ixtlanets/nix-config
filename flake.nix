@@ -28,7 +28,10 @@
 
     ghostty.url = "github:ghostty-org/ghostty";
 
+    systems.url = "github:nix-systems/default-linux";
+
     handy.url = "github:cjpais/Handy/v0.9.4";
+    handy.inputs.bun2nix.inputs.systems.follows = "systems";
 
     disko.url = "github:nix-community/disko/latest";
     disko.inputs.nixpkgs.follows = "nixpkgs";

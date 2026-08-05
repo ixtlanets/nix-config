@@ -1,8 +1,11 @@
 {
   pkgs,
+  outputs,
   ...
 }:
 {
+  nixpkgs.overlays = [ outputs.overlays.hyprland-fix ];
+
   boot.kernelModules = [ "uinput" ];
 
   xdg.portal = {

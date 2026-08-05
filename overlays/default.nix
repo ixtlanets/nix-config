@@ -16,11 +16,27 @@
     voxtype-vulkan = final.callPackage ../pkgs/voxtype.nix { voxtype = prev.voxtype-vulkan; };
   };
 
+  # Included upstream after the locked nixpkgs revision (NixOS/nixpkgs#549253).
+  hyprland-fix = _final: prev: {
+    hyprland = prev.hyprland.overrideAttrs (old: {
+      postPatch = ''
+        substituteInPlace CMakeLists.txt start/CMakeLists.txt hyprpm/CMakeLists.txt \
+          --replace-fail "glaze 7...<8" "glaze"
+      '' + old.postPatch;
+    });
+  };
+
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
     tawm = inputs.tawm.packages.${prev.stdenv.hostPlatform.system}.default;
+    gam = prev.gam.overridePythonAttrs (_: {
+      pythonRelaxDeps = [ "chardet" ];
+    });
+    imgp = prev.imgp.overridePythonAttrs (old: {
+      build-system = old.build-system ++ [ final.python3Packages.standard-pkg-resources ];
+    });
     # nss_wrapper is Linux-only and its store path is referenced in mailutils' preCheck hook.
     # Nix tracks all store paths in derivation attrs, so even with doCheck=false it tries to build it.
     # Clear preCheck on Darwin to drop the reference entirely.
