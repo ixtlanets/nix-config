@@ -35,8 +35,25 @@
       pythonRelaxDeps = [ "chardet" ];
     });
     imgp = prev.imgp.overridePythonAttrs (old: {
-      build-system = old.build-system ++ [ final.python3Packages.standard-pkg-resources ];
+      build-system = old.build-system ++ [
+        (final.python3Packages.standard-pkg-resources.overridePythonAttrs (_: {
+          doCheck = !prev.stdenv.isDarwin;
+        }))
+      ];
     });
+    python3 =
+      if prev.stdenv.isDarwin then
+        prev.python3.override {
+          packageOverrides = _pythonFinal: pythonPrev: {
+            jupyter-server = pythonPrev.jupyter-server.overridePythonAttrs (old: {
+              disabledTests = (old.disabledTests or [ ]) ++ [
+                "test_disconnect_resolves_orphaned_kernel_info_future"
+              ];
+            });
+          };
+        }
+      else
+        prev.python3;
     # nss_wrapper is Linux-only and its store path is referenced in mailutils' preCheck hook.
     # Nix tracks all store paths in derivation attrs, so even with doCheck=false it tries to build it.
     # Clear preCheck on Darwin to drop the reference entirely.
