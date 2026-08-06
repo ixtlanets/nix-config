@@ -147,9 +147,9 @@ in
     };
   };
 
-  # nix 2.31.2+1 fails the nix-shell shebang functional test on aarch64-darwin;
-  # stick to the previous release until upstream fixes the regression.
-  nix.package = pkgs.nixVersions.nix_2_30;
+  # Nix 2.31.5 includes the upstream fix for the aarch64-darwin nix-shell
+  # shebang regression that required pinning 2.30.
+  nix.package = pkgs.nixVersions.nix_2_31;
 
   # Backward compatibility
   system.stateVersion = 4;
