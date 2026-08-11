@@ -53,9 +53,12 @@ services:
     depends_on:
       llama-server:
         condition: service_healthy
+      embedding-server:
+        condition: service_healthy
     environment:
-      LLD_UPSTREAM_URL: http://127.0.0.1:8080
-      LLD_PROXY_PORT: "8081"
+      LLD_UPSTREAMS_JSON: >-
+        [{"key":"generation","label":"Generation","role":"generation","upstreamUrl":"http://127.0.0.1:8080","listener":{"host":"0.0.0.0","port":8081}},{"key":"embedding","label":"Embeddings","role":"embedding","upstreamUrl":"http://100.95.213.117:8083","listener":{"host":"0.0.0.0","port":8084},"inputCapture":false}]
+      LLD_DEFAULT_UPSTREAM_KEY: generation
       LLD_UI_PORT: "8082"
       LLD_HOST: 0.0.0.0
       LLD_DB_PATH: /data/llama-dashboard.db
