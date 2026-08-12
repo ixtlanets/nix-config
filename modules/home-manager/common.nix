@@ -231,6 +231,17 @@ in
           IdentityFile = "~/.ssh/id_rsa_1";
           IdentitiesOnly = true;
         };
+
+        "um790pro" = {
+          HostName = "100.95.213.117";
+          User = "nik";
+        };
+
+        "m1max" = {
+          HostName = "192.168.1.174";
+          User = "nik";
+          ProxyJump = "um790pro";
+        };
       };
     };
     git = {
@@ -638,6 +649,21 @@ in
           echo "warning: failed to fetch github.com host key" >&2
       fi
     '';
+    makeSshConfigMutable = lib.mkIf isLinux (
+      lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+        ssh_config="$HOME/.ssh/config"
+
+        # OpenSSH rejects the Home Manager symlink when the Nix store is
+        # exposed through a user namespace and appears to be owned by nobody.
+        if [ -L "$ssh_config" ]; then
+          ssh_config_source="$(${pkgs.coreutils}/bin/readlink -f "$ssh_config")"
+          ${pkgs.coreutils}/bin/install -m 600 "$ssh_config_source" "$ssh_config.mutable"
+          ${pkgs.coreutils}/bin/mv -f "$ssh_config.mutable" "$ssh_config"
+        elif [ -f "$ssh_config" ]; then
+          chmod 600 "$ssh_config"
+        fi
+      ''
+    );
     setupAuthorizedKeys = lib.mkIf isDarwin (
       lib.hm.dag.entryAfter [ "setupSsh" ] ''
         install -m 600 ${sshAuthorizedKeysFile} ~/.ssh/authorized_keys
@@ -692,5 +718,9 @@ in
       clone_warn git@github.com:snikulin/verbatoria_node.git "$HOME/pro/verbatoria/verbatoria_node"
       fi
     '';
+  };
+
+  home.file = lib.mkIf isLinux {
+    ".ssh/config".force = true;
   };
 }

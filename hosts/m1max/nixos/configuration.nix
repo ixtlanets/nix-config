@@ -33,6 +33,9 @@ in
 
   programs.zsh.enable = true;
 
+  # Allow SSH access from the local network, including via um790pro as a jump host.
+  services.openssh.enable = true;
+
   users.users.nik = {
     home = "/Users/nik";
   };
