@@ -110,6 +110,7 @@ in
       "um790pro-frankfurt" = {
         BatchMode = true;
         HostName = "198.18.77.6";
+        HostKeyAlias = "192.168.1.241";
         User = "nik";
         IdentityFile = "~/.ssh/id_rsa_1";
         IdentitiesOnly = true;
