@@ -149,7 +149,7 @@ It is not an internet exit path and does not replace VLESS+Reality.
 | x13 | `198.18.77.2/32` | `hosts/x13/nixos/configuration.nix`; manual profile `secrets/wireguard/x13.conf` |
 | zenbook | `198.18.77.3/32` | `hosts/zenbook/nixos/configuration.nix` |
 | x1carbon | `198.18.77.5/32` | `hosts/x1carbon/nixos/configuration.nix` |
-| um790pro | `198.18.77.6/32` | `hosts/um790pro/nixos/configuration.nix` |
+| um790pro | `198.18.77.6/32` | `hosts/um790pro/nixos/configuration.nix`; CachyOS setup in `install.sh` |
 | desktop | `198.18.77.7/32` | manual profile `secrets/wireguard/desktop.conf` |
 
 NixOS hosts use `networking.wireguard.interfaces.wg-hosts` with:
@@ -164,6 +164,26 @@ can be intercepted by the transparent proxy instead of using the kernel WireGuar
 
 Manual `wg-quick` profiles under `secrets/wireguard/*.conf` are for non-NixOS or transitional Linux
 installs. If helper-script behavior for those installs changes, keep `install.sh` in sync.
+
+### SSH access through Frankfurt
+
+Home Manager configures `ssh frankfurt` to use `~/.ssh/id_rsa_1` explicitly. `IdentitiesOnly`
+prevents unrelated agent keys from being tried, while `BatchMode` disables password fallback. On
+`m3max`, `ssh m1max` uses the following jump chain:
+
+```text
+m3max -> frankfurt (31.58.85.163) -> um790pro (198.18.77.6) -> m1max (192.168.1.174)
+```
+
+The Frankfurt-to-um790pro hop depends on the `wg-hosts` WireGuard overlay. On CachyOS/Arch,
+`install.sh` writes `/etc/wireguard/wg-hosts.conf` from the encrypted per-host key and enables
+`wg-quick@wg-hosts.service`.
+
+To configure only this overlay without running the full installer:
+
+```bash
+./install.sh wireguard-overlay
+```
 
 ### macOS clients (m1max, m3max)
 

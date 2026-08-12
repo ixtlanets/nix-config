@@ -208,7 +208,7 @@ in
       enable = true;
       gitCredentialHelper.enable = true;
     };
-    ssh = lib.mkIf isLinux {
+    ssh = {
       enable = true;
       enableDefaultConfig = false;
       settings = {
@@ -232,14 +232,28 @@ in
           IdentitiesOnly = true;
         };
 
+        "frankfurt" = {
+          BatchMode = true;
+          HostName = "31.58.85.163";
+          User = "root";
+          IdentityFile = "~/.ssh/id_rsa_1";
+          IdentitiesOnly = true;
+        };
+
         "um790pro" = {
+          BatchMode = true;
           HostName = "100.95.213.117";
           User = "nik";
+          IdentityFile = "~/.ssh/id_rsa_1";
+          IdentitiesOnly = true;
         };
 
         "m1max" = {
+          BatchMode = true;
           HostName = "192.168.1.174";
           User = "nik";
+          IdentityFile = "~/.ssh/id_rsa_1";
+          IdentitiesOnly = true;
           ProxyJump = "um790pro";
         };
       };

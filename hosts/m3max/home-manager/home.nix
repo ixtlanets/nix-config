@@ -106,6 +106,18 @@ in
 
   programs = {
     home-manager.enable = true;
+    ssh.settings = {
+      "um790pro-frankfurt" = {
+        BatchMode = true;
+        HostName = "198.18.77.6";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
+      "m1max" = {
+        ProxyJump = lib.mkForce "frankfurt,um790pro-frankfurt";
+      };
+    };
     alacritty = {
       enable = true;
       settings = {

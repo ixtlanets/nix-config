@@ -1108,6 +1108,49 @@ enable_tailscale_service() {
   fi
 }
 
+configure_wireguard_overlay() {
+  local address
+  case "$HOSTNAME_SHORT" in
+    x13) address="198.18.77.2/32" ;;
+    zenbook) address="198.18.77.3/32" ;;
+    x1carbon) address="198.18.77.5/32" ;;
+    um790pro) address="198.18.77.6/32" ;;
+    *)
+      log "skipping WireGuard host overlay; no address assigned to ${HOSTNAME_SHORT}"
+      return
+      ;;
+  esac
+
+  local private_key_file="${SCRIPT_DIR}/secrets/wireguard/${HOSTNAME_SHORT}.key"
+  if [[ ! -r "$private_key_file" ]]; then
+    log "warning: WireGuard private key not readable at ${private_key_file}; skipping"
+    return
+  fi
+
+  local private_key
+  private_key="$(<"$private_key_file")"
+  if [[ ! "$private_key" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
+    log "warning: WireGuard private key at ${private_key_file} is invalid or still encrypted; skipping"
+    return
+  fi
+
+  log "configuring WireGuard host overlay at ${address}"
+  sudo install -d -m 700 /etc/wireguard
+  sudo tee /etc/wireguard/wg-hosts.conf >/dev/null <<EOF
+[Interface]
+Address = ${address}
+PrivateKey = ${private_key}
+
+[Peer]
+PublicKey = Daj7tj5vfs3gIzHWzt9FKadBVrCFf0CyLn0nUc/N5Ug=
+AllowedIPs = 198.18.77.0/24
+Endpoint = 31.58.85.163:51820
+PersistentKeepalive = 25
+EOF
+  sudo chmod 600 /etc/wireguard/wg-hosts.conf
+  sudo systemctl enable --now wg-quick@wg-hosts.service
+}
+
 write_vless_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1303,6 +1346,12 @@ EOF
 }
 
 main() {
+  if [[ "${1:-}" == "wireguard-overlay" ]]; then
+    pacman_install wireguard-tools
+    configure_wireguard_overlay
+    return
+  fi
+
   local packages=(
     zsh
     zsh-completions
@@ -1376,6 +1425,7 @@ main() {
     ttf-sourcecodepro-nerd
     ttf-hack-nerd
     wordnet
+    wireguard-tools
   )
 
   if [[ "$HOSTNAME_SHORT" == "x13" ]]; then
@@ -1421,6 +1471,7 @@ main() {
   install_tat
   write_vpn_script
   enable_tailscale_service
+  configure_wireguard_overlay
   write_vless_script
   install_vless_service
   ensure_vless_docker_firewall
