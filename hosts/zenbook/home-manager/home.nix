@@ -45,6 +45,12 @@
 
   services.vaultwardenBackupPull.enable = true;
 
+  dconf.settings."org/gnome/desktop/interface" = {
+    document-font-name = "Roboto 12";
+    font-name = "Roboto 12";
+    text-scaling-factor = 1.0;
+  };
+
   home = {
     username = "nik";
     homeDirectory = "/home/nik";
