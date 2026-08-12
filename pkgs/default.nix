@@ -10,6 +10,7 @@
   google-genai = pkgs.callPackage ./google-genai.nix { };
   pdftext = pkgs.callPackage ./pdftext.nix { };
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };
+  chatgpt-desktop = pkgs.callPackage ./chatgpt-desktop.nix { };
   codebuddy-code = pkgs.callPackage ./codebuddy-code.nix { };
   opencode = pkgs.callPackage ./opencode.nix { };
   opencode-desktop = pkgs.callPackage ./opencode-desktop.nix { };

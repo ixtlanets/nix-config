@@ -8,6 +8,7 @@
     google-genai = final.callPackage ../pkgs/google-genai.nix { };
     pdftext = final.callPackage ../pkgs/pdftext.nix { };
     surya-ocr = final.callPackage ../pkgs/surya-ocr.nix { };
+    chatgpt-desktop = final.callPackage ../pkgs/chatgpt-desktop.nix { };
     codebuddy-code = final.callPackage ../pkgs/codebuddy-code.nix { };
     specify-cli = final.callPackage ../pkgs/specify-cli.nix { };
     opencode-desktop = final.callPackage ../pkgs/opencode-desktop.nix { };

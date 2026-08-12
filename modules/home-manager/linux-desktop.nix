@@ -43,6 +43,7 @@ in
         font-awesome
         zoom-us
         obsidian
+        chatgpt-desktop
         opencode-desktop
         vscode
         pkgs.unstable.libreoffice-qt6-fresh
