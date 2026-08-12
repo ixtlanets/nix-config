@@ -4,6 +4,7 @@
   fetchurl,
   lib,
   stdenvNoCC,
+  writeShellScript,
 }:
 
 let
@@ -39,11 +40,19 @@ let
 
     dontFixup = true;
   };
+
+  chatgpt-launcher = writeShellScript "chatgpt-launcher" ''
+    if [[ ''${XDG_SESSION_TYPE:-} == "wayland" ]]; then
+      set -- --ozone-platform=wayland "$@"
+    fi
+
+    exec ${chatgpt-unwrapped}/lib/chatgpt/codex-launcher "$@"
+  '';
 in
 buildFHSEnv {
   inherit pname version;
 
-  runScript = "${chatgpt-unwrapped}/lib/chatgpt/codex-launcher";
+  runScript = chatgpt-launcher;
 
   targetPkgs =
     pkgs:
