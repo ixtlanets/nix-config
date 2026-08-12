@@ -68,7 +68,7 @@
         prev.mailutils;
     codex = prev.stdenvNoCC.mkDerivation rec {
       pname = "codex";
-      version = "0.146.1";
+      version = "0.147.0";
       nativeBuildInputs = [
         prev.zstd
         prev.makeWrapper
@@ -78,25 +78,25 @@
           prev.fetchurl
             {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-unknown-linux-musl.zst";
-              sha256 = "sha256-yWnPnRPBN8xAGL9mtoMmq04iBFLopqjdZzkltAgX/ec=";
+              sha256 = "sha256-kwwnZLaQOOXL1zolhnF9lwM0gizFABQCWk0YvMnIUy8=";
             }
         else if prev.stdenv.isLinux && prev.stdenv.isAarch64 then
           prev.fetchurl
             {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-unknown-linux-musl.zst";
-              sha256 = "sha256-F6u73GiG9gp6vpVT2lE+K62HR3+AgQnJdrEf3KM+C5I=";
+              sha256 = "sha256-kc8nRcAhCaResUwOLtJpT/HPzItw5C8NOju0pQE5qTM=";
             }
         else if prev.stdenv.isDarwin && prev.stdenv.isx86_64 then
           prev.fetchurl
             {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-x86_64-apple-darwin.zst";
-              sha256 = "sha256-H8Fw5XjRRSfJSJeSjQVzY7BzBEXrN5iHU4tpwx0v1RA=";
+              sha256 = "sha256-IyvisTGm3Pu5qIL4BQVZryxA/N+lqclFt4PxqmQNYSI=";
             }
         else if prev.stdenv.isDarwin && prev.stdenv.isAarch64 then
           prev.fetchurl
             {
               url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-aarch64-apple-darwin.zst";
-              sha256 = "sha256-tTfAOpgopISWytXg03Y8QhVF3jNfjLAxIBO4IyOURBk=";
+              sha256 = "sha256-j5O0TK1Gol87YRbAsQHY/1HyAMeuVSrlN8WxJ1B/vqU=";
             }
         else
           throw "Unsupported system for codex";
