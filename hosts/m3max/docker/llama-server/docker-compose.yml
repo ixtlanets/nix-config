@@ -1,0 +1,33 @@
+services:
+  llama-dashboard:
+    build:
+      context: /Users/nik/pro/llama-dashboard
+    image: llama-dashboard:local
+    container_name: llama-dashboard
+    restart: "no"
+    init: true
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    environment:
+      LLD_UPSTREAMS_JSON: >-
+        [{"key":"generation","label":"Generation","role":"generation","upstreamUrl":"http://host.docker.internal:8080","listener":{"host":"0.0.0.0","port":8081}}]
+      LLD_DEFAULT_UPSTREAM_KEY: generation
+      LLD_UI_PORT: "8082"
+      LLD_HOST: 0.0.0.0
+      LLD_DB_PATH: /data/llama-dashboard.db
+    volumes:
+      - dashboard-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8082/api/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: "3"
+
+volumes:
+  dashboard-data:
