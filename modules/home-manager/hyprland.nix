@@ -8,26 +8,15 @@ let
   DPI = builtins.toString dpi;
   rofi_width = builtins.toString (dpi * 5);
   rofi_height = builtins.toString (dpi * 3);
-  handle_monitor_connect = pkgs.writeShellScriptBin "handle_monitor_connect" ''
-    set -euo pipefail
-
-    ${pkgs.variety}/bin/variety --next
-
-    handle() {
-      case "$1" in
-        monitoradded*)
-          hyprctl dispatch moveworkspacetomonitor "1 1"
-          hyprctl dispatch moveworkspacetomonitor "2 1"
-          hyprctl dispatch moveworkspacetomonitor "3 1"
-          hyprctl dispatch moveworkspacetomonitor "4 1"
-          hyprctl dispatch moveworkspacetomonitor "5 1"
-          ;;
-      esac
-    }
-
-    ${pkgs.socat}/bin/socat - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
-      | while read -r line; do handle "$line"; done
-  '';
+  handle_monitor_connect = pkgs.writeShellApplication {
+    name = "handle_monitor_connect";
+    runtimeInputs = with pkgs; [
+      hyprland
+      socat
+      variety
+    ];
+    text = builtins.readFile ./scripts/handle-monitor-connect;
+  };
   take-screenshot = pkgs.writeShellScriptBin "take-screenshot" ''
     OUTPUT_DIR="$HOME/Pictures"
 

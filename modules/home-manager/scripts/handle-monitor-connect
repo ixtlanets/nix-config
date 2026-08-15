@@ -1,0 +1,50 @@
+set -euo pipefail
+
+hyprctl_bin="${HYPRCTL_BIN:-hyprctl}"
+socat_bin="${SOCAT_BIN:-socat}"
+variety_bin="${VARIETY_BIN:-variety}"
+
+handle_monitor_event() {
+  local event="$1"
+  local monitor_name=""
+  local payload
+  local workspace
+
+  case "$event" in
+    'monitoraddedv2>>'*)
+      payload="${event#monitoraddedv2>>}"
+      payload="${payload#*,}"
+      monitor_name="${payload%%,*}"
+      ;;
+    'monitoradded>>'*)
+      monitor_name="${event#monitoradded>>}"
+      ;;
+    *)
+      return 0
+      ;;
+  esac
+
+  if [[ -z "$monitor_name" ]]; then
+    printf 'Ignoring monitor event without a monitor name: %s\n' "$event" >&2
+    return 0
+  fi
+
+  for workspace in 1 2 3 4 5; do
+    if ! "$hyprctl_bin" dispatch moveworkspacetomonitor "$workspace $monitor_name"; then
+      printf 'Could not move workspace %s to %s\n' "$workspace" "$monitor_name" >&2
+    fi
+  done
+}
+
+main() {
+  "$variety_bin" --next
+
+  "$socat_bin" - "UNIX-CONNECT:$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock" \
+    | while IFS= read -r line; do
+        handle_monitor_event "$line"
+      done
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main "$@"
+fi
