@@ -169,7 +169,8 @@ installs. If helper-script behavior for those installs changes, keep `install.sh
 
 Home Manager configures `ssh frankfurt` to use `~/.ssh/id_rsa_1` explicitly. `IdentitiesOnly`
 prevents unrelated agent keys from being tried, while `BatchMode` disables password fallback. On
-`m3max`, `ssh m1max` uses the following jump chain:
+`m3max`, `ssh um790pro-frankfurt` jumps through `frankfurt`; `ssh m1max` uses the following full
+jump chain:
 
 ```text
 m3max -> frankfurt (31.58.85.163) -> um790pro (198.18.77.6) -> m1max (192.168.1.174)
