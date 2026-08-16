@@ -251,6 +251,9 @@ in
       "GTK_APPLICATION_PREFER_DARK_THEME,1"
       "XCURSOR_SIZE,24"
     ];
+    cursor = {
+      no_warps = true;
+    };
     input = {
       kb_layout = "us,ru";
       kb_options = "grp:win_space_toggle";

@@ -67,6 +67,22 @@
     box-shadow: inset 0 -2px 0 @base0D;
 }
 
+/* The apps-only workspace module still creates its active workspace button
+ * when that workspace has no windows. Collapse that empty shell completely. */
+#workspaces.apps {
+    margin-left: 0;
+}
+
+#workspaces.apps button.empty {
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+
 #workspaces button.urgent {
     color: rgba(238, 46, 36, 1);
 }

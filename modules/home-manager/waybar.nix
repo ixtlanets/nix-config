@@ -7,6 +7,17 @@
 let
   thermalZone = config.home.sessionVariables.THERMAL_ZONE or null;
   tzList = config.home.sessionVariables.TZ_LIST or "";
+  waybarActiveOnlyFix = pkgs.waybar.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      # `active-only` otherwise keeps every Hyprland workspace declared as
+      # persistent, which makes an active-workspace taskbar show all apps.
+      substituteInPlace src/modules/hyprland/workspace.cpp \
+        --replace-fail '     !this->isPersistent() && \' "" \
+        --replace-fail \
+          '// if activeOnly is true, hide if not active, persistent, visible or special' \
+          '// if activeOnly is true, hide if not active, visible, or special'
+    '';
+  });
   timezonePicker = pkgs.writeShellScriptBin "timezone-picker" ''
     set -euo pipefail
 
@@ -65,13 +76,36 @@ let
     ${pkgs.systemd}/bin/timedatectl set-timezone "$selected_zone"
     ${pkgs.systemd}/bin/systemctl --user restart waybar || true
   '';
+  hyprFocusWindow = pkgs.writeShellApplication {
+    name = "hypr-focus-window";
+    runtimeInputs = [ pkgs.hyprland ];
+    text = ''
+      address="''${1:-}"
+      button="''${2:-1}"
+
+      # Waybar reports GDK button numbers. Only left click changes focus so
+      # middle/right click remain available for future window actions.
+      [ "$button" = "1" ] || exit 0
+
+      if [[ ! "$address" =~ ^0x[0-9a-fA-F]+$ ]]; then
+        printf 'Invalid Hyprland window address: %s\n' "$address" >&2
+        exit 2
+      fi
+
+      hyprctl dispatch focuswindow "address:$address" >/dev/null
+    '';
+  };
 in
 {
-  home.packages = [ timezonePicker ];
+  home.packages = [
+    timezonePicker
+    hyprFocusWindow
+  ];
 
   programs = {
     waybar = {
       enable = true;
+      package = waybarActiveOnlyFix;
       systemd.enable = true;
       settings = {
         mainBar = {
@@ -79,6 +113,7 @@ in
           position = "top";
           modules-left = [
             "hyprland/workspaces"
+            "hyprland/workspaces#apps"
           ];
           modules-center = [ "clock" ];
           modules-right = [
@@ -93,13 +128,19 @@ in
           ];
 
           "hyprland/workspaces" = {
-            "format" = "{id} {windows}";
-            "format-window-separator" = " ";
+            "format" = "{id}";
+          };
+          "hyprland/workspaces#apps" = {
+            "active-only" = true;
+            "format" = "{windows}";
+            "on-scroll-up" = "${pkgs.hyprland}/bin/hyprctl dispatch layoutmsg cycleprev";
+            "on-scroll-down" = "${pkgs.hyprland}/bin/hyprctl dispatch layoutmsg cyclenext";
             "workspace-taskbar" = {
               "enable" = true;
               "update-active-window" = true;
               "format" = "{icon}";
               "icon-size" = 14;
+              "on-click-window" = "${hyprFocusWindow}/bin/hypr-focus-window {address} {button}";
             };
           };
           "custom/vless" = {
