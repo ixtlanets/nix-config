@@ -541,7 +541,6 @@ in
       enable = true;
       commands = ../../dotfiles/opencode/commands;
       package = null;
-      settings.autoupdate = false;
     };
   };
 

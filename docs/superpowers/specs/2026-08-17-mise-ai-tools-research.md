@@ -188,7 +188,7 @@ Codex npm package использует platform-specific optional dependencies. 
 
 При централизованном обновлении через mise стоит выключить собственные проверки/updaters обоих CLI:
 
-- OpenCode: `autoupdate: false`. Его upgrade code прекращает работу при этом флаге, а для нераспознанного метода установки (`unknown`, что ожидаемо для mise) всё равно не выполняет upgrade: [официальный `upgrade.ts`](https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/cli/upgrade.ts), [config docs](https://opencode.ai/docs/config/);
+- OpenCode: `OPENCODE_DISABLE_AUTOUPDATE=true`. Официальная переменная среды отключает update check, не требуя брать пользовательский `opencode.json` под декларативное управление. Его upgrade code прекращает работу при этом флаге, а для нераспознанного метода установки (`unknown`, что ожидаемо для mise) всё равно не выполняет upgrade: [официальный `upgrade.ts`](https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/cli/upgrade.ts), [CLI docs](https://opencode.ai/docs/cli/);
 - Codex: `check_for_update_on_startup = false`; комментарий upstream прямо рекомендует это при centrally managed updates: [официальный config source](https://github.com/openai/codex/blob/main/codex-rs/config/src/config_toml.rs). Mise/Aqua binary определяется как `Other`, для него update action отсутствует; npm install context, напротив, может предложить обычный `npm install -g`, обходя ownership mise: [install context](https://github.com/openai/codex/blob/main/codex-rs/install-context/src/lib.rs), [update action](https://github.com/openai/codex/blob/main/codex-rs/tui/src/update_action.rs).
 
 ### OpenCode Desktop — оставить в Nix
@@ -315,7 +315,7 @@ Desktop packages остались у системных package managers, а CLI
    mise upgrade --dry-run
    ```
 
-5. Upstream-owned update paths отключены: OpenCode через config и `OPENCODE_DISABLE_AUTOUPDATE`, Codex через `check_for_update_on_startup = false` с сохранением остальных mutable настроек.
+5. Upstream-owned update paths отключены без захвата mutable пользовательских конфигов: OpenCode через `OPENCODE_DISABLE_AUTOUPDATE`, Codex через идемпотентное добавление `check_for_update_on_startup = false`.
 6. Единственный выбранный update workflow — ручной запуск `mise upgrade`. Timer, lazy wrappers и remote check при старте не используются.
 7. OpenCode/Codex CLI удалены из Nix/Homebrew host packages. Desktop derivations и casks остаются системными.
 
