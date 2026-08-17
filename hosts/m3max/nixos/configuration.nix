@@ -1,12 +1,15 @@
-{ pkgs
-, inputs
-, ...
+{
+  pkgs,
+  inputs,
+  ...
 }:
 
 let
   floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
+  imports = [ ../../../modules/nixos/darwin-ai-tools.nix ];
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
@@ -130,7 +133,6 @@ in
       "docker-desktop"
       "linearmouse"
       "ghostty"
-      "codex"
     ];
     taps = [
       "fujiapple852/trippy"

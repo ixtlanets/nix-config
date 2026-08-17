@@ -118,11 +118,14 @@ in
   };
 
   home.sessionVariables = {
-    TZ_LIST = "America/Los_Angeles,GR-office;America/New_York,NY;Europe/London,London;Europe/Berlin,Berlin;Europe/Moscow,Moscow";
     LANG = "en_US.UTF-8";
     LC_ALL = "en_US.UTF-8";
+    OPENCODE_DISABLE_AUTOUPDATE = "true";
     TERM = "xterm-256color";
+    TZ_LIST = "America/Los_Angeles,GR-office;America/New_York,NY;Europe/London,London;Europe/Berlin,Berlin;Europe/Moscow,Moscow";
   };
+
+  home.sessionPath = [ "${config.home.homeDirectory}/.local/share/mise/shims" ];
 
   home.packages =
     with pkgs;
@@ -161,7 +164,6 @@ in
     ]
     ++ lib.optionals (!isDarwin) [
       qwen-code # AI coding agent by Qwen
-      codex # AI coding agent by OpenAI
       codebuddy-code # Tencent AI coding tool
     ]
     ++ [
@@ -274,6 +276,17 @@ in
     };
     direnv = {
       enable = true;
+    };
+    mise = {
+      enable = true;
+      enableZshIntegration = true;
+      globalConfig = {
+        settings.minimum_release_age = "24h";
+        tools = {
+          "aqua:openai/codex" = "latest";
+          "github:anomalyco/opencode" = "latest";
+        };
+      };
     };
     zsh = {
       enable = true;
@@ -527,6 +540,8 @@ in
     opencode = {
       enable = true;
       commands = ../../dotfiles/opencode/commands;
+      package = null;
+      settings.autoupdate = false;
     };
   };
 
@@ -627,6 +642,39 @@ in
 
       mv "$bw_data_tmp" "$bw_data_file"
       chmod 600 "$bw_data_file"
+    '';
+
+    disableCodexUpdateCheck = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      codex_dir="''${CODEX_HOME:-$HOME/.codex}"
+      codex_config="$codex_dir/config.toml"
+      codex_config_tmp="$(${pkgs.coreutils}/bin/mktemp)"
+
+      ${pkgs.coreutils}/bin/mkdir -p "$codex_dir"
+
+      if [ -f "$codex_config" ]; then
+        ${pkgs.gawk}/bin/awk '
+          BEGIN { in_root = 1; policy_written = 0 }
+          in_root && /^[[:space:]]*check_for_update_on_startup[[:space:]]*=/ {
+            if (!policy_written) print "check_for_update_on_startup = false"
+            policy_written = 1
+            next
+          }
+          in_root && /^[[:space:]]*\[/ {
+            if (!policy_written) print "check_for_update_on_startup = false\n"
+            policy_written = 1
+            in_root = 0
+          }
+          { print }
+          END {
+            if (in_root && !policy_written) print "check_for_update_on_startup = false"
+          }
+        ' "$codex_config" > "$codex_config_tmp"
+      else
+        echo 'check_for_update_on_startup = false' > "$codex_config_tmp"
+      fi
+
+      ${pkgs.coreutils}/bin/mv "$codex_config_tmp" "$codex_config"
+      ${pkgs.coreutils}/bin/chmod 600 "$codex_config"
     '';
 
     importGpgKeys = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

@@ -360,7 +360,8 @@ elif [[ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
   source "$HOME/.nix-profile/etc/profile.d/nix.sh"
 fi
 
-export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/bin:$HOME/go/bin:$PATH"
+export PATH="$HOME/.nix-profile/bin:/nix/var/nix/profiles/default/bin:$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/go/bin:$PATH"
+export OPENCODE_DISABLE_AUTOUPDATE=true
 # Time zone list for tz (keep in sync with home-manager common.nix)
 export TZ_LIST="America/Los_Angeles,GR-office;America/New_York,NY;Europe/London,London;Europe/Berlin,Berlin;Europe/Moscow,Moscow"
 export PASSWORD_STORE_DIR="$HOME/.password-store"
@@ -406,11 +407,70 @@ if command -v direnv >/dev/null 2>&1; then
   eval "$(direnv hook zsh)"
 fi
 
+# Mise-managed development tools
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
+
 # Prompt
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 EOF
+}
+
+write_mise_config() {
+  local mise_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mise"
+  local mise_fragment="${mise_dir}/conf.d/50-nix-config.toml"
+
+  log "writing ${mise_fragment}"
+  mkdir -p "${mise_dir}/conf.d"
+  if [[ ! -e "${mise_dir}/config.toml" ]]; then
+    touch "${mise_dir}/config.toml"
+  fi
+  cat <<'EOF' >"$mise_fragment"
+[settings]
+minimum_release_age = "24h"
+
+[tools]
+"aqua:openai/codex" = "latest"
+"github:anomalyco/opencode" = "latest"
+EOF
+}
+
+write_codex_update_policy() {
+  local codex_dir="${CODEX_HOME:-$HOME/.codex}"
+  local codex_config="${codex_dir}/config.toml"
+  local codex_config_tmp
+
+  log "disabling Codex startup update checks in ${codex_config}"
+  mkdir -p "$codex_dir"
+  codex_config_tmp="$(mktemp)"
+
+  if [[ -f "$codex_config" ]]; then
+    awk '
+      BEGIN { in_root = 1; policy_written = 0 }
+      in_root && /^[[:space:]]*check_for_update_on_startup[[:space:]]*=/ {
+        if (!policy_written) print "check_for_update_on_startup = false"
+        policy_written = 1
+        next
+      }
+      in_root && /^[[:space:]]*\[/ {
+        if (!policy_written) print "check_for_update_on_startup = false\n"
+        policy_written = 1
+        in_root = 0
+      }
+      { print }
+      END {
+        if (in_root && !policy_written) print "check_for_update_on_startup = false"
+      }
+    ' "$codex_config" > "$codex_config_tmp"
+  else
+    echo 'check_for_update_on_startup = false' > "$codex_config_tmp"
+  fi
+
+  mv "$codex_config_tmp" "$codex_config"
+  chmod 600 "$codex_config"
 }
 
 write_starship_config() {
@@ -1377,6 +1437,7 @@ main() {
     alacritty
     telegram-desktop
     moonlight-qt
+    mise
     otf-monaspace
     otf-monaspace-nerdfonts
     variety
@@ -1385,6 +1446,8 @@ main() {
     yt-dlp
     zoom
     obsidian
+    opencode-desktop-bin
+    chatgpt-desktop
     wl-clipboard
     wtype
     libreoffice-fresh
@@ -1455,6 +1518,8 @@ main() {
 
   install_tz
   install_tpm
+  write_mise_config
+  write_codex_update_policy
   write_zshrc
   write_starship_config
   write_tmux_conf

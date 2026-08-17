@@ -92,7 +92,6 @@ in
 
   home.packages = with pkgs; [
     nixpkgs-fmt
-    opencode
     ripgrep
     sqlite
     wordnet

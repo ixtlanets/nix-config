@@ -1,9 +1,16 @@
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   floxPkg = inputs.flox.packages.${pkgs.system}.default;
 in
 {
+  imports = [ ../../../modules/nixos/darwin-ai-tools.nix ];
+
   nix.enable = false; # required whn using Determinate nix
   nix.settings.experimental-features = [
     "nix-command"
@@ -119,7 +126,6 @@ in
       "linearmouse"
       "rectangle"
       "ghostty"
-      "codex"
     ];
     taps = [
       "fujiapple852/trippy"
