@@ -1168,6 +1168,63 @@ enable_tailscale_service() {
   fi
 }
 
+configure_tailscale_subnet_router() {
+  local mode="${1:-best-effort}"
+  if [[ "$HOSTNAME_SHORT" != "um790pro" ]]; then
+    return
+  fi
+
+  local recovery_message="run 'sudo tailscale up', then './install.sh tailscale-subnet-router'"
+  local backend_state=""
+  if ! command -v systemctl >/dev/null 2>&1 || ! systemctl is-active --quiet tailscaled.service; then
+    log "tailscaled.service is not active; ${recovery_message}"
+    if [[ "$mode" == "strict" ]]; then
+      return 1
+    fi
+    return 0
+  fi
+
+  if ! command -v tailscale >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    log "tailscale and jq are required; ${recovery_message}"
+    if [[ "$mode" == "strict" ]]; then
+      return 1
+    fi
+    return 0
+  fi
+
+  if ! backend_state="$(tailscale status --json --peers=false 2>/dev/null | jq -r '.BackendState // empty')" || [[ "$backend_state" != "Running" ]]; then
+    log "tailscaled is not authenticated (BackendState=${backend_state:-unknown}); ${recovery_message}"
+    if [[ "$mode" == "strict" ]]; then
+      return 1
+    fi
+    return 0
+  fi
+
+  local ipv6_forwarding
+  if ! ipv6_forwarding="$(sysctl -n net.ipv6.conf.all.forwarding 2>/dev/null)"; then
+    log "unable to read net.ipv6.conf.all.forwarding; refusing to configure subnet routing"
+    return 1
+  fi
+  if [[ "$ipv6_forwarding" != "0" ]]; then
+    log "net.ipv6.conf.all.forwarding is ${ipv6_forwarding}, expected 0; refusing to change router state"
+    return 1
+  fi
+
+  local sysctl_file="/etc/sysctl.d/99-tailscale-subnet-router.conf"
+  local sysctl_content="net.ipv4.ip_forward = 1"
+  if [[ ! -f "$sysctl_file" ]] || [[ "$(<"$sysctl_file")" != "$sysctl_content" ]]; then
+    log "writing ${sysctl_file}"
+    printf '%s\n' "$sysctl_content" | sudo tee "$sysctl_file" >/dev/null
+  fi
+  sudo sysctl --load "$sysctl_file"
+
+  log "advertising the m1max and m3max LAN host routes"
+  sudo tailscale set \
+    --accept-routes=false \
+    --advertise-routes=192.168.1.174/32,192.168.1.144/32 \
+    --snat-subnet-routes=true
+}
+
 configure_wireguard_overlay() {
   local address
   case "$HOSTNAME_SHORT" in
@@ -1412,6 +1469,14 @@ main() {
     return
   fi
 
+  if [[ "${1:-}" == "tailscale-subnet-router" ]]; then
+    pacman_install tailscale
+    pacman_install jq
+    enable_tailscale_service
+    configure_tailscale_subnet_router strict
+    return
+  fi
+
   local packages=(
     zsh
     zsh-completions
@@ -1536,6 +1601,7 @@ main() {
   install_tat
   write_vpn_script
   enable_tailscale_service
+  configure_tailscale_subnet_router best-effort
   configure_wireguard_overlay
   write_vless_script
   install_vless_service

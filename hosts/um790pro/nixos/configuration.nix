@@ -37,6 +37,19 @@
   '';
   networking.hostName = "um790pro"; # Define your hostname.
 
+  services.tailscale = {
+    useRoutingFeatures = "server";
+    openFirewall = true;
+    extraSetFlags = [
+      "--accept-routes=false"
+      "--advertise-routes=192.168.1.174/32,192.168.1.144/32"
+      "--snat-subnet-routes=true"
+    ];
+  };
+
+  # Only IPv4 host routes are advertised; keep IPv6 host behavior unchanged.
+  boot.kernel.sysctl."net.ipv6.conf.all.forwarding" = lib.mkForce false;
+
   networking.wireguard.interfaces.wg-hosts = {
     ips = [ "198.18.77.6/32" ];
     privateKeyFile = "/home/nik/nix-config/secrets/wireguard/um790pro.key";

@@ -36,6 +36,11 @@ in
   };
   programs.ssh.askPassword = lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
+  services.tailscale = {
+    useRoutingFeatures = "client";
+    extraSetFlags = [ "--accept-routes=true" ];
+  };
+
   networking.wireguard.interfaces.wg-hosts = {
     ips = [ "198.18.77.3/32" ];
     privateKeyFile = "/home/nik/nix-config/secrets/wireguard/zenbook.key";

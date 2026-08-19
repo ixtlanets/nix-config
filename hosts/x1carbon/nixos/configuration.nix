@@ -25,6 +25,11 @@
 
   networking.hostName = "x1carbon"; # Define your hostname.
 
+  services.tailscale = {
+    useRoutingFeatures = "client";
+    extraSetFlags = [ "--accept-routes=true" ];
+  };
+
   networking.wireguard.interfaces.wg-hosts = {
     ips = [ "198.18.77.5/32" ];
     privateKeyFile = "/home/nik/nix-config/secrets/wireguard/x1carbon.key";
