@@ -37,8 +37,8 @@ in
   programs.ssh.askPassword = lib.mkForce "${pkgs.kdePackages.ksshaskpass.out}/bin/ksshaskpass";
 
   services.tailscale = {
-    useRoutingFeatures = "client";
     extraSetFlags = [ "--accept-routes=true" ];
+    useRoutingFeatures = "client";
   };
 
   networking.wireguard.interfaces.wg-hosts = {
