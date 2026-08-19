@@ -37,6 +37,9 @@ in
 
   programs.zsh.enable = true;
 
+  # Allow SSH access from the local network, including through the Tailscale subnet router.
+  services.openssh.enable = true;
+
   users.users.nik = {
     home = "/Users/nik";
   };

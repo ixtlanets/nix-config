@@ -40,7 +40,7 @@
   services.tailscale = {
     extraSetFlags = [
       "--accept-routes=false"
-      "--advertise-routes=192.168.1.174/32"
+      "--advertise-routes=192.168.1.174/32,192.168.1.144/32"
       "--snat-subnet-routes=true"
     ];
     openFirewall = true;

@@ -1218,10 +1218,10 @@ configure_tailscale_subnet_router() {
   fi
   sudo sysctl --load "$sysctl_file"
 
-  log "advertising the m1max LAN host route"
+  log "advertising the m1max and m3max LAN host routes"
   sudo tailscale set \
     --accept-routes=false \
-    --advertise-routes=192.168.1.174/32 \
+    --advertise-routes=192.168.1.174/32,192.168.1.144/32 \
     --snat-subnet-routes=true
 }
 
