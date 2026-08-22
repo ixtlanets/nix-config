@@ -50,3 +50,17 @@
 ## Security & Configuration Tips
 - Do not commit plaintext secrets. `secrets/gpg/**` and `secrets/ssh/**` are encrypted via git‑crypt.
 - To work with secrets, ensure GPG access and run `git-crypt unlock`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues for this repository. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The standard five-role triage vocabulary is used. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repository uses a single-context domain-doc layout. See `docs/agents/domain.md`.
