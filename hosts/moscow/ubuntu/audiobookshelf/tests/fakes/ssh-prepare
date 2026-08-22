@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+shift
+printf 'ssh %s\n' "$*" >>"${FAKE_COMMAND_LOG:?}"
+
+case "$*" in
+  "docker pull ghcr.io/advplyr/audiobookshelf:2.36.0")
+    exit 1
+    ;;
+  "docker load")
+    cat >/dev/null
+    echo "Loaded image"
+    ;;
+  "docker image inspect ghcr.io/advplyr/audiobookshelf:2.36.0 --format {{.Id}}")
+    echo "sha256:28b665b047a1e02474fad2bc703bd2a7489e4e72295f67e431c17f07c63320b3"
+    ;;
+  "docker tag ghcr.io/advplyr/audiobookshelf:2.36.0 nix-config/audiobookshelf:2.36.0-arm64-14a6492c")
+    ;;
+  "docker image inspect nix-config/audiobookshelf:2.36.0-arm64-14a6492c --format {{.Id}}")
+    echo "sha256:28b665b047a1e02474fad2bc703bd2a7489e4e72295f67e431c17f07c63320b3"
+    ;;
+  *)
+    echo "unexpected fake ssh command: $*" >&2
+    exit 1
+    ;;
+esac

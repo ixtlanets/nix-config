@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  audiobookshelf:
+    image: nix-config/audiobookshelf:2.36.0-arm64-14a6492c
+    container_name: audiobookshelf
+    restart: unless-stopped
+    environment:
+      AUDIOBOOKSHELF_GID: "100"
+      AUDIOBOOKSHELF_UID: "99"
+    ports:
+      - "0.0.0.0:13378:80"
+    volumes:
+      - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/config"
+      - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/metadata"
+      - "${MEDIA_DIR:-/media/disk1/media/Audiobooks}:/audiobooks"

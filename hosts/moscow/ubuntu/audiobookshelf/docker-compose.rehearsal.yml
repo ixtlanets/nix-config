@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  audiobookshelf-rehearsal:
+    image: nix-config/audiobookshelf:2.36.0-arm64-14a6492c
+    container_name: audiobookshelf-rehearsal
+    restart: "no"
+    environment:
+      AUDIOBOOKSHELF_GID: "100"
+      AUDIOBOOKSHELF_UID: "99"
+    ports:
+      - "${TAILSCALE_IP:-100.81.67.47}:13379:80"
+    volumes:
+      - "${REHEARSAL_STATE_DIR:?set REHEARSAL_STATE_DIR}:/config"
+      - "${REHEARSAL_STATE_DIR:?set REHEARSAL_STATE_DIR}:/metadata"
+      - "${MEDIA_DIR:-/media/disk1/media/Audiobooks}:/audiobooks:ro"

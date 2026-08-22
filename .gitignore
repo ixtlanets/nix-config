@@ -7,6 +7,7 @@ result
 .codex
 .sisyphus/
 .omo/
+/.scratch/
 firebase-debug.log
 __pycache__/
 *.py[cod]

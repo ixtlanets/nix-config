@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf 'docker %s\n' "$*" >>"${FAKE_COMMAND_LOG:?}"
+
+case "$*" in
+  "inspect audiobookshelf --format {{.Image}}")
+    echo "sha256:b83b66d7c1f3fec8bdea64f7ef670a9b7b61d8ab227d279b3d65551a877851ad"
+    ;;
+  "stop --time 30 audiobookshelf" | "start audiobookshelf")
+    ;;
+  "inspect audiobookshelf --format {{.State.Health.Status}}")
+    echo "healthy"
+    ;;
+  *)
+    echo "unexpected fake remote docker command: $*" >&2
+    exit 1
+    ;;
+esac

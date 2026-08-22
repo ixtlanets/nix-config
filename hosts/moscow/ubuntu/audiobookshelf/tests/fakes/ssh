@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cat >/dev/null
+printf '%s\n' "${FAKE_SSH_OUTPUT:-}"
+exit "${FAKE_SSH_STATUS:-0}"

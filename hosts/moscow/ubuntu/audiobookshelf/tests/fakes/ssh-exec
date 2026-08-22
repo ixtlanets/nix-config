@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+shift
+[[ $* == "bash -s" ]] || {
+  echo "unexpected fake ssh-exec command: $*" >&2
+  exit 1
+}
+
+FAKE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+PATH="$FAKE_DIR/remote-bin:$PATH" bash -s
