@@ -1,0 +1,4 @@
+# GUI packages without dedicated Omarchy integration installers.
+bitwarden
+t3code-bin
+telegram-desktop

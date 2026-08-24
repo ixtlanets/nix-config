@@ -1319,7 +1319,7 @@ action=$(choose_action "$@")
 
 case "$action" in
   up)
-    sudo systemctl enable --now "$SERVICE"
+    sudo systemctl start "$SERVICE"
     ;;
   down)
     sudo systemctl stop "$SERVICE"

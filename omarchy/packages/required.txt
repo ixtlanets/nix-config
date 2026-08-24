@@ -1,0 +1,8 @@
+# Shell and personal CLI baseline.
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+direnv
+pass
+git-crypt
+yq

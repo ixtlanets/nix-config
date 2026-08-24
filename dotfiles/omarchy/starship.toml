@@ -1,0 +1,115 @@
+add_newline = false
+format = "$nix_shell$username$hostname$directory$container$git_branch $git_status$python$nodejs$lua$rust$java$c$golang$status$character"
+palette = "catppuccin_mocha"
+right_format = "$battery$time"
+
+[battery]
+charging_symbol = ""
+discharging_symbol = ""
+format = "[$symbol$percentage]($style)"
+full_symbol = ""
+unknown_symbol = ""
+
+[c]
+format = "[$symbol ](blue)"
+symbol = ""
+
+[character]
+error_symbol = "[❯](bold red)"
+success_symbol = "[❯](bold purple)"
+
+[container]
+format = "[$symbol ](yellow dimmed)"
+symbol = " 󰏖"
+
+[directory]
+fish_style_pwd_dir_length = 1
+format = "[$path]($style)[$read_only]($read_only_style) "
+read_only = " "
+style = "blue"
+
+[git_branch]
+format = "[ $symbol $branch](fg:purple)(:$remote_branch)"
+style = ""
+symbol = ""
+
+[golang]
+format = "[$symbol ](blue)"
+symbol = ""
+
+[hostname]
+format = "[@$hostname]($style): "
+ssh_only = false
+style = "green"
+
+[java]
+format = "[$symbol ](red)"
+symbol = ""
+
+[lua]
+format = "[$symbol ](blue)"
+symbol = "󰢱"
+
+[nix_shell]
+disabled = false
+format = "[](fg:white)[ ](bg:white fg:black)[](fg:white) "
+
+[nodejs]
+format = "[$symbol ](yellow)"
+symbol = " "
+
+[palettes.catppuccin_mocha]
+base = "#1e1e2e"
+blue = "#89b4fa"
+crust = "#11111b"
+flamingo = "#f2cdcd"
+green = "#a6e3a1"
+lavender = "#b4befe"
+mantle = "#181825"
+maroon = "#eba0ac"
+mauve = "#cba6f7"
+overlay0 = "#6c7086"
+overlay1 = "#7f849c"
+overlay2 = "#9399b2"
+peach = "#fab387"
+pink = "#f5c2e7"
+red = "#f38ba8"
+rosewater = "#f5e0dc"
+sapphire = "#74c7ec"
+sky = "#89dceb"
+subtext0 = "#a6adc8"
+subtext1 = "#bac2de"
+surface0 = "#313244"
+surface1 = "#45475a"
+surface2 = "#585b70"
+teal = "#94e2d5"
+text = "#cdd6f4"
+yellow = "#f9e2af"
+
+[python]
+format = "[$symbol ](yellow)"
+symbol = ""
+
+[rust]
+format = "[$symbol ](red)"
+symbol = ""
+
+[status]
+disabled = false
+format = "[$symbol](fg:red)"
+map_symbol = true
+not_executable_symbol = " Can't Execute E"
+not_found_symbol = "󰍉 Not Found"
+sigint_symbol = "󰂭 "
+signal_symbol = "󱑽 "
+success_symbol = ""
+symbol = "✗"
+
+[time]
+format = "[$time]($style)"
+
+[username]
+format = "[$user]($style)"
+show_always = true
+style_root = "red"
+style_user = "yellow"

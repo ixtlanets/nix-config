@@ -1,0 +1,5 @@
+ffmpeg
+imagemagick
+parallel
+mediainfo
+yt-dlp

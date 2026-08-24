@@ -4,6 +4,7 @@ result
 .opencode/package-lock.json
 .opencode/bun.lock
 .cache/
+/omarchy/output/
 .codex
 .sisyphus/
 .omo/

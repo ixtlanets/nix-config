@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+service="vless-sing-box.service"
+
+usage() {
+  cat <<'EOF'
+Usage: vless [up|down|status]
+
+Without arguments an interactive selector is shown when gum is available.
+EOF
+}
+
+if (($# > 1)); then
+  usage >&2
+  exit 1
+elif (($# == 1)); then
+  action="$1"
+elif command -v gum >/dev/null 2>&1; then
+  action="$(gum choose --header='VLESS' up down status)"
+else
+  usage >&2
+  exit 1
+fi
+
+case "$action" in
+  up)
+    sudo systemctl start "$service"
+    ;;
+  down)
+    sudo systemctl stop "$service"
+    ;;
+  status)
+    systemctl status --no-pager "$service"
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
+esac

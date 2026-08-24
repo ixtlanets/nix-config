@@ -1,0 +1,15 @@
+{
+  "ExtensionInstallForcelist": [
+    "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx",
+    "nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx",
+    "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx",
+    "kcpnkledgcbobhkgimpbmejgockkplob;https://clients2.google.com/service/update2/crx",
+    "enamippconapkdmgfgjchkhakpfinmaj;https://clients2.google.com/service/update2/crx",
+    "enboaomnljigfhfjfoalacienlhjlfil;https://clients2.google.com/service/update2/crx",
+    "hipekcciheckooncpjeljhnekcoolahp;https://clients2.google.com/service/update2/crx",
+    "edibdbjcniadpccecjdfdjjppcpchdlm;https://clients2.google.com/service/update2/crx",
+    "ponfpcnoihfmfllpaingbgckeeldkhle;https://clients2.google.com/service/update2/crx",
+    "jdehgalffmffhfhmmhaokfbfnafnmgcl;https://clients2.google.com/service/update2/crx",
+    "dcpihecpambacapedldabdbpakmachpb;https://raw.githubusercontent.com/iamadamdev/bypass-paywalls-chrome/master/src/updates/updates.xml"
+  ]
+}
