@@ -17,8 +17,8 @@ Options:
   --install-packages  Install package manifests through Omarchy (interactive).
   --install-gui       Install GUI applications and managed browser extensions.
   --import-gpg        Transfer/import repo GPG key material, then delete staging.
-  --import-syncthing  Restore x1carbon Syncthing device identity.
-  --import-vless      Install x1carbon sing-box config and system service.
+  --import-syncthing  Restore the x1carbon Syncthing device identity.
+  --import-vless      Install the target host's sing-box config and service.
   -h, --help          Show help.
 EOF
 }
@@ -68,17 +68,40 @@ done
 [[ "${target:-}" =~ ^[a-z_][a-z0-9_-]*@[A-Za-z0-9.-]+$ ]] ||
   die "target must look like user@host"
 target_user="${target%@*}"
+remote_host="$(ssh "$target" 'hostname -s')" || die "could not read target hostname"
+[[ "$remote_host" =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]] ||
+  die "target returned invalid hostname: $remote_host"
 
 # Validate destination before package changes or secret transfer.
 # shellcheck disable=SC2029
-ssh "$target" "[[ \$(hostname -s) == x1carbon ]] && [[ \$(id -un) == '$target_user' ]] && source /etc/os-release && [[ \$ID == omarchy ]] && command -v omarchy >/dev/null" ||
+ssh "$target" "[[ \$(hostname -s) == '$remote_host' ]] && [[ \$(id -un) == '$target_user' ]] && source /etc/os-release && [[ \$ID == omarchy ]] && command -v omarchy >/dev/null" ||
   die "target validation failed"
 
+if $import_syncthing; then
+  [[ "$remote_host" == x1carbon ]] || die "Syncthing identity import is only configured for x1carbon"
+fi
+if $import_vless; then
+  vless_config="$repo_root/secrets/vless/$remote_host.json"
+  [[ -f "$vless_config" ]] || die "VLESS config missing: $vless_config"
+  command -v jq >/dev/null 2>&1 || die "jq is required to validate VLESS config"
+  command -v sing-box >/dev/null 2>&1 || die "sing-box is required to validate VLESS config"
+  tun_interface="$(jq -er '[.inbounds[] | select(.type == "tun") | .interface_name][0] // empty' "$vless_config")" ||
+    die "VLESS config has no TUN interface: $vless_config"
+  [[ "$tun_interface" =~ ^[A-Za-z0-9][A-Za-z0-9_.+-]*$ ]] ||
+    die "invalid VLESS TUN interface: $tun_interface"
+  ((${#tun_interface} <= 15)) || die "VLESS TUN interface is longer than 15 characters"
+  sing-box check -c "$vless_config" || die "invalid VLESS config: $vless_config"
+fi
+
+package_manifests=(
+  "$repo_root/omarchy/packages/required.txt"
+  "$repo_root/omarchy/packages/extended-cli.txt"
+)
+host_manifest="$repo_root/omarchy/packages/$remote_host.txt"
+[[ -f "$host_manifest" ]] && package_manifests+=("$host_manifest")
+$import_vless && package_manifests+=("$repo_root/omarchy/packages/vless.txt")
 package_output="$({
-  grep -hEv '^[[:space:]]*(#|$)' \
-    "$repo_root/omarchy/packages/required.txt" \
-    "$repo_root/omarchy/packages/extended-cli.txt" \
-    "$repo_root/omarchy/packages/x1carbon.txt"
+  grep -hEv '^[[:space:]]*(#|$)' "${package_manifests[@]}"
 } || exit 1)" || die "could not load package manifests"
 mapfile -t packages <<< "$package_output"
 ((${#packages[@]} > 0)) || die "package manifests are empty"
@@ -108,9 +131,23 @@ else
   printf '\n'
 fi
 
+if $import_vless; then
+  # shellcheck disable=SC2029
+  ssh "$target" "install -d -m 700 '$remote_root/secrets/vless'"
+  rsync -a --chmod=F600 \
+    "$vless_config" \
+    "$target:$remote_root/secrets/vless/"
+  # shellcheck disable=SC2029
+  if ! ssh -t "$target" "bash '$remote_root/scripts/omarchy-install-vless.sh' '$remote_root/secrets/vless/$remote_host.json'"; then
+    # shellcheck disable=SC2029
+    ssh "$target" "rm -f '$remote_root/secrets/vless/$remote_host.json'"
+    die "VLESS installation failed"
+  fi
+fi
+
 if $install_gui; then
   # shellcheck disable=SC2029
-  ssh -t "$target" "bash '$remote_root/scripts/omarchy-install-gui.sh' '$remote_root'"
+  ssh -t "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-install-gui.sh' '$remote_root'"
 fi
 
 if $import_gpg; then
@@ -128,19 +165,11 @@ if $import_syncthing; then
     "$target:.local/state/syncthing/"
 fi
 
-if $import_vless; then
+# shellcheck disable=SC2029
+ssh "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-apply-user.sh' '$remote_root'"
+if [[ "$remote_host" == x1carbon ]]; then
   # shellcheck disable=SC2029
-  ssh "$target" "install -d -m 700 '$remote_root/secrets/vless'"
-  rsync -a --chmod=F600 \
-    "$repo_root/secrets/vless/x1carbon.json" \
-    "$target:$remote_root/secrets/vless/"
-  # shellcheck disable=SC2029
-  ssh -t "$target" "bash '$remote_root/scripts/omarchy-install-vless.sh' '$remote_root/secrets/vless/x1carbon.json'"
+  ssh "$target" "bash '$remote_root/scripts/omarchy-configure-syncthing.sh'"
 fi
-
 # shellcheck disable=SC2029
-ssh "$target" "bash '$remote_root/scripts/omarchy-apply-user.sh' '$remote_root'"
-# shellcheck disable=SC2029
-ssh "$target" "bash '$remote_root/scripts/omarchy-configure-syncthing.sh'"
-# shellcheck disable=SC2029
-ssh "$target" "bash '$remote_root/scripts/omarchy-verify.sh'"
+ssh "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-verify.sh'"

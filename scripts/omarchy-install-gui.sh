@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source_root="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+expected_host="${OMARCHY_EXPECTED_HOST:-x1carbon}"
 manifest="$source_root/omarchy/packages/gui.txt"
 brave_policy="$source_root/dotfiles/omarchy/brave/extensions.json"
 firefox_extensions="$source_root/dotfiles/omarchy/firefox/extensions.json"
@@ -27,7 +28,7 @@ package_installed() {
   pacman -Q "$1" >/dev/null 2>&1
 }
 
-[[ "$(hostname -s)" == x1carbon ]] || die "unexpected hostname"
+[[ "$(hostname -s)" == "$expected_host" ]] || die "unexpected hostname"
 # shellcheck disable=SC1091
 source /etc/os-release
 [[ "${ID:-}" == omarchy ]] || die "host is not Omarchy"

@@ -1377,13 +1377,61 @@ install_vless_service() {
   local service_name="vless-sing-box"
   local config_path="${HOME}/nix-config/secrets/vless/$(hostname).json"
   local runtime_config="/run/${service_name}/config.json"
+  local interface_path="/etc/sing-box/vless-interface"
+  local resolved_path="/usr/local/libexec/vless-revert-resolved"
+  local tun_interface
 
   if [[ ! -f "$config_path" ]]; then
     log "vless config not found at ${config_path}; skipping service install"
     return
   fi
 
+  if ! sing-box check -c "$config_path"; then
+    log "invalid VLESS config: ${config_path}"
+    return 1
+  fi
+  if ! tun_interface="$(jq -er '[.inbounds[] | select(.type == "tun") | .interface_name][0] // empty' "$config_path")"; then
+    log "VLESS config has no TUN interface"
+    return 1
+  fi
+  if [[ ! "$tun_interface" =~ ^[A-Za-z0-9][A-Za-z0-9_.+-]*$ ]]; then
+    log "invalid VLESS TUN interface: ${tun_interface}"
+    return 1
+  fi
+  if ((${#tun_interface} > 15)); then
+    log "VLESS TUN interface is longer than 15 characters"
+    return 1
+  fi
+
   log "installing systemd service ${service_name}"
+  sudo install -d -m0755 /usr/local/libexec
+  sudo tee "$resolved_path" >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+interface="${1:?usage: vless-revert-resolved INTERFACE}"
+
+if ! command -v resolvectl >/dev/null 2>&1 ||
+  ! systemctl is-active --quiet systemd-resolved.service; then
+  exit 0
+fi
+
+# sing-box registers resolved settings shortly after systemd considers it started.
+for ((attempt = 0; attempt < 50; attempt++)); do
+  dns="$(resolvectl dns "$interface" 2>/dev/null || true)"
+  if [[ "$dns" == *:* && -n "${dns#*:}" ]]; then
+    resolvectl revert "$interface"
+    resolvectl flush-caches
+    exit 0
+  fi
+  sleep 0.1
+done
+EOF
+  sudo chmod 0755 "$resolved_path"
+  sudo install -d -m0755 /etc/sing-box
+  printf '%s\n' "$tun_interface" | sudo tee "$interface_path" >/dev/null
+  sudo chmod 0444 "$interface_path"
+
   sudo tee /etc/systemd/system/${service_name}.service >/dev/null <<EOF
 [Unit]
 Description=VLESS tunnel via sing-box
@@ -1394,6 +1442,7 @@ After=network-online.target
 Type=simple
 ExecStartPre=/usr/bin/install -Dm0400 ${config_path} ${runtime_config}
 ExecStart=/usr/bin/sing-box run --disable-color -c ${runtime_config}
+ExecStartPost=${resolved_path} ${tun_interface}
 Restart=on-failure
 RestartSec=5
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_SETUID CAP_SETGID CAP_DAC_READ_SEARCH

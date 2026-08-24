@@ -73,10 +73,18 @@ scripts/omarchy-provision.sh --install-packages --install-gui --import-gpg \
 ```
 
 Package installation is interactive because Omarchy requests privilege through
-its normal policy. Provisioning keeps Bash as login/session shell and adds Zsh
-only as an interactive terminal shell. It restores Syncthing identity and
-configures shared devices and folders. VLESS config is validated, installed at
-`/etc/sing-box/vless.json`, and controlled with `vless up|down|status`.
+its normal policy. Provisioning detects the target's short hostname, includes an
+optional `omarchy/packages/<hostname>.txt` manifest, keeps Bash as login/session
+shell, and adds Zsh only as an interactive terminal shell. The Syncthing identity
+import and shared topology are currently specific to `x1carbon`.
+
+With `--import-vless`, provisioning selects
+`secrets/vless/<hostname>.json`, validates it, installs it at
+`/etc/sing-box/vless.json`, and provides `vless up|down|status`. The source host
+must have `jq` and `sing-box` so validation finishes before the target is changed.
+On systems using `systemd-resolved`, the VLESS unit removes sing-box's synthetic
+TUN DNS registration after startup. System DNS still traverses the TUN without
+making `198.19.0.2` the host resolver.
 GUI provisioning uses Omarchy installers for Brave, Firefox, VS Code, and
 ChatGPT; installs Bitwarden, T3 Code, and Telegram from package manifests; and
 applies managed browser extensions. It also installs the Bibata cursor theme and

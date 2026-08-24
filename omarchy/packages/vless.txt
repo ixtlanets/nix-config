@@ -1,0 +1,3 @@
+# VLESS tunnel runtime and config inspection.
+jq
+sing-box

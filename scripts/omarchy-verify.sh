@@ -26,6 +26,28 @@ if systemctl cat vless-sing-box.service >/dev/null 2>&1; then
   command -v sing-box >/dev/null 2>&1 || fail "sing-box is missing"
   command -v vless >/dev/null 2>&1 || fail "vless helper is missing"
   [[ -f /etc/sing-box/vless.json ]] || fail "VLESS config is missing"
+  [[ -r /etc/sing-box/vless-interface ]] || fail "VLESS interface metadata is missing"
+  [[ -x /usr/local/libexec/vless-revert-resolved ]] ||
+    fail "VLESS resolved helper is missing"
+  read -r tun_interface < /etc/sing-box/vless-interface
+  [[ "$tun_interface" =~ ^[A-Za-z0-9][A-Za-z0-9_.+-]*$ ]] ||
+    fail "invalid VLESS TUN interface"
+  ((${#tun_interface} <= 15)) || fail "VLESS TUN interface is too long"
+
+  if systemctl is-active --quiet vless-sing-box.service &&
+    systemctl is-active --quiet systemd-resolved.service; then
+    [[ -e "/sys/class/net/$tun_interface" ]] || fail "VLESS TUN interface is missing"
+    resolved_dns="$(resolvectl dns "$tun_interface")" || fail "could not read VLESS DNS state"
+    resolved_domains="$(resolvectl domain "$tun_interface")" || fail "could not read VLESS DNS domains"
+    resolved_default_route="$(resolvectl default-route "$tun_interface")" ||
+      fail "could not read VLESS DNS route"
+    ! grep -Eq '\):[[:space:]]+[^[:space:]]' <<< "$resolved_dns" ||
+      fail "VLESS TUN must not register DNS with systemd-resolved"
+    ! grep -Fq '~.' <<< "$resolved_domains" ||
+      fail "VLESS TUN must not own the default DNS domain"
+    ! grep -Eq ': yes$' <<< "$resolved_default_route" ||
+      fail "VLESS TUN must not be the default DNS route"
+  fi
 fi
 
 if [[ -f "$HOME/.local/state/nix-config-omarchy/gui-installed" ]]; then
@@ -75,11 +97,13 @@ gpg --batch --list-secret-keys --with-colons | grep -q '^sec:' || fail "GPG secr
 ssh -G m1max >/dev/null || fail "SSH m1max alias invalid"
 zsh -n "$HOME/.zshrc" || fail "Zsh config invalid"
 
-[[ "$(systemctl --user is-active syncthing.service)" == active ]] ||
-  fail "Syncthing user service inactive"
-syncthing_id="$(syncthing cli show system | jq -r '.myID // .myId // ""')"
-[[ "$syncthing_id" == "$expected_syncthing_id" ]] || fail "Syncthing identity mismatch"
-bash "$script_dir/omarchy-configure-syncthing.sh" --check
+if [[ "$expected_host" == x1carbon ]]; then
+  [[ "$(systemctl --user is-active syncthing.service)" == active ]] ||
+    fail "Syncthing user service inactive"
+  syncthing_id="$(syncthing cli show system | jq -r '.myID // .myId // ""')"
+  [[ "$syncthing_id" == "$expected_syncthing_id" ]] || fail "Syncthing identity mismatch"
+  bash "$script_dir/omarchy-configure-syncthing.sh" --check
+fi
 
 if command -v tailscale >/dev/null 2>&1; then
   [[ "$(tailscale status --json | jq -r '.BackendState')" == Running ]] ||
