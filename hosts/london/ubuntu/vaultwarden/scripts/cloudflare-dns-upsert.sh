@@ -41,9 +41,11 @@ payload=$(jq -n \
   '{type: $type, name: $name, content: $content, ttl: $ttl, proxied: false}')
 
 if [[ -n "$record_id" ]]; then
-  cf -X PUT --data "$payload" "$api/zones/$zone_id/dns_records/$record_id" >/dev/null
+  response=$(cf -X PUT --data "$payload" "$api/zones/$zone_id/dns_records/$record_id")
 else
-  cf -X POST --data "$payload" "$api/zones/$zone_id/dns_records" >/dev/null
+  response=$(cf -X POST --data "$payload" "$api/zones/$zone_id/dns_records")
 fi
 
-echo "$RECORD_NAME A $content"
+jq -e '.success == true' <<<"$response" >/dev/null
+
+echo "$RECORD_NAME A $content proxied=false ttl=$TTL"

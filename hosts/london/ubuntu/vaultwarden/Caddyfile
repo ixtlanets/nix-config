@@ -10,3 +10,17 @@ vault.nikcode.xyz {
 
 	reverse_proxy vaultwarden:80
 }
+
+books.nikcode.xyz {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+
+	# Keep audiobook traffic outside Cloudflare's reverse proxy/CDN. The public
+	# DNS-only record terminates TLS here, then Caddy reaches Moscow over Tailscale.
+	reverse_proxy 100.81.67.47:13378
+}

@@ -26,6 +26,7 @@
 | Target ARM64 manifest | `sha256:14a6492c743f2acfa00bcd96ec2a5c0c95e311f567718d29cb3c7f3772dc773f` |
 | Target ARM64 image ID | `sha256:28b665b047a1e02474fad2bc703bd2a7489e4e72295f67e431c17f07c63320b3` |
 | Production URL | `http://100.81.67.47:13378` through Tailscale |
+| Public URL | `https://books.nikcode.xyz` through London Caddy and Tailscale |
 | Rehearsal URL | `http://100.81.67.47:13379` through Tailscale |
 
 ## Layout
@@ -51,6 +52,18 @@ Remote defaults:
 - media: `/media/disk1/media/Audiobooks`.
 
 State directories are created with mode `0700`. They contain the Audiobookshelf database, including password hashes and auth state, and must never be copied into the repository.
+
+The public endpoint does not require a home-router port forward. Cloudflare is
+authoritative for `nikcode.xyz`, but the `books.nikcode.xyz` record is deliberately
+DNS-only. TLS terminates at the managed Caddy instance on `london`, which reaches
+this production endpoint through Tailscale. The reproducible ingress and its
+rollback procedure live in `hosts/london/ubuntu/vaultwarden/README.md`.
+
+For user provisioning in Absorb, prefer its per-user setup link/QR flow. It
+passes `https://books.nikcode.xyz` and a dedicated revocable API key without
+requiring the recipient to type a server address, username or password. The
+operator and recipient instructions, stable-version fallback, and credential
+handling rules are documented in `docs/absorb-onboarding.md`.
 
 ## Prerequisites
 

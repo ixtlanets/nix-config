@@ -1,0 +1,15 @@
+[Unit]
+Description=Check public Audiobookshelf ingress
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/audiobookshelf-monitor/check.sh
+DynamicUser=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6
