@@ -361,12 +361,14 @@ in
         CapabilityBoundingSet = [
           "CAP_NET_ADMIN"
           "CAP_NET_BIND_SERVICE"
+          "CAP_NET_RAW"
           "CAP_SETUID"
           "CAP_SETGID"
         ];
         AmbientCapabilities = [
           "CAP_NET_ADMIN"
           "CAP_NET_BIND_SERVICE"
+          "CAP_NET_RAW"
         ];
         NoNewPrivileges = cfg.configUser == null;
         DeviceAllow = [
