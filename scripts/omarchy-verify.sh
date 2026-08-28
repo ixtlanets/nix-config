@@ -8,10 +8,15 @@ declare -A syncthing_ids=(
 )
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source_root="$(cd -- "$script_dir/.." && pwd)"
+tmux_plugins_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins"
 
 fail() {
   printf '[omarchy:verify] FAIL: %s\n' "$*" >&2
   exit 1
+}
+
+warn() {
+  printf '[omarchy:verify] WARNING: %s\n' "$*" >&2
 }
 
 [[ "$(hostname -s)" == "$expected_host" ]] || fail "unexpected hostname"
@@ -21,9 +26,10 @@ source /etc/os-release
 [[ "$(getent passwd "$USER" | cut -d: -f7)" == /usr/bin/bash ]] ||
   fail "login shell must remain Bash"
 
-for command_name in git gpg zsh pass direnv mise codex opencode omarchy; do
+for command_name in git gpg zsh pass direnv mise codex opencode omarchy tat tmux wl-copy wl-paste yp yt yt-dlp; do
   command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is missing"
 done
+command -v urlview >/dev/null 2>&1 || warn "urlview is missing; tmux-urlview is unavailable"
 
 if systemctl cat vless-sing-box.service >/dev/null 2>&1; then
   command -v sing-box >/dev/null 2>&1 || fail "sing-box is missing"
@@ -108,6 +114,20 @@ cmp -s "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.j
   fail "Omarchy shell config mismatch"
 cmp -s "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml" ||
   fail "Voxtype config mismatch"
+cmp -s \
+  "$source_root/dotfiles/omarchy/tmux/tmux.conf" \
+  "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf" ||
+  fail "tmux config mismatch"
+[[ -x "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/tpm/tpm" ]] ||
+  fail "tmux plugin manager is missing"
+for plugin in tmux-sensible tmux-pain-control tmux-urlview tmux-prefix-highlight tmux; do
+  [[ -d "$tmux_plugins_dir/$plugin/.git" ]] || fail "tmux plugin $plugin is missing"
+done
+for helper in tat yp yt; do
+  cmp -s "$source_root/dotfiles/omarchy/bin/$helper" "$HOME/.local/bin/$helper" ||
+    fail "$helper helper mismatch"
+  [[ -x "$HOME/.local/bin/$helper" ]] || fail "$helper helper is not executable"
+done
 if command -v voxtype >/dev/null 2>&1; then
   [[ "$(voxtype setup onnx --status 2>&1)" == *'Backend: ONNX'* ]] ||
     fail "Voxtype ONNX backend is not active"

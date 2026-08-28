@@ -27,6 +27,20 @@ install_file() {
   log "installed $destination"
 }
 
+install_file_with_backup() {
+  local source="$1"
+  local destination="$2"
+  local backup="${destination}.pre-nix-config"
+
+  [[ -f "$source" ]] || die "source file missing: $source"
+  if [[ -f "$destination" ]] && ! cmp -s "$source" "$destination" &&
+    [[ ! -e "$backup" && ! -L "$backup" ]]; then
+    cp --dereference --preserve=mode,timestamps "$destination" "$backup"
+    log "backed up existing file to $backup"
+  fi
+  install_file "$source" "$destination"
+}
+
 ensure_plugin() {
   local id="$1"
   local url="$2"
@@ -39,6 +53,45 @@ ensure_plugin() {
 
   log "installing plugin $id"
   omarchy plugin add "$url" --yes
+}
+
+install_tmux_config() {
+  local source="$source_root/dotfiles/omarchy/tmux/tmux.conf"
+  local destination="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf"
+  local plugins_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins"
+  local tpm_dir="$plugins_dir/tpm"
+  local reload_tmux=false
+  local plugin
+
+  if [[ ! -f "$destination" ]] || ! cmp -s "$source" "$destination"; then
+    reload_tmux=true
+  fi
+  if [[ ! -d "$tpm_dir/.git" ]]; then
+    reload_tmux=true
+  fi
+  for plugin in tmux-sensible tmux-pain-control tmux-urlview tmux-prefix-highlight tmux; do
+    if [[ ! -d "$plugins_dir/$plugin/.git" ]]; then
+      reload_tmux=true
+    fi
+  done
+
+  install_file_with_backup "$source" "$destination"
+
+  if [[ -d "$tpm_dir/.git" ]]; then
+    log "tmux plugin manager already installed"
+  else
+    [[ ! -e "$tpm_dir" ]] || die "incomplete tmux plugin manager path: $tpm_dir"
+    mkdir -p "$(dirname "$tpm_dir")"
+    log "installing tmux plugin manager"
+    git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
+  fi
+
+  [[ -x "$tpm_dir/bin/install_plugins" ]] || die "tmux plugin installer is missing"
+  tmux start-server \; set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir/"
+  TMUX_PLUGIN_MANAGER_PATH="$plugins_dir/" "$tpm_dir/bin/install_plugins"
+  if $reload_tmux && tmux list-sessions >/dev/null 2>&1; then
+    tmux source-file "$destination"
+  fi
 }
 
 configure_foot_shell() {
@@ -124,13 +177,23 @@ install_file "$source_root/dotfiles/omarchy/starship.toml" "$HOME/.config/starsh
 install_file "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json"
 install_file "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
 install_file "$source_root/dotfiles/omarchy/bin/vless" "$HOME/.local/bin/vless"
-chmod 0755 "$HOME/.local/bin/vless"
+install_file_with_backup "$source_root/dotfiles/omarchy/bin/tat" "$HOME/.local/bin/tat"
+install_file_with_backup "$source_root/dotfiles/omarchy/bin/yt" "$HOME/.local/bin/yt"
+install_file_with_backup "$source_root/dotfiles/omarchy/bin/yp" "$HOME/.local/bin/yp"
+chmod 0755 \
+  "$HOME/.local/bin/tat" \
+  "$HOME/.local/bin/vless" \
+  "$HOME/.local/bin/yp" \
+  "$HOME/.local/bin/yt"
 install_file "$source_root/dotfiles/omarchy/environment.d/cursor.conf" "$HOME/.config/environment.d/20-cursor.conf"
 install_file "$source_root/dotfiles/omarchy/icons/default/index.theme" "$HOME/.icons/default/index.theme"
 install_file "$source_root/dotfiles/omarchy/hypr/input.lua" "$HOME/.config/hypr/input.lua"
 install_file "$source_root/dotfiles/omarchy/hypr/bindings.lua" "$HOME/.config/hypr/bindings.lua"
 install_file "$source_root/dotfiles/omarchy/hypr/looknfeel.lua" "$HOME/.config/hypr/looknfeel.lua"
-install_file "$source_root/dotfiles/omarchy/yt-dlp/config" "$HOME/.config/yt-dlp/config"
+install_file \
+  "$source_root/dotfiles/omarchy/yt-dlp/config" \
+  "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config"
+install_tmux_config
 configure_foot_shell
 configure_cursor
 omarchy-shell shell rescanPlugins >/dev/null

@@ -75,7 +75,12 @@ scripts/omarchy-provision.sh --install-packages --install-gui --import-gpg \
 Package installation is interactive because Omarchy requests privilege through
 its normal policy. Provisioning detects the target's short hostname, includes an
 optional `omarchy/packages/<hostname>.txt` manifest, keeps Bash as login/session
-shell, and adds Zsh only as an interactive terminal shell. The Syncthing identity
+shell, and adds Zsh only as an interactive terminal shell. It also installs the
+NixOS-equivalent `tat`, `yt`, and `yp` helpers in `~/.local/bin`; `yt` downloads
+clipboard URLs to `~/Videos`, while `yp` uses `~/tmp/.tt/inbox`. The NixOS tmux
+configuration and its TPM-managed plugins are installed alongside them; an existing
+XDG tmux config or helper is preserved once with a `.pre-nix-config` suffix. The
+`urlview` runtime is installed from the AUR when available. The Syncthing identity
 import and shared topology are currently specific to `x1carbon`.
 
 With `--import-vless`, provisioning selects

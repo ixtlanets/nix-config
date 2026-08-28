@@ -185,6 +185,11 @@ package_output="$({
 } || exit 1)" || die "could not load package manifests"
 mapfile -t packages <<< "$package_output"
 ((${#packages[@]} > 0)) || die "package manifests are empty"
+aur_manifest="$repo_root/omarchy/packages/aur.txt"
+aur_output="$(grep -Ev '^[[:space:]]*(#|$)' "$aur_manifest")" ||
+  die "could not load AUR package manifest"
+mapfile -t aur_packages <<< "$aur_output"
+((${#aur_packages[@]} > 0)) || die "AUR package manifest is empty"
 
 # Local expansion is intentional; remote_root is a fixed script constant.
 # shellcheck disable=SC2029
@@ -223,12 +228,19 @@ fi
 if $install_packages; then
   printf -v package_command '%q ' "${packages[@]}"
   run_privileged_remote "omarchy pkg add $package_command"
+  printf -v aur_package_command '%q ' "${aur_packages[@]}"
+  if ! run_privileged_remote "omarchy pkg aur add $aur_package_command"; then
+    printf 'WARNING: AUR packages could not be installed: %s\n' "${aur_packages[*]}" >&2
+  fi
   if [[ "$(ssh_remote "tailscale status --json 2>/dev/null | jq -r '.BackendState // \"\"'")" != Running ]]; then
     run_privileged_remote "omarchy install service tailscale"
   fi
 else
   printf 'Package install skipped. Run interactively when ready:\n  omarchy pkg add'
   printf ' %q' "${packages[@]}"
+  printf '\n'
+  printf 'AUR package install skipped. Run interactively when ready:\n  omarchy pkg aur add'
+  printf ' %q' "${aur_packages[@]}"
   printf '\n'
 fi
 

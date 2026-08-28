@@ -1,0 +1,2 @@
+# Optional runtime packages available only from the AUR.
+urlview

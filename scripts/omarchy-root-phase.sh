@@ -33,6 +33,12 @@ package_output="$({
 } || exit 1)" || die "could not load package manifests"
 mapfile -t packages <<< "$package_output"
 ((${#packages[@]} > 0)) || die "package manifests are empty"
+aur_manifest="$source_root/omarchy/packages/aur.txt"
+[[ -f "$aur_manifest" ]] || die "AUR package manifest missing: $aur_manifest"
+aur_output="$(grep -Ev '^[[:space:]]*(#|$)' "$aur_manifest")" ||
+  die "could not load AUR package manifest"
+mapfile -t aur_packages <<< "$aur_output"
+((${#aur_packages[@]} > 0)) || die "AUR package manifest is empty"
 
 printf '[omarchy:root] Authenticate once to begin system installation.\n'
 sudo -v
@@ -46,6 +52,10 @@ cleanup() {
 trap cleanup EXIT
 
 omarchy pkg add "${packages[@]}"
+if ! omarchy pkg aur add "${aur_packages[@]}"; then
+  printf '[omarchy:root] WARNING: AUR packages could not be installed: %s\n' \
+    "${aur_packages[*]}" >&2
+fi
 if [[ "$skip_tailscale" == true ]]; then
   printf '[omarchy:root] Tailscale login skipped; package and daemon remain installed.\n'
 else

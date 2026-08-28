@@ -2,4 +2,5 @@ ffmpeg
 imagemagick
 parallel
 mediainfo
+wl-clipboard
 yt-dlp

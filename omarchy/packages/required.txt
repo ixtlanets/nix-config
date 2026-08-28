@@ -5,4 +5,5 @@ zsh-syntax-highlighting
 direnv
 pass
 git-crypt
+tmux
 yq
