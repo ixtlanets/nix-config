@@ -47,7 +47,8 @@ package_output="$(grep -Ev '^[[:space:]]*(#|$)' "$manifest")" ||
 mapfile -t packages <<< "$package_output"
 ((${#packages[@]} > 0)) || die "GUI package manifest is empty"
 omarchy pkg add "${packages[@]}"
-omarchy-pkg-aur-add bibata-cursor-theme
+omarchy-pkg-aur-add bibata-cursor-theme voxtype-bin
+sudo voxtype setup onnx --enable
 
 # Browser helpers own Wayland flags, native messaging, and base policies.
 omarchy install browser brave
@@ -89,6 +90,7 @@ expected_packages=(
   t3code-bin
   telegram-desktop
   visual-studio-code-bin
+  voxtype-bin
 )
 for package in "${expected_packages[@]}"; do
   package_installed "$package" || die "$package is missing after installation"

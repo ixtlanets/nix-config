@@ -2,12 +2,17 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+secrets_root="$repo_root/secrets"
 remote_root=".local/share/nix-config-omarchy"
 install_packages=false
 install_gui=false
 import_gpg=false
 import_syncthing=false
 import_vless=false
+use_pkexec=false
+ssh_via_socat=false
+stage_only=false
+skip_tailscale=false
 
 usage() {
   cat <<'EOF'
@@ -17,8 +22,13 @@ Options:
   --install-packages  Install package manifests through Omarchy (interactive).
   --install-gui       Install GUI applications and managed browser extensions.
   --import-gpg        Transfer/import repo GPG key material, then delete staging.
-  --import-syncthing  Restore the x1carbon Syncthing device identity.
+  --import-syncthing  Restore the target host's Syncthing device identity.
   --import-vless      Install the target host's sing-box config and service.
+  --pkexec            Show graphical polkit prompts instead of terminal sudo.
+  --ssh-via-socat     Proxy SSH and rsync through socat (for local TUN conflicts).
+  --stage-only         Transfer scripts/configs and requested VLESS secret, then stop.
+  --skip-tailscale     Do not require a connected Tailscale node during verification.
+  --secrets-root DIR  Read already-decrypted secrets from DIR.
   -h, --help          Show help.
 EOF
 }
@@ -50,6 +60,27 @@ while (($# > 0)); do
       import_vless=true
       shift
       ;;
+    --pkexec)
+      use_pkexec=true
+      shift
+      ;;
+    --ssh-via-socat)
+      ssh_via_socat=true
+      shift
+      ;;
+    --stage-only)
+      stage_only=true
+      shift
+      ;;
+    --skip-tailscale)
+      skip_tailscale=true
+      shift
+      ;;
+    --secrets-root)
+      (($# >= 2)) || die "--secrets-root requires a directory"
+      secrets_root="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -67,21 +98,70 @@ done
 
 [[ "${target:-}" =~ ^[a-z_][a-z0-9_-]*@[A-Za-z0-9.-]+$ ]] ||
   die "target must look like user@host"
+[[ -d "$secrets_root" ]] || die "secrets root missing: $secrets_root"
+
+control_path="/tmp/omarchy-provision-ssh-$$"
+ssh_args=(
+  -o ControlMaster=auto
+  -o ControlPersist=60
+  -o "ControlPath=$control_path"
+)
+rsync_ssh="ssh -o ControlMaster=auto -o ControlPersist=60 -o ControlPath=$control_path"
+if $ssh_via_socat; then
+  command -v socat >/dev/null 2>&1 || die "socat is required for --ssh-via-socat"
+  ssh_args+=(-o 'ProxyCommand=socat - TCP:%h:%p')
+  rsync_ssh+=" -o 'ProxyCommand=socat - TCP:%h:%p'"
+fi
+
+ssh_remote() {
+  # Local expansion is intentional: callers pass the remote command as args.
+  # shellcheck disable=SC2029
+  ssh "${ssh_args[@]}" "$target" "$@"
+}
+
+rsync_remote() {
+  rsync -e "$rsync_ssh" "$@"
+}
+
+close_control_master() {
+  ssh "${ssh_args[@]}" -O exit "$target" >/dev/null 2>&1 || true
+}
+trap close_control_master EXIT
+
 target_user="${target%@*}"
-remote_host="$(ssh "$target" 'hostname -s')" || die "could not read target hostname"
+remote_host="$(ssh_remote 'hostname -s')" || die "could not read target hostname"
 [[ "$remote_host" =~ ^[A-Za-z0-9][A-Za-z0-9-]*$ ]] ||
   die "target returned invalid hostname: $remote_host"
 
 # Validate destination before package changes or secret transfer.
 # shellcheck disable=SC2029
-ssh "$target" "[[ \$(hostname -s) == '$remote_host' ]] && [[ \$(id -un) == '$target_user' ]] && source /etc/os-release && [[ \$ID == omarchy ]] && command -v omarchy >/dev/null" ||
+ssh_remote "[[ \$(hostname -s) == '$remote_host' ]] && [[ \$(id -un) == '$target_user' ]] && source /etc/os-release && [[ \$ID == omarchy ]] && command -v omarchy >/dev/null" ||
   die "target validation failed"
+if $use_pkexec; then
+  ssh_remote "command -v pkexec >/dev/null" || die "pkexec is missing on target"
+fi
+
+remote_command_prefix=""
+if $use_pkexec; then
+  remote_command_prefix="env PATH='$remote_root/pkexec-bin':\$PATH "
+fi
+
+run_privileged_remote() {
+  local command="$1"
+  if $use_pkexec; then
+    ssh_remote "${remote_command_prefix}${command}"
+  else
+    ssh "${ssh_args[@]}" -t "$target" "$command"
+  fi
+}
 
 if $import_syncthing; then
-  [[ "$remote_host" == x1carbon ]] || die "Syncthing identity import is only configured for x1carbon"
+  syncthing_secret_dir="$secrets_root/syncthing/$remote_host"
+  [[ -f "$syncthing_secret_dir/cert.pem" && -f "$syncthing_secret_dir/key.pem" ]] ||
+    die "Syncthing identity missing: $syncthing_secret_dir"
 fi
 if $import_vless; then
-  vless_config="$repo_root/secrets/vless/$remote_host.json"
+  vless_config="$secrets_root/vless/$remote_host.json"
   [[ -f "$vless_config" ]] || die "VLESS config missing: $vless_config"
   command -v jq >/dev/null 2>&1 || die "jq is required to validate VLESS config"
   command -v sing-box >/dev/null 2>&1 || die "sing-box is required to validate VLESS config"
@@ -108,22 +188,43 @@ mapfile -t packages <<< "$package_output"
 
 # Local expansion is intentional; remote_root is a fixed script constant.
 # shellcheck disable=SC2029
-ssh "$target" "mkdir -p '$remote_root/scripts' '$remote_root/dotfiles' '$remote_root/omarchy/packages'"
-rsync -a --delete "$repo_root/dotfiles/omarchy/" "$target:$remote_root/dotfiles/omarchy/"
-rsync -a --delete "$repo_root/omarchy/packages/" "$target:$remote_root/omarchy/packages/"
-rsync -a \
+ssh_remote "mkdir -p '$remote_root/scripts' '$remote_root/dotfiles' '$remote_root/omarchy/packages' '$remote_root/pkexec-bin'"
+rsync_remote -a --delete "$repo_root/dotfiles/omarchy/" "$target:$remote_root/dotfiles/omarchy/"
+rsync_remote -a --delete "$repo_root/omarchy/packages/" "$target:$remote_root/omarchy/packages/"
+rsync_remote -a \
   "$repo_root/scripts/omarchy-apply-user.sh" \
   "$repo_root/scripts/omarchy-configure-syncthing.sh" \
+  "$repo_root/scripts/omarchy-enable-voxtype.sh" \
   "$repo_root/scripts/omarchy-install-gui.sh" \
   "$repo_root/scripts/omarchy-install-vless.sh" \
+  "$repo_root/scripts/omarchy-root-phase.sh" \
+  "$repo_root/scripts/omarchy-root-phase-terminal.sh" \
+  "$repo_root/scripts/omarchy-test-vless.sh" \
   "$repo_root/scripts/omarchy-verify.sh" \
   "$target:$remote_root/scripts/"
+if $use_pkexec; then
+  rsync_remote -a "$repo_root/scripts/omarchy-pkexec-sudo" "$target:$remote_root/pkexec-bin/sudo"
+  ssh_remote "chmod 0755 '$remote_root/pkexec-bin/sudo'"
+fi
+
+if $import_vless; then
+  # shellcheck disable=SC2029
+  ssh_remote "install -d -m 700 '$remote_root/secrets/vless'"
+  rsync_remote -a --chmod=F600 \
+    "$vless_config" \
+    "$target:$remote_root/secrets/vless/"
+fi
+
+if $stage_only; then
+  printf 'Omarchy provisioning files staged on %s:%s\n' "$target" "$remote_root"
+  exit 0
+fi
 
 if $install_packages; then
   printf -v package_command '%q ' "${packages[@]}"
-  ssh -t "$target" "omarchy pkg add $package_command"
-  if [[ "$(ssh "$target" "tailscale status --json 2>/dev/null | jq -r '.BackendState // \"\"'")" != Running ]]; then
-    ssh -t "$target" "omarchy install service tailscale"
+  run_privileged_remote "omarchy pkg add $package_command"
+  if [[ "$(ssh_remote "tailscale status --json 2>/dev/null | jq -r '.BackendState // \"\"'")" != Running ]]; then
+    run_privileged_remote "omarchy install service tailscale"
   fi
 else
   printf 'Package install skipped. Run interactively when ready:\n  omarchy pkg add'
@@ -133,43 +234,38 @@ fi
 
 if $import_vless; then
   # shellcheck disable=SC2029
-  ssh "$target" "install -d -m 700 '$remote_root/secrets/vless'"
-  rsync -a --chmod=F600 \
-    "$vless_config" \
-    "$target:$remote_root/secrets/vless/"
-  # shellcheck disable=SC2029
-  if ! ssh -t "$target" "bash '$remote_root/scripts/omarchy-install-vless.sh' '$remote_root/secrets/vless/$remote_host.json'"; then
+  if ! run_privileged_remote "bash '$remote_root/scripts/omarchy-install-vless.sh' '$remote_root/secrets/vless/$remote_host.json'"; then
     # shellcheck disable=SC2029
-    ssh "$target" "rm -f '$remote_root/secrets/vless/$remote_host.json'"
+    ssh_remote "rm -f '$remote_root/secrets/vless/$remote_host.json'"
     die "VLESS installation failed"
   fi
 fi
 
 if $install_gui; then
   # shellcheck disable=SC2029
-  ssh -t "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-install-gui.sh' '$remote_root'"
+  run_privileged_remote "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-install-gui.sh' '$remote_root'"
 fi
 
 if $import_gpg; then
-  ssh "$target" "gpg --batch --import" < "$repo_root/secrets/gpg/public.key"
-  ssh "$target" "gpg --batch --import" < "$repo_root/secrets/gpg/private.key"
-  ssh "$target" "gpg --batch --import-ownertrust" < "$repo_root/secrets/gpg/ownertrust.txt"
+  ssh_remote "gpg --batch --import" < "$secrets_root/gpg/public.key"
+  ssh_remote "gpg --batch --import" < "$secrets_root/gpg/private.key"
+  ssh_remote "gpg --batch --import-ownertrust" < "$secrets_root/gpg/ownertrust.txt"
 fi
 
 # Syncthing reads this XDG state path by default on current Arch builds.
 if $import_syncthing; then
-  ssh "$target" "install -d -m 700 '.local/state/syncthing'"
-  rsync -a --chmod=F600 \
-    "$repo_root/secrets/syncthing/x1carbon/cert.pem" \
-    "$repo_root/secrets/syncthing/x1carbon/key.pem" \
+  ssh_remote "install -d -m 700 '.local/state/syncthing'"
+  rsync_remote -a --chmod=F600 \
+    "$syncthing_secret_dir/cert.pem" \
+    "$syncthing_secret_dir/key.pem" \
     "$target:.local/state/syncthing/"
 fi
 
 # shellcheck disable=SC2029
-ssh "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-apply-user.sh' '$remote_root'"
-if [[ "$remote_host" == x1carbon ]]; then
+ssh_remote "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-apply-user.sh' '$remote_root'"
+if $import_syncthing; then
   # shellcheck disable=SC2029
-  ssh "$target" "bash '$remote_root/scripts/omarchy-configure-syncthing.sh'"
+  ssh_remote "bash '$remote_root/scripts/omarchy-configure-syncthing.sh'"
 fi
 # shellcheck disable=SC2029
-ssh "$target" "OMARCHY_EXPECTED_HOST='$remote_host' bash '$remote_root/scripts/omarchy-verify.sh'"
+ssh_remote "OMARCHY_EXPECTED_HOST='$remote_host' OMARCHY_SKIP_TAILSCALE='$skip_tailscale' bash '$remote_root/scripts/omarchy-verify.sh'"

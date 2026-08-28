@@ -2,7 +2,10 @@
 set -euo pipefail
 
 expected_host="${OMARCHY_EXPECTED_HOST:-x1carbon}"
-expected_syncthing_id="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
+declare -A syncthing_ids=(
+  [x1carbon]="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
+  [zenbook]="H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
+)
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source_root="$(cd -- "$script_dir/.." && pwd)"
 
@@ -59,7 +62,8 @@ if [[ -f "$HOME/.local/state/nix-config-omarchy/gui-installed" ]]; then
     openai-codex-desktop \
     t3code-bin \
     telegram-desktop \
-    visual-studio-code-bin; do
+    visual-studio-code-bin \
+    voxtype-bin; do
     pacman -Q "$package" >/dev/null 2>&1 || fail "$package GUI package is missing"
   done
   [[ -f "$HOME/.local/state/nix-config-omarchy/vscode-integrated" ]] ||
@@ -96,16 +100,36 @@ gpg --batch --list-secret-keys --with-colons | grep -q '^sec:' || fail "GPG secr
 [[ -d "$HOME/.password-store/.git" ]] || fail "password store missing"
 ssh -G m1max >/dev/null || fail "SSH m1max alias invalid"
 zsh -n "$HOME/.zshrc" || fail "Zsh config invalid"
+cmp -s "$source_root/dotfiles/omarchy/hypr/bindings.lua" "$HOME/.config/hypr/bindings.lua" ||
+  fail "Hyprland bindings mismatch"
+cmp -s "$source_root/dotfiles/omarchy/hypr/input.lua" "$HOME/.config/hypr/input.lua" ||
+  fail "Hyprland input config mismatch"
+cmp -s "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json" ||
+  fail "Omarchy shell config mismatch"
+cmp -s "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml" ||
+  fail "Voxtype config mismatch"
+if command -v voxtype >/dev/null 2>&1; then
+  [[ "$(voxtype setup onnx --status 2>&1)" == *'Backend: ONNX'* ]] ||
+    fail "Voxtype ONNX backend is not active"
+  [[ -f "$HOME/.local/share/voxtype/models/parakeet-tdt-0.6b-v3/encoder-model.onnx.data" ]] ||
+    fail "Voxtype Parakeet model is missing"
+  [[ "$(systemctl --user is-active voxtype.service)" == active ]] ||
+    fail "Voxtype user service inactive"
+fi
+for plugin_id in io.github.sspaeti.timezones io.github.snikulin.omaquote; do
+  [[ -e "$HOME/.config/omarchy/plugins/$plugin_id" ]] ||
+    fail "Omarchy plugin $plugin_id is missing"
+done
 
-if [[ "$expected_host" == x1carbon ]]; then
+if [[ -n "${syncthing_ids[$expected_host]:-}" ]]; then
   [[ "$(systemctl --user is-active syncthing.service)" == active ]] ||
     fail "Syncthing user service inactive"
   syncthing_id="$(syncthing cli show system | jq -r '.myID // .myId // ""')"
-  [[ "$syncthing_id" == "$expected_syncthing_id" ]] || fail "Syncthing identity mismatch"
+  [[ "$syncthing_id" == "${syncthing_ids[$expected_host]}" ]] || fail "Syncthing identity mismatch"
   bash "$script_dir/omarchy-configure-syncthing.sh" --check
 fi
 
-if command -v tailscale >/dev/null 2>&1; then
+if command -v tailscale >/dev/null 2>&1 && [[ "${OMARCHY_SKIP_TAILSCALE:-false}" != true ]]; then
   [[ "$(tailscale status --json | jq -r '.BackendState')" == Running ]] ||
     fail "Tailscale is not connected"
   tailscale_dns="$(tailscale status --json | jq -r '.Self.DNSName')"

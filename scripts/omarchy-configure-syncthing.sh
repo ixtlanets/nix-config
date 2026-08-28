@@ -17,22 +17,35 @@ fail() {
   exit 1
 }
 
-self_id="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
+host="$(hostname -s)"
+declare -A host_ids=(
+  [x1carbon]="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
+  [um790pro]="OKR2QCL-FLJ7JE5-HPWXEKY-SV2BHIA-I24BTUD-CJRVW4Y-VUFRT7H-YFPWOQL"
+  [x13]="NZ4IHCR-OW6F44P-FPNHA6M-PE44VY7-ZXPCEEB-QSLKP6J-I56KPSA-4AX5VQX"
+  [m1max]="A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV"
+  [m3max]="NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV"
+  [zenbook]="H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
+  [desktop]="6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS"
+  [um790pro-wsl]="6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL"
+)
+self_id="${host_ids[$host]:-}"
+[[ -n "$self_id" ]] || fail "unsupported Syncthing host: $host"
 computer_ids=(
-  "$self_id"
-  "OKR2QCL-FLJ7JE5-HPWXEKY-SV2BHIA-I24BTUD-CJRVW4Y-VUFRT7H-YFPWOQL"
-  "NZ4IHCR-OW6F44P-FPNHA6M-PE44VY7-ZXPCEEB-QSLKP6J-I56KPSA-4AX5VQX"
-  "A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV"
-  "NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV"
-  "H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
-  "6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS"
-  "6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL"
+  "${host_ids[x1carbon]}"
+  "${host_ids[um790pro]}"
+  "${host_ids[x13]}"
+  "${host_ids[m1max]}"
+  "${host_ids[m3max]}"
+  "${host_ids[zenbook]}"
+  "${host_ids[desktop]}"
+  "${host_ids[um790pro-wsl]}"
 )
 mobile_ids=(
   "66MSI5D-LTA44T5-VYMLLN7-2XVEN2F-WBR2CKJ-WWDAEOE-R3VUFIH-4NAZQA6"
   "7LI7XA5-TKD43OY-RZZIYRC-5CE35VG-YTGAYD7-JZEFRZK-XIQKZGP-L4TZXQQ"
 )
 device_specs=(
+  "x1carbon|${computer_ids[0]}"
   "um790pro|${computer_ids[1]}"
   "x13|${computer_ids[2]}"
   "m1max|${computer_ids[3]}"
@@ -65,6 +78,7 @@ done < <(syncthing cli config devices list)
 
 for spec in "${device_specs[@]}"; do
   IFS='|' read -r name device_id <<< "$spec"
+  [[ "$device_id" == "$self_id" ]] && continue
   if [[ -z "${configured_devices[$device_id]:-}" ]]; then
     $check_only && fail "device $name is missing"
     device_json="$(jq -nc --arg id "$device_id" --arg name "$name" '{deviceID:$id,name:$name}')"
@@ -83,7 +97,10 @@ for spec in "${folder_specs[@]}"; do
   if [[ -z "${configured_folders[$folder_id]:-}" ]]; then
     $check_only && fail "folder $folder_id is missing"
     mkdir -p "$path"
-    folder_devices=("${computer_ids[@]}")
+    folder_devices=()
+    for device_id in "${computer_ids[@]}"; do
+      [[ "$device_id" == "$self_id" ]] || folder_devices+=("$device_id")
+    done
     [[ "$sharing" == mobile ]] && folder_devices+=("${mobile_ids[@]}")
     devices_json="$(printf '%s\n' "${folder_devices[@]}" | jq -R . | jq -s .)"
     folder_json="$(jq -nc \

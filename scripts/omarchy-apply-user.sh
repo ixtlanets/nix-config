@@ -27,6 +27,20 @@ install_file() {
   log "installed $destination"
 }
 
+ensure_plugin() {
+  local id="$1"
+  local url="$2"
+  local destination="$HOME/.config/omarchy/plugins/$id"
+
+  if [[ -d "$destination" || -L "$destination" ]]; then
+    log "plugin $id already installed"
+    return
+  fi
+
+  log "installing plugin $id"
+  omarchy plugin add "$url" --yes
+}
+
 configure_foot_shell() {
   local config="$HOME/.config/foot/foot.ini"
   local temporary
@@ -91,9 +105,24 @@ source /etc/os-release
 [[ "${ID:-}" == omarchy ]] || die "host is not Omarchy"
 command -v omarchy >/dev/null 2>&1 || die "omarchy command is missing"
 [[ "$(id -u)" -ne 0 ]] || die "run as desktop user, not root"
+export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
+
+while IFS= read -r variable; do
+  export "${variable?}"
+done < <(systemctl --user show-environment | grep -E \
+  '^(DBUS_SESSION_BUS_ADDRESS|DISPLAY|HYPRLAND_INSTANCE_SIGNATURE|WAYLAND_DISPLAY|XDG_CURRENT_DESKTOP|XDG_RUNTIME_DIR)=')
+
+ensure_plugin \
+  io.github.sspaeti.timezones \
+  https://github.com/sspaeti/omarchy-timezones-plugin.git
+ensure_plugin \
+  io.github.snikulin.omaquote \
+  https://github.com/snikulin/omaquote.git
 
 install_file "$source_root/dotfiles/omarchy/zshrc" "$HOME/.zshrc"
 install_file "$source_root/dotfiles/omarchy/starship.toml" "$HOME/.config/starship.toml"
+install_file "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json"
+install_file "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
 install_file "$source_root/dotfiles/omarchy/bin/vless" "$HOME/.local/bin/vless"
 chmod 0755 "$HOME/.local/bin/vless"
 install_file "$source_root/dotfiles/omarchy/environment.d/cursor.conf" "$HOME/.config/environment.d/20-cursor.conf"
@@ -103,12 +132,8 @@ install_file "$source_root/dotfiles/omarchy/hypr/bindings.lua" "$HOME/.config/hy
 install_file "$source_root/dotfiles/omarchy/hypr/looknfeel.lua" "$HOME/.config/hypr/looknfeel.lua"
 install_file "$source_root/dotfiles/omarchy/yt-dlp/config" "$HOME/.config/yt-dlp/config"
 configure_foot_shell
-
-while IFS= read -r variable; do
-  export "${variable?}"
-done < <(systemctl --user show-environment | grep -E \
-  '^(DBUS_SESSION_BUS_ADDRESS|DISPLAY|HYPRLAND_INSTANCE_SIGNATURE|WAYLAND_DISPLAY|XDG_CURRENT_DESKTOP|XDG_RUNTIME_DIR)=')
 configure_cursor
+omarchy-shell shell rescanPlugins >/dev/null
 
 git config --global user.name "Sergey Nikulin"
 git config --global user.email "snikulin@gmail.com"
@@ -122,6 +147,11 @@ fi
 
 if command -v syncthing >/dev/null 2>&1 && [[ -f "$HOME/.local/state/syncthing/cert.pem" ]]; then
   systemctl --user enable --now syncthing.service
+fi
+
+if command -v voxtype >/dev/null 2>&1 &&
+  [[ -f "$HOME/.local/share/voxtype/models/parakeet-tdt-0.6b-v3/encoder-model.onnx.data" ]]; then
+  systemctl --user enable --now voxtype.service
 fi
 
 if command -v zsh >/dev/null 2>&1; then

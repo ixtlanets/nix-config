@@ -1,0 +1,11 @@
+# Host-specific packages needed to match the current x1carbon Omarchy setup.
+fprintd
+fwupd
+htop
+libfprint
+otf-monaspace
+syncthing
+tailscale
+tesseract-data-rus
+usbutils
+yazi

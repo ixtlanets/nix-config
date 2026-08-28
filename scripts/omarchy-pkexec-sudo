@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Agent-driven provisioning has no terminal where the desktop user can type a
+# sudo password. Keep upstream Omarchy scripts unchanged and route their
+# narrowly scoped sudo calls through the active graphical polkit agent.
+exec /usr/bin/pkexec "$@"

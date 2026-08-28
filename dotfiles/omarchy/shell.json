@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "idle": {
+    "screensaver": 150,
+    "lock": 300
+  },
+  "bar": {
+    "position": "top",
+    "transparent": false,
+    "centerAnchor": "omarchy.clock",
+    "layout": {
+      "left": [
+        { "id": "omarchy.menu" },
+        { "id": "omarchy.workspaces" }
+      ],
+      "center": [
+        { "id": "omarchy.indicators" },
+        {
+          "id": "omarchy.clock",
+          "format": "dddd HH:mm",
+          "formatAlt": "d MMMM 'W'ww yyyy",
+          "verticalFormat": "HH\n—\nmm"
+        },
+        { "id": "omarchy.keyboard-layout" },
+        { "id": "omarchy.weather" },
+        {
+          "id": "io.github.sspaeti.timezones",
+          "homeZones": ["Europe/Moscow"],
+          "zones": [
+            {
+              "label": "GR-office",
+              "shortLabel": "GR-office",
+              "zone": "America/Los_Angeles"
+            },
+            {
+              "label": "NY",
+              "shortLabel": "NY",
+              "zone": "America/New_York"
+            },
+            {
+              "label": "London",
+              "shortLabel": "London",
+              "zone": "Europe/London"
+            },
+            {
+              "label": "Berlin",
+              "shortLabel": "Berlin",
+              "zone": "Europe/Berlin"
+            },
+            {
+              "label": "Moscow",
+              "shortLabel": "Moscow",
+              "zone": "",
+              "home": true
+            }
+          ]
+        },
+        { "id": "omarchy.system-update" }
+      ],
+      "right": [
+        { "id": "omarchy.tray" },
+        { "id": "omarchy.tailscale" },
+        { "id": "omarchy.agents" },
+        { "id": "omarchy.bluetooth" },
+        { "id": "omarchy.network" },
+        { "id": "omarchy.audio" },
+        { "id": "omarchy.monitor" },
+        {
+          "id": "omarchy.power",
+          "showPercentage": true
+        }
+      ]
+    }
+  },
+  "plugins": [
+    { "id": "io.github.snikulin.omaquote" }
+  ]
+}
