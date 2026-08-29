@@ -321,7 +321,8 @@ in
       };
     };
     yt-dlp = {
-      enable = true;
+      # on macOS yt-dlp comes from Homebrew (fresher), config is written below via xdg.configFile
+      enable = !isDarwin;
       settings = {
         "cookies-from-browser" = "brave";
         "output" = "~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s";
@@ -542,6 +543,15 @@ in
       commands = ../../dotfiles/opencode/commands;
       package = null;
     };
+  };
+
+  # macOS: yt-dlp is installed via Homebrew; keep the same config as programs.yt-dlp would write
+  xdg.configFile."yt-dlp/config" = lib.mkIf isDarwin {
+    text = ''
+      --cookies-from-browser brave
+      --format bv*[height<=1080]+ba/b[height<=1080]/b
+      --output ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
+    '';
   };
 
   xdg.configFile."opencode/tui.json" = {

@@ -6,8 +6,13 @@ let
   yt-dlp-helper = pkgs.writeShellApplication {
     name = "yp";
     runtimeInputs =
-      (with pkgs; [
-        yt-dlp
+      # on macOS yt-dlp comes from Homebrew and is resolved via PATH
+      lib.optionals (!stdenv.isDarwin) (
+        with pkgs; [
+          yt-dlp
+        ]
+      )
+      ++ (with pkgs; [
         coreutils
       ])
       ++ lib.optionals stdenv.isLinux (
