@@ -101,10 +101,11 @@ Managed by this repo. Affected NixOS hosts: `zenbook`, `x13`, `x1carbon`, `um790
 - Outbound `proxy`: VLESS+Reality to Frankfurt
 - Outbound `london`: SOCKS5 to `london.tailf108.ts.net:1080`, `bind_interface: tailscale0`
 - Outbound `direct`: plain direct connection
-- Remote `geoip-ru` rule-set downloads through `proxy`, because GitHub raw content may be blocked
-  on the direct ISP path before the TUN is ready.
+- Remote `geoip-ru` rule-set downloads directly from the jsDelivr GitHub mirror. This avoids a
+  bootstrap dependency on the VLESS outbound when GitHub raw content is blocked before the TUN
+  is ready.
 - The rule-set is cached in `/var/lib/vless-sing-box/cache.db`. The first start downloads it through
-  Frankfurt; later starts load the cached copy and refresh stale data in the background. NixOS,
+  jsDelivr; later starts load the cached copy and refresh stale data in the background. NixOS,
   Omarchy, and the generic Arch service all preserve this directory with
   `StateDirectory=vless-sing-box`.
 - System DNS is pinned to local `dnsmasq` on `127.0.0.1`; `dnsmasq` filters public AAAA

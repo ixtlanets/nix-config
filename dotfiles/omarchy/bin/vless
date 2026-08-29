@@ -2,6 +2,7 @@
 set -euo pipefail
 
 service="vless-sing-box.service"
+interface_path="${VLESS_INTERFACE_PATH:-/etc/sing-box/vless-interface}"
 
 usage() {
   cat <<'EOF'
@@ -9,6 +10,31 @@ Usage: vless [up|down|status]
 
 Without arguments an interactive selector is shown when gum is available.
 EOF
+}
+
+wait_for_tunnel() {
+  local tun_interface
+  local tunnel_ready=false
+
+  [[ -r "$interface_path" ]] || {
+    printf 'VLESS interface metadata is missing: %s\n' "$interface_path" >&2
+    return 1
+  }
+  read -r tun_interface < "$interface_path"
+  for ((attempt = 0; attempt < 60; attempt++)); do
+    if systemctl is-active --quiet "$service" && ip link show "$tun_interface" >/dev/null 2>&1; then
+      tunnel_ready=true
+      break
+    fi
+    [[ "$(systemctl show --property=SubState --value "$service")" != auto-restart ]] || break
+    sleep 0.5
+  done
+  if ! $tunnel_ready; then
+    printf 'VLESS TUN interface %s did not become ready.\n' "$tun_interface" >&2
+    systemctl status --no-pager "$service" >&2 || true
+    sudo systemctl stop "$service"
+    return 1
+  fi
 }
 
 if (($# > 1)); then
@@ -26,6 +52,7 @@ fi
 case "$action" in
   up)
     sudo systemctl start "$service"
+    wait_for_tunnel
     ;;
   down)
     sudo systemctl stop "$service"

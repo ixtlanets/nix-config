@@ -69,6 +69,7 @@ else
 fi
 
 bash "$source_root/scripts/omarchy-install-vless.sh" "$vless_config"
+bash "$source_root/scripts/omarchy-test-vless.sh"
 OMARCHY_EXPECTED_HOST="$expected_host" \
   bash "$source_root/scripts/omarchy-install-gui.sh" "$source_root"
 

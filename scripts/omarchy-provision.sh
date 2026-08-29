@@ -251,6 +251,7 @@ if $import_vless; then
     ssh_remote "rm -f '$remote_root/secrets/vless/$remote_host.json'"
     die "VLESS installation failed"
   fi
+  run_privileged_remote "bash '$remote_root/scripts/omarchy-test-vless.sh'"
 fi
 
 if $install_gui; then

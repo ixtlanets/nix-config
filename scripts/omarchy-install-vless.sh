@@ -10,6 +10,7 @@ interface_path="/etc/sing-box/vless-interface"
 restore_path="/usr/local/libexec/vless-restore-ipv6-ra"
 resolved_path="/usr/local/libexec/vless-revert-resolved"
 temporary_dir="$(mktemp -d)"
+service_was_active=false
 trap 'rm -rf "$temporary_dir"' EXIT
 
 die() {
@@ -22,6 +23,7 @@ die() {
 source /etc/os-release
 [[ "${ID:-}" == omarchy ]] || die "host is not Omarchy"
 [[ -f "$config_path" ]] || die "config missing: $config_path"
+systemctl is-active --quiet "$service.service" && service_was_active=true
 command -v sing-box >/dev/null 2>&1 || die "sing-box is not installed"
 command -v jq >/dev/null 2>&1 || die "jq is not installed"
 sing-box check -c "$config_path"
@@ -101,6 +103,7 @@ sudo install -Dm0755 "$temporary_dir/restore-ipv6-ra" "$restore_path"
 sudo install -Dm0755 "$temporary_dir/revert-resolved" "$resolved_path"
 sudo install -Dm0644 "$temporary_dir/$service.service" "$unit_path"
 sudo systemctl daemon-reload
+$service_was_active && sudo systemctl restart "$service.service"
 rm -f "$config_path"
 
 printf '[omarchy:vless] installed; run vless up to connect\n'

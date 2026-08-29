@@ -90,6 +90,8 @@ must have `jq` and `sing-box` so validation finishes before the target is change
 On systems using `systemd-resolved`, the VLESS unit removes sing-box's synthetic
 TUN DNS registration after startup. System DNS still traverses the TUN without
 making `198.19.0.2` the host resolver.
+Provisioning performs a temporary VLESS smoke test after importing the config;
+`vless up` returns successfully only after the managed TUN interface appears.
 GUI provisioning uses Omarchy installers for Brave, Firefox, VS Code, and
 ChatGPT; installs Bitwarden, T3 Code, and Telegram from package manifests; and
 applies managed browser extensions. It also installs the Bibata cursor theme and

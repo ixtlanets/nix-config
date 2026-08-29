@@ -1283,6 +1283,7 @@ set -euo pipefail
 
 SERVICE="vless-sing-box"
 CONFIG_PATH="${HOME}/nix-config/secrets/vless/$(hostname).json"
+INTERFACE_PATH="${VLESS_INTERFACE_PATH:-/etc/sing-box/vless-interface}"
 
 usage() {
   cat <<'HELP'
@@ -1290,6 +1291,31 @@ Usage: vless [up|down|status]
 
 Without arguments an interactive selector is shown when gum is available.
 HELP
+}
+
+wait_for_tunnel() {
+  local tun_interface
+  local tunnel_ready=false
+
+  if [[ ! -r "$INTERFACE_PATH" ]]; then
+    echo "VLESS interface metadata is missing: $INTERFACE_PATH" >&2
+    return 1
+  fi
+  read -r tun_interface < "$INTERFACE_PATH"
+  for ((attempt = 0; attempt < 60; attempt++)); do
+    if systemctl is-active --quiet "$SERVICE" && ip link show "$tun_interface" >/dev/null 2>&1; then
+      tunnel_ready=true
+      break
+    fi
+    [[ "$(systemctl show --property=SubState --value "$SERVICE")" != auto-restart ]] || break
+    sleep 0.5
+  done
+  if ! $tunnel_ready; then
+    echo "VLESS TUN interface $tun_interface did not become ready." >&2
+    sudo systemctl stop "$SERVICE"
+    systemctl status --no-pager "$SERVICE" >&2 || true
+    return 1
+  fi
 }
 
 ensure_config() {
@@ -1324,6 +1350,7 @@ action=$(choose_action "$@")
 case "$action" in
   up)
     sudo systemctl start "$SERVICE"
+    wait_for_tunnel
     ;;
   down)
     sudo systemctl stop "$SERVICE"
@@ -1384,11 +1411,13 @@ install_vless_service() {
   local interface_path="/etc/sing-box/vless-interface"
   local resolved_path="/usr/local/libexec/vless-revert-resolved"
   local tun_interface
+  local service_was_active=false
 
   if [[ ! -f "$config_path" ]]; then
     log "vless config not found at ${config_path}; skipping service install"
     return
   fi
+  systemctl is-active --quiet "$service_name" && service_was_active=true
 
   if ! sing-box check -c "$config_path"; then
     log "invalid VLESS config: ${config_path}"
@@ -1464,6 +1493,52 @@ WantedBy=multi-user.target
 EOF
 
   sudo systemctl daemon-reload
+  $service_was_active && sudo systemctl restart "$service_name"
+}
+
+test_vless_service() {
+  local service_name="vless-sing-box"
+  local config_path="${HOME}/nix-config/secrets/vless/$(hostname).json"
+  local interface_path="/etc/sing-box/vless-interface"
+  local tun_interface
+  local started_here=false
+  local tunnel_ready=false
+
+  [[ -f "$config_path" ]] || return
+  [[ -f "/etc/systemd/system/${service_name}.service" ]] || return
+  [[ -r "$interface_path" ]] || return
+  read -r tun_interface < "$interface_path"
+
+  if ! systemctl is-active --quiet "$service_name"; then
+    sudo systemctl start "$service_name"
+    started_here=true
+  fi
+  for ((attempt = 0; attempt < 60; attempt++)); do
+    if systemctl is-active --quiet "$service_name" && ip link show "$tun_interface" >/dev/null 2>&1; then
+      tunnel_ready=true
+      break
+    fi
+    [[ "$(systemctl show --property=SubState --value "$service_name")" != auto-restart ]] || break
+    sleep 0.5
+  done
+  if ! $tunnel_ready; then
+    log "VLESS TUN interface ${tun_interface} did not become ready"
+    systemctl status --no-pager "$service_name" >&2 || true
+    $started_here && sudo systemctl stop "$service_name"
+    return 1
+  fi
+
+  if ! curl --fail --silent --show-error --max-time 15 \
+    --output /dev/null https://www.google.com/generate_204; then
+    $started_here && sudo systemctl stop "$service_name"
+    return 1
+  fi
+  if $started_here; then
+    sudo systemctl stop "$service_name"
+    log "VLESS smoke test passed on ${tun_interface}; stopped temporary tunnel"
+  else
+    log "VLESS smoke test passed on active tunnel ${tun_interface}"
+  fi
 }
 
 install_radj_service() {
@@ -1662,6 +1737,7 @@ main() {
   configure_wireguard_overlay
   write_vless_script
   install_vless_service
+  test_vless_service
   ensure_vless_docker_firewall
   ensure_ssh_firewall
   configure_openssh

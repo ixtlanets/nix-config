@@ -9,7 +9,7 @@ trap 'rm -rf "$tmp_dir"' EXIT
 mock_bin="$tmp_dir/bin"
 mkdir -p "$mock_bin" "$tmp_dir/project.name"
 
-for helper in kbd-backlight tat yt yp; do
+for helper in kbd-backlight tat vless yt yp; do
   [[ -x "$helpers_dir/$helper" ]] || {
     printf 'Missing executable Omarchy helper: %s\n' "$helper" >&2
     exit 1
@@ -66,6 +66,32 @@ cat > "$mock_bin/sleep" <<'MOCK'
 printf '%s\n' "$*" >> "$SLEEP_CALL"
 MOCK
 
+cat > "$mock_bin/sudo" <<'MOCK'
+#!/usr/bin/env bash
+"$@"
+MOCK
+
+cat > "$mock_bin/systemctl" <<'MOCK'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$SYSTEMCTL_CALLS"
+case "$*" in
+  'is-active --quiet vless-sing-box.service')
+    [[ "$VLESS_STATE" == ready ]]
+    ;;
+  'show --property=SubState --value vless-sing-box.service')
+    [[ "$VLESS_STATE" == ready ]] && printf 'running\n' || printf 'auto-restart\n'
+    ;;
+  'status --no-pager vless-sing-box.service')
+    exit 3
+    ;;
+esac
+MOCK
+
+cat > "$mock_bin/ip" <<'MOCK'
+#!/usr/bin/env bash
+[[ "$VLESS_STATE" == ready && "$*" == 'link show test-tun' ]]
+MOCK
+
 cat > "$mock_bin/yt-dlp" <<'MOCK'
 #!/usr/bin/env bash
 printf '%s\n' "$@" > "$YT_DLP_CALLS"
@@ -74,7 +100,10 @@ MOCK
 chmod +x \
   "$mock_bin/brightnessctl" \
   "$mock_bin/omarchy-hyprland-session-locked" \
+  "$mock_bin/ip" \
   "$mock_bin/sleep" \
+  "$mock_bin/sudo" \
+  "$mock_bin/systemctl" \
   "$mock_bin/tmux" \
   "$mock_bin/wl-copy" \
   "$mock_bin/wl-paste" \
@@ -128,6 +157,28 @@ tmux_calls="$tmp_dir/tmux.calls"
 )
 grep -Fxq 'new-session -As project-name' "$tmux_calls"
 
+vless_interface="$tmp_dir/vless-interface"
+printf 'test-tun\n' > "$vless_interface"
+vless_calls="$tmp_dir/vless-ready.calls"
+PATH="$mock_bin:$PATH" \
+  SYSTEMCTL_CALLS="$vless_calls" \
+  VLESS_INTERFACE_PATH="$vless_interface" \
+  VLESS_STATE=ready \
+  "$helpers_dir/vless" up
+grep -Fxq 'start vless-sing-box.service' "$vless_calls"
+grep -Fxq 'is-active --quiet vless-sing-box.service' "$vless_calls"
+
+vless_failed_calls="$tmp_dir/vless-failed.calls"
+if PATH="$mock_bin:$PATH" \
+  SYSTEMCTL_CALLS="$vless_failed_calls" \
+  VLESS_INTERFACE_PATH="$vless_interface" \
+  VLESS_STATE=failed \
+  "$helpers_dir/vless" up; then
+  printf 'vless up succeeded without a TUN interface\n' >&2
+  exit 1
+fi
+grep -Fxq 'stop vless-sing-box.service' "$vless_failed_calls"
+
 for helper in yt yp; do
   helper_home="$tmp_dir/$helper-home"
   clipboard_contents="$tmp_dir/$helper.clipboard"
@@ -179,4 +230,4 @@ for helper in yt yp; do
   }
 done
 
-printf 'PASS: Omarchy helpers preserve kbd-backlight, tat, yt, and yp behavior\n'
+printf 'PASS: Omarchy helpers preserve kbd-backlight, tat, vless, yt, and yp behavior\n'

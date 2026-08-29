@@ -6,21 +6,31 @@ started_here=false
 
 cleanup() {
   if $started_here; then
-    sudo -n systemctl stop "$service" >/dev/null 2>&1 || true
+    sudo systemctl stop "$service" >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
 
-sudo -v
 if ! systemctl is-active --quiet "$service"; then
   sudo systemctl start "$service"
   started_here=true
 fi
 
-sleep 5
-systemctl is-active --quiet "$service"
 read -r tun_interface < /etc/sing-box/vless-interface
-[[ -e "/sys/class/net/$tun_interface" ]]
+tunnel_ready=false
+for ((attempt = 0; attempt < 60; attempt++)); do
+  if systemctl is-active --quiet "$service" && [[ -e "/sys/class/net/$tun_interface" ]]; then
+    tunnel_ready=true
+    break
+  fi
+  [[ "$(systemctl show --property=SubState --value "$service")" != auto-restart ]] || break
+  sleep 0.5
+done
+if ! $tunnel_ready; then
+  printf '[omarchy:vless] TUN interface %s did not become ready.\n' "$tun_interface" >&2
+  systemctl status --no-pager "$service" >&2 || true
+  exit 1
+fi
 
 if systemctl is-active --quiet systemd-resolved.service; then
   resolved_dns="$(resolvectl dns "$tun_interface")"
