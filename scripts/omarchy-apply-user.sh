@@ -94,23 +94,24 @@ install_tmux_config() {
   fi
 }
 
-configure_foot_shell() {
+configure_foot() {
   local config="$HOME/.config/foot/foot.ini"
   local temporary
 
   [[ -f "$config" ]] || {
     mkdir -p "$(dirname "$config")"
-    printf '[main]\nshell=/usr/bin/zsh\n' > "$config"
-    log "configured Foot to launch Zsh"
+    printf '[main]\nshell=/usr/bin/zsh\nfont=JetBrainsMono Nerd Font:size=14\n' > "$config"
+    log "configured Foot"
     return
   }
   if /usr/bin/awk '
     /^\[main\]$/ { in_main = 1; next }
     /^\[/ { in_main = 0 }
-    in_main && /^shell=\/usr\/bin\/zsh$/ { found = 1 }
-    END { exit !found }
+    in_main && /^shell=\/usr\/bin\/zsh$/ { shell_found = 1 }
+    in_main && /^font=JetBrainsMono Nerd Font:size=14$/ { font_found = 1 }
+    END { exit !(shell_found && font_found) }
   ' "$config"; then
-    log "unchanged $config shell"
+    log "unchanged $config"
     return
   fi
 
@@ -119,16 +120,17 @@ configure_foot_shell() {
     /^\[main\]$/ {
       print
       print "shell=/usr/bin/zsh"
+      print "font=JetBrainsMono Nerd Font:size=14"
       in_main = 1
       next
     }
     /^\[/ { in_main = 0 }
-    in_main && /^shell=/ { next }
+    in_main && /^(shell|font)=/ { next }
     { print }
   ' "$config" > "$temporary"
   install -m 0644 "$temporary" "$config"
   rm -f "$temporary"
-  log "configured Foot to launch Zsh"
+  log "configured Foot"
 }
 
 configure_cursor() {
@@ -210,7 +212,7 @@ install_file \
   "$source_root/dotfiles/omarchy/yt-dlp/config" \
   "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config"
 install_tmux_config
-configure_foot_shell
+configure_foot
 configure_cursor
 configure_host_gpu
 omarchy-shell shell rescanPlugins >/dev/null
