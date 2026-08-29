@@ -176,11 +176,13 @@ install_file "$source_root/dotfiles/omarchy/zshrc" "$HOME/.zshrc"
 install_file "$source_root/dotfiles/omarchy/starship.toml" "$HOME/.config/starship.toml"
 install_file "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json"
 install_file "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
+install_file "$source_root/dotfiles/omarchy/bin/kbd-backlight" "$HOME/.local/bin/kbd-backlight"
 install_file "$source_root/dotfiles/omarchy/bin/vless" "$HOME/.local/bin/vless"
 install_file_with_backup "$source_root/dotfiles/omarchy/bin/tat" "$HOME/.local/bin/tat"
 install_file_with_backup "$source_root/dotfiles/omarchy/bin/yt" "$HOME/.local/bin/yt"
 install_file_with_backup "$source_root/dotfiles/omarchy/bin/yp" "$HOME/.local/bin/yp"
 chmod 0755 \
+  "$HOME/.local/bin/kbd-backlight" \
   "$HOME/.local/bin/tat" \
   "$HOME/.local/bin/vless" \
   "$HOME/.local/bin/yp" \

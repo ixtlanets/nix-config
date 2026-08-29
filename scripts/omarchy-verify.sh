@@ -26,7 +26,7 @@ source /etc/os-release
 [[ "$(getent passwd "$USER" | cut -d: -f7)" == /usr/bin/bash ]] ||
   fail "login shell must remain Bash"
 
-for command_name in git gpg zsh pass direnv mise codex opencode omarchy tat tmux wl-copy wl-paste yp yt yt-dlp; do
+for command_name in brightnessctl git gpg zsh pass direnv mise codex opencode omarchy tat tmux wl-copy wl-paste yp yt yt-dlp; do
   command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is missing"
 done
 command -v urlview >/dev/null 2>&1 || warn "urlview is missing; tmux-urlview is unavailable"
@@ -123,7 +123,7 @@ cmp -s \
 for plugin in tmux-sensible tmux-pain-control tmux-urlview tmux-prefix-highlight tmux; do
   [[ -d "$tmux_plugins_dir/$plugin/.git" ]] || fail "tmux plugin $plugin is missing"
 done
-for helper in tat yp yt; do
+for helper in kbd-backlight tat yp yt; do
   cmp -s "$source_root/dotfiles/omarchy/bin/$helper" "$HOME/.local/bin/$helper" ||
     fail "$helper helper mismatch"
   [[ -x "$HOME/.local/bin/$helper" ]] || fail "$helper helper is not executable"

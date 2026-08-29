@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="${1:-toggle}"
+if [[ $action != up && $action != down && $action != toggle ]]; then
+  printf 'Usage: %s [up|down|toggle]\n' "$(basename "$0")" >&2
+  exit 2
+fi
+
+device="$(
+  brightnessctl --list --machine-readable |
+    awk -F, '$1 ~ /kbd_backlight/ && $2 == "leds" { print $1; exit }'
+)"
+
+if [[ -z $device ]]; then
+  printf 'No keyboard backlight device found\n' >&2
+  exit 1
+fi
+
+# The lock screen restores its saved level on every key press. Let that finish
+# before changing it, then save our target so later wake events preserve it.
+if command -v omarchy-hyprland-session-locked >/dev/null 2>&1 &&
+  omarchy-hyprland-session-locked; then
+  sleep 0.2
+fi
+
+current="$(brightnessctl --device="$device" get)"
+maximum="$(brightnessctl --device="$device" max)"
+
+case "$action" in
+  up)
+    target=$((current + 1))
+    ((target <= maximum)) || target="$maximum"
+    ;;
+  down)
+    target=$((current - 1))
+    ((target >= 0)) || target=0
+    ;;
+  toggle)
+    if ((current == 0)); then
+      target="$maximum"
+    else
+      target=0
+    fi
+    ;;
+esac
+
+brightnessctl --device="$device" set "$target" >/dev/null
+brightnessctl --device="$device" --save set "$target" >/dev/null

@@ -1077,6 +1077,13 @@ EOF
   chmod +x "$yp_path"
 }
 
+install_kbd_backlight_script() {
+  local helper_src="${SCRIPT_DIR}/dotfiles/omarchy/bin/kbd-backlight"
+  local helper_path="${HOME}/.local/bin/kbd-backlight"
+  log "installing ${helper_path}"
+  install -Dm755 "$helper_src" "$helper_path"
+}
+
 install_yt_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1527,6 +1534,7 @@ main() {
   fi
 
   local packages=(
+    brightnessctl
     zsh
     zsh-completions
     zsh-autosuggestions
@@ -1640,6 +1648,7 @@ main() {
   write_alacritty_config
   write_variety_config
   write_yt_dlp_config
+  install_kbd_backlight_script
   install_yp_script
   install_yt_script
   configure_kde_shortcuts
