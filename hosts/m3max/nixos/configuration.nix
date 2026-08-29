@@ -33,7 +33,9 @@ in
   networking.hostName = "m3max"; # Define your hostname.
 
   # Set your time zone.
-  time.timeZone = "Europe/Moscow";
+  # time.timeZone is managed via System Settings: nix-darwin validates against
+  # `systemsetup -listtimezones`, which no longer lists Europe/Moscow on macOS 26
+  # time.timeZone = "Europe/Moscow";
 
   programs.zsh.enable = true;
 
@@ -144,6 +146,7 @@ in
     brews = [
       "trippy"
       "llama.cpp"
+      "yt-dlp"
       # "sunshine" it's broken now
     ];
     onActivation = {

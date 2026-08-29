@@ -33,7 +33,9 @@ in
   networking.hostName = "i9mac"; # Define your hostname.
 
   # Set your time zone.
-  time.timeZone = "Europe/Moscow";
+  # time.timeZone is managed via System Settings: nix-darwin validates against
+  # `systemsetup -listtimezones`, which no longer lists Europe/Moscow on macOS 26
+  # time.timeZone = "Europe/Moscow";
 
   programs.zsh.enable = true;
 
@@ -134,6 +136,7 @@ in
     brews = [
       "trippy"
       "emacs-plus"
+      "yt-dlp"
       # "sunshine" it's broken now
     ];
     onActivation = {
