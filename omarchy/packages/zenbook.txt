@@ -2,6 +2,7 @@
 fprintd
 fwupd
 htop
+intel-media-driver
 libfprint
 otf-monaspace
 syncthing

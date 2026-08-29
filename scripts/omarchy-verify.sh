@@ -32,6 +32,9 @@ done
 for package_name in python-curl_cffi python-secretstorage; do
   pacman -Q "$package_name" >/dev/null 2>&1 || fail "$package_name package is missing"
 done
+if [[ "$expected_host" == zenbook ]]; then
+  [[ -f /usr/lib/dri/iHD_drv_video.so ]] || fail "Intel iHD VA-API driver is missing"
+fi
 python -c 'import curl_cffi, secretstorage' >/dev/null 2>&1 ||
   fail "yt-dlp Python dependencies could not be imported"
 yt-dlp --ignore-config --list-impersonate-targets 2>/dev/null | grep -Fq curl_cffi ||
@@ -117,6 +120,10 @@ cmp -s "$source_root/dotfiles/omarchy/hypr/bindings.lua" "$HOME/.config/hypr/bin
   fail "Hyprland bindings mismatch"
 cmp -s "$source_root/dotfiles/omarchy/hypr/input.lua" "$HOME/.config/hypr/input.lua" ||
   fail "Hyprland input config mismatch"
+cmp -s "$source_root/dotfiles/omarchy/hypr/looknfeel.lua" "$HOME/.config/hypr/looknfeel.lua" ||
+  fail "Hyprland look and feel config mismatch"
+cmp -s "$source_root/dotfiles/omarchy/hypr/hosts/$expected_host.lua" "$HOME/.config/hypr/host.lua" ||
+  fail "Hyprland host config mismatch"
 cmp -s "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json" ||
   fail "Omarchy shell config mismatch"
 cmp -s "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml" ||
@@ -173,6 +180,13 @@ done < <(systemctl --user show-environment | grep -E '^(HYPRLAND_INSTANCE_SIGNAT
 if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]]; then
   hyprctl reload >/dev/null
   [[ -z "$(hyprctl configerrors)" ]] || fail "Hyprland configuration errors"
+  if [[ "$expected_host" == zenbook ]]; then
+    session_environment="$(systemctl --user show-environment)"
+    grep -Fxq 'LIBVA_DRIVER_NAME=iHD' <<< "$session_environment" ||
+      fail "session VA-API driver is not Intel iHD"
+    grep -Fxq '__GLX_VENDOR_LIBRARY_NAME=mesa' <<< "$session_environment" ||
+      fail "session GLX vendor is not Mesa"
+  fi
   [[ "$(hyprctl getoption input:kb_layout -j | jq -r '.str')" == us,ru ]] ||
     fail "Hyprland keyboard layouts mismatch"
   [[ "$(hyprctl getoption input:kb_options -j | jq -r '.str')" == grp:win_space_toggle ]] ||

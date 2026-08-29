@@ -150,6 +150,19 @@ configure_cursor() {
   fi
 }
 
+configure_host_gpu() {
+  [[ "$expected_host" == zenbook ]] || return
+
+  export LIBVA_DRIVER_NAME="iHD"
+  export __GLX_VENDOR_LIBRARY_NAME="mesa"
+  systemctl --user set-environment \
+    LIBVA_DRIVER_NAME="$LIBVA_DRIVER_NAME" \
+    __GLX_VENDOR_LIBRARY_NAME="$__GLX_VENDOR_LIBRARY_NAME"
+  if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd LIBVA_DRIVER_NAME __GLX_VENDOR_LIBRARY_NAME
+  fi
+}
+
 [[ "$(hostname -s)" == "$expected_host" ]] ||
   die "hostname $(hostname -s) does not match $expected_host"
 [[ -r /etc/os-release ]] || die "/etc/os-release is missing"
@@ -192,12 +205,14 @@ install_file "$source_root/dotfiles/omarchy/icons/default/index.theme" "$HOME/.i
 install_file "$source_root/dotfiles/omarchy/hypr/input.lua" "$HOME/.config/hypr/input.lua"
 install_file "$source_root/dotfiles/omarchy/hypr/bindings.lua" "$HOME/.config/hypr/bindings.lua"
 install_file "$source_root/dotfiles/omarchy/hypr/looknfeel.lua" "$HOME/.config/hypr/looknfeel.lua"
+install_file "$source_root/dotfiles/omarchy/hypr/hosts/$expected_host.lua" "$HOME/.config/hypr/host.lua"
 install_file \
   "$source_root/dotfiles/omarchy/yt-dlp/config" \
   "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config"
 install_tmux_config
 configure_foot_shell
 configure_cursor
+configure_host_gpu
 omarchy-shell shell rescanPlugins >/dev/null
 
 git config --global user.name "Sergey Nikulin"
