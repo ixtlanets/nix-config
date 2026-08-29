@@ -124,8 +124,11 @@ crash) when Tailscale is not running. All other traffic continues to work via VL
 **IPv6 policy**: NixOS VLESS clients are intentionally IPv4-only for public traffic. Kernel IPv6
 stays enabled for local/Tailscale needs, but public AAAA answers are filtered before applications
 see them. This avoids failures where glibc picks an IPv6 result while the host has no usable
-public IPv6 default route. Tailscale DNS injection is disabled with `--accept-dns=false`; MagicDNS
-is preserved by split DNS in local `dnsmasq`.
+public IPv6 default route. sing-box DNS rules return an empty successful `NOERROR` response for
+AAAA queries instead of `REFUSED`; static resolvers such as the Codex Linux binary can treat a
+refused AAAA response as a failure of the entire lookup even when the A response succeeds.
+Tailscale DNS injection is disabled with `--accept-dns=false`; MagicDNS is preserved by split DNS
+in local `dnsmasq`.
 
 **IPv6/DNS diagnostics**:
 ```bash
