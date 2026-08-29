@@ -26,9 +26,16 @@ source /etc/os-release
 [[ "$(getent passwd "$USER" | cut -d: -f7)" == /usr/bin/bash ]] ||
   fail "login shell must remain Bash"
 
-for command_name in brightnessctl git gpg zsh pass direnv mise codex opencode omarchy tat tmux wl-copy wl-paste yp yt yt-dlp; do
+for command_name in brightnessctl git gpg zsh pass direnv mise codex opencode omarchy python tat tmux wl-copy wl-paste yp yt yt-dlp; do
   command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is missing"
 done
+for package_name in python-curl_cffi python-secretstorage; do
+  pacman -Q "$package_name" >/dev/null 2>&1 || fail "$package_name package is missing"
+done
+python -c 'import curl_cffi, secretstorage' >/dev/null 2>&1 ||
+  fail "yt-dlp Python dependencies could not be imported"
+yt-dlp --ignore-config --list-impersonate-targets 2>/dev/null | grep -Fq curl_cffi ||
+  fail "yt-dlp curl_cffi impersonation targets are unavailable"
 command -v urlview >/dev/null 2>&1 || warn "urlview is missing; tmux-urlview is unavailable"
 
 if systemctl cat vless-sing-box.service >/dev/null 2>&1; then
@@ -114,6 +121,10 @@ cmp -s "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.j
   fail "Omarchy shell config mismatch"
 cmp -s "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml" ||
   fail "Voxtype config mismatch"
+cmp -s \
+  "$source_root/dotfiles/omarchy/yt-dlp/config" \
+  "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config" ||
+  fail "yt-dlp config mismatch"
 cmp -s \
   "$source_root/dotfiles/omarchy/tmux/tmux.conf" \
   "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf" ||

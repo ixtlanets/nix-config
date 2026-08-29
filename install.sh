@@ -976,13 +976,10 @@ write_variety_config() {
 write_yt_dlp_config() {
   local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp"
   local output_dir="$HOME/Videos/YouTube"
+  local config_src="${SCRIPT_DIR}/dotfiles/omarchy/yt-dlp/config"
   mkdir -p "$config_dir" "$output_dir"
-  log "writing ${config_dir}/config"
-  cat <<'EOF' >"${config_dir}/config"
---cookies-from-browser brave
---output ~/Videos/YouTube/%(uploader)s/%(title)s.%(ext)s
---format bv*[height<=1080]+ba/b[height<=1080]/b
-EOF
+  log "installing ${config_dir}/config"
+  install -m644 "$config_src" "${config_dir}/config"
 }
 
 install_tat() {
@@ -1566,6 +1563,8 @@ main() {
     prismlauncher
     mpv
     yt-dlp
+    python-curl_cffi
+    python-secretstorage
     zoom
     obsidian
     opencode-desktop-bin

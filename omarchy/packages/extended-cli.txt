@@ -5,3 +5,5 @@ parallel
 mediainfo
 wl-clipboard
 yt-dlp
+python-curl_cffi
+python-secretstorage
