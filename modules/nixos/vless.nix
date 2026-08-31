@@ -386,11 +386,11 @@ in
       };
     };
 
-    # Allow Docker bridge traffic to reach the sing-box redirect port so
-    # containers can use the tunnel.
+    # sing-box auto_redirect selects an ephemeral TCP port on every start.
+    # Accept only connections that were DNATed to it from Docker bridges.
     networking.firewall.extraInputRules = lib.mkIf config.virtualisation.docker.enable ''
-      -i docker0 -p tcp --dport 41935 -j ACCEPT
-      -i br-+ -p tcp --dport 41935 -j ACCEPT
+      -i docker0 -p tcp -m conntrack --ctstate DNAT -j ACCEPT
+      -i br-+ -p tcp -m conntrack --ctstate DNAT -j ACCEPT
     '';
   };
 }

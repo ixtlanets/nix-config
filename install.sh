@@ -1368,40 +1368,19 @@ EOF
 }
 
 ensure_vless_docker_firewall() {
-  # Allow sing-box redirect port for docker bridges so container traffic can reach the tunnel.
   if ! command -v ufw >/dev/null 2>&1; then
     log "ufw not found; skipping sing-box firewall rule for docker bridges"
     return
   fi
 
-  local port=41935
-  local ifaces=()
-
-  if ip link show docker0 >/dev/null 2>&1; then
-    ifaces+=("docker0")
+  local helper="${SCRIPT_DIR}/scripts/configure-vless-docker-firewall.sh"
+  if [[ ! -x $helper ]]; then
+    log "VLESS Docker firewall helper not found at ${helper}"
+    return 1
   fi
 
-  while IFS=: read -r _ name _; do
-    name=${name%%@*}
-    if [[ "$name" =~ ^br- ]]; then
-      ifaces+=("$name")
-    fi
-  done < <(ip -o link show 2>/dev/null || true)
-
-  if [[ "${#ifaces[@]}" -eq 0 ]]; then
-    log "no docker bridges detected; skipping ufw allow for sing-box"
-    return
-  fi
-
-  for iface in "${ifaces[@]}"; do
-    if sudo ufw status | grep -F " ${port}/tcp" | grep -F "on ${iface}" >/dev/null 2>&1; then
-      log "ufw rule for ${port}/tcp on ${iface} already present"
-      continue
-    fi
-
-    log "allowing ${port}/tcp on ${iface} via ufw for sing-box docker redirect"
-    sudo ufw allow in on "${iface}" to any port "${port}" proto tcp comment 'sing-box docker redirect' || true
-  done
+  log "allowing dynamic sing-box DNAT traffic from Docker bridges via UFW"
+  sudo "$helper"
 }
 
 install_vless_service() {
