@@ -4,7 +4,6 @@ fwupd
 htop
 intel-media-driver
 libfprint
-otf-monaspace
 syncthing
 tailscale
 tesseract-data-rus

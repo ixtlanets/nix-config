@@ -8,6 +8,7 @@ linux_configs=(
   um790pro.json
   x13.json
   x1carbon.json
+  t14s.json
   zenbook.json
 )
 

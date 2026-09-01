@@ -49,6 +49,11 @@ mapfile -t packages <<< "$package_output"
 omarchy pkg add "${packages[@]}"
 omarchy-pkg-aur-add bibata-cursor-theme voxtype-bin
 sudo voxtype setup onnx --enable
+voxtype setup \
+  --download \
+  --model parakeet-tdt-0.6b-v3 \
+  --quiet \
+  --no-post-install
 
 # Browser helpers own Wayland flags, native messaging, and base policies.
 omarchy install browser brave

@@ -25,6 +25,7 @@ declare -A host_ids=(
   [m1max]="A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV"
   [m3max]="NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV"
   [zenbook]="H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
+  [t14s]="ENCYRPL-WSFOMH7-CJWGNLS-NXVADIL-O7NKZZF-H46XEJS-5Y7YYSI-DR2E2AY"
   [desktop]="6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS"
   [um790pro-wsl]="6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL"
 )
@@ -37,6 +38,7 @@ computer_ids=(
   "${host_ids[m1max]}"
   "${host_ids[m3max]}"
   "${host_ids[zenbook]}"
+  "${host_ids[t14s]}"
   "${host_ids[desktop]}"
   "${host_ids[um790pro-wsl]}"
 )
@@ -51,8 +53,9 @@ device_specs=(
   "m1max|${computer_ids[3]}"
   "m3max|${computer_ids[4]}"
   "zenbook|${computer_ids[5]}"
-  "desktop|${computer_ids[6]}"
-  "um790pro-wsl|${computer_ids[7]}"
+  "t14s|${computer_ids[6]}"
+  "desktop|${computer_ids[7]}"
+  "um790pro-wsl|${computer_ids[8]}"
   "android-phone|${mobile_ids[0]}"
   "android-tablet|${mobile_ids[1]}"
 )

@@ -195,7 +195,9 @@ mapfile -t aur_packages <<< "$aur_output"
 # shellcheck disable=SC2029
 ssh_remote "mkdir -p '$remote_root/scripts' '$remote_root/dotfiles' '$remote_root/omarchy/packages' '$remote_root/pkexec-bin'"
 rsync_remote -a --delete "$repo_root/dotfiles/omarchy/" "$target:$remote_root/dotfiles/omarchy/"
+rsync_remote -a "$repo_root/dotfiles/quotes.txt" "$target:$remote_root/dotfiles/quotes.txt"
 rsync_remote -a --delete "$repo_root/omarchy/packages/" "$target:$remote_root/omarchy/packages/"
+rsync_remote -a "$repo_root/omarchy/plugins.tsv" "$target:$remote_root/omarchy/plugins.tsv"
 rsync_remote -a \
   "$repo_root/scripts/omarchy-apply-user.sh" \
   "$repo_root/scripts/omarchy-configure-syncthing.sh" \

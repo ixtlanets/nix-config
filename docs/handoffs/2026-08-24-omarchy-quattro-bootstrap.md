@@ -42,9 +42,14 @@ Omarchy, затем одна команда для пакетов, dotfiles, Hyp
 - Штатный unattended installer Quattro использует отдельный носитель/образ с
   меткой `cidata`. Он умеет disk/hostname/timezone/keyboard, пользователя,
   Git identity, публичные `authorized_keys` и Tailscale enrollment.
-- `cidata` не принимает произвольный post-install script. Поэтому рекомендуемая
-  схема двухстадийная: `Omarchy ISO + cidata` → remote personal bootstrap по
-  SSH/Tailscale.
+- `cidata` не принимает произвольный post-install script. Поэтому персональный
+  bootstrap выполняется второй стадией. На сети, где control path Tailscale
+  требует VLESS, для первого подключения нужно использовать LAN SSH и не
+  включать Tailscale enrollment в `cidata`.
+- Порядок настройки сети обязателен: установить и проверить VLESS, оставить
+  тоннель активным во время `tailscale up`, дождаться `BackendState: Running`
+  и только после этого использовать Tailscale как транспорт для дальнейшего
+  provisioning.
 - Приватные SSH/GPG keys не помещать в `cidata`. Передавать после установки по
   защищённому каналу либо получать с hardware token/password manager.
 - Для `git-crypt` нужен внешний bootstrap key; закрытый ключ внутри
@@ -79,7 +84,11 @@ build cidata for <host>
         ↓
 boot official Omarchy ISO + cidata
         ↓
-base OS + <user> + authorized_keys + optional Tailscale
+base OS + <user> + authorized_keys
+        ↓ LAN SSH
+install + start + verify VLESS
+        ↓ keep VLESS active
+authorize Tailscale and verify BackendState: Running
         ↓
 scripts/omarchy-provision.sh <user>@<host>
         ↓

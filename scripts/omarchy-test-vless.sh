@@ -3,9 +3,32 @@ set -euo pipefail
 
 service="vless-sing-box.service"
 started_here=false
+keep_active=false
+probe_url="https://www.google.com/generate_204"
+
+while (($# > 0)); do
+  case "$1" in
+    --keep-active)
+      keep_active=true
+      shift
+      ;;
+    --probe-url)
+      (($# >= 2)) || {
+        printf '[omarchy:vless] --probe-url requires a URL.\n' >&2
+        exit 2
+      }
+      probe_url="$2"
+      shift 2
+      ;;
+    *)
+      printf '[omarchy:vless] unknown option: %s\n' "$1" >&2
+      exit 2
+      ;;
+  esac
+done
 
 cleanup() {
-  if $started_here; then
+  if $started_here && ! $keep_active; then
     sudo systemctl stop "$service" >/dev/null 2>&1 || true
   fi
 }
@@ -51,8 +74,10 @@ if systemctl is-active --quiet systemd-resolved.service; then
 fi
 
 curl --fail --silent --show-error --max-time 15 \
-  --output /dev/null https://www.google.com/generate_204
-if $started_here; then
+  --output /dev/null "$probe_url"
+if $started_here && $keep_active; then
+  printf '[omarchy:vless] smoke test passed on %s; keeping the tunnel active.\n' "$tun_interface"
+elif $started_here; then
   printf '[omarchy:vless] smoke test passed on %s; stopping the temporary tunnel.\n' "$tun_interface"
 else
   printf '[omarchy:vless] smoke test passed on already-active tunnel %s.\n' "$tun_interface"

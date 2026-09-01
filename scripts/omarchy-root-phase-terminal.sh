@@ -7,7 +7,7 @@ state_dir="$HOME/.local/state/nix-config-omarchy"
 log_file="$state_dir/root-phase.log"
 mkdir -p "$state_dir"
 
-printf 'Zenbook Omarchy provisioning\n'
+printf '%s Omarchy provisioning\n' "$expected_host"
 printf 'The password prompt below is local to this terminal.\n\n'
 
 OMARCHY_EXPECTED_HOST="$expected_host" \

@@ -72,6 +72,24 @@ scripts/omarchy-provision.sh --install-packages --install-gui --import-gpg \
   --import-syncthing --import-vless nik@192.168.1.15
 ```
 
+### Required network order: VLESS before Tailscale
+
+On a fresh host, use LAN SSH for the initial provisioning connection. Configure
+and authorize Tailscale only while an already verified VLESS tunnel is active;
+do not rely on Tailscale enrollment from `cidata` on a network where its control
+path needs VLESS. The required order is:
+
+1. Install the host VLESS config and start `vless-sing-box.service`.
+2. Verify that the managed TUN interface exists and a non-Google HTTPS probe
+   succeeds through it.
+3. Keep VLESS active while running and authorizing `tailscale up`.
+4. Verify that Tailscale reaches `BackendState: Running` and receives a DNS name.
+5. Verify the final Google-through-London routing policy.
+
+The provisioning root phase enforces this sequence when `--import-vless` is
+used. Starting with Tailscale and planning to enable VLESS afterward can leave
+the host authorized but without its first usable network map.
+
 Package installation is interactive because Omarchy requests privilege through
 its normal policy. Provisioning detects the target's short hostname, includes an
 optional `omarchy/packages/<hostname>.txt` manifest, keeps Bash as login/session
@@ -81,7 +99,18 @@ clipboard URLs to `~/Videos`, while `yp` uses `~/tmp/.tt/inbox`. The NixOS tmux
 configuration and its TPM-managed plugins are installed alongside them; an existing
 XDG tmux config or helper is preserved once with a `.pre-nix-config` suffix. The
 `urlview` runtime is installed from the AUR when available. The Syncthing identity
-import and shared topology are currently specific to `x1carbon`.
+import and shared topology support the Omarchy hosts listed in
+`scripts/omarchy-configure-syncthing.sh`, including `x1carbon`, `zenbook`, and
+`t14s`.
+
+Third-party Omarchy shell plugins are declared in `omarchy/plugins.tsv`.
+Provisioning installs every entry and applies the shared `shell.json`, including
+the active OmaQuote, Timezones, wallpaper manager, and multi-monitor manager
+widgets. OmaQuote receives the shared collection generated from
+`dotfiles/quotes.txt` plus its managed display config; `otf-monaspace` supplies
+the configured Monaspace Krypton font. Verification fails if a declared plugin
+is missing or disabled, or if the OmaQuote collection, runtime settings, or font
+do not match.
 
 With `--import-vless`, provisioning selects
 `secrets/vless/<hostname>.json`, validates it, installs it at
@@ -92,6 +121,8 @@ TUN DNS registration after startup. System DNS still traverses the TUN without
 making `198.19.0.2` the host resolver.
 Provisioning performs a temporary VLESS smoke test after importing the config;
 `vless up` returns successfully only after the managed TUN interface appears.
+The root phase keeps that verified tunnel active through the interactive
+Tailscale login, then performs the final route check after Tailscale connects.
 GUI provisioning uses Omarchy installers for Brave, Firefox, VS Code, and
 ChatGPT; installs Bitwarden, T3 Code, and Telegram from package manifests; and
 applies managed browser extensions. It also installs the Bibata cursor theme and

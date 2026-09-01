@@ -1,0 +1,10 @@
+# Host-specific packages for the ThinkPad T14s AMD.
+fprintd
+fwupd
+htop
+libfprint
+syncthing
+tailscale
+tesseract-data-rus
+usbutils
+yazi

@@ -1,2 +1,3 @@
 # Optional runtime packages available only from the AUR.
+hyprmoncfg-bin
 urlview

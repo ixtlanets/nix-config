@@ -23,6 +23,7 @@
         },
         { "id": "omarchy.keyboard-layout" },
         { "id": "omarchy.weather" },
+        { "id": "io.github.snikulin.omaquote" },
         {
           "id": "io.github.sspaeti.timezones",
           "homeZones": ["Europe/Moscow"],
@@ -59,6 +60,28 @@
       ],
       "right": [
         { "id": "omarchy.tray" },
+        {
+          "id": "io.github.guiestrela.wallpaperomarchymanager",
+          "displayConfig": {
+            "eDP-1": {
+              "folder": "~/wallpapers",
+              "recursive": true,
+              "mode": "shuffle",
+              "pinned": "",
+              "scaling": "zoom"
+            },
+            "all": {
+              "folder": "~/wallpapers",
+              "recursive": true,
+              "mode": "shuffle",
+              "pinned": "/home/nik/wallpapers/20150529_183703.jpg",
+              "scaling": "zoom"
+            }
+          },
+          "intervalSec": 600,
+          "perDisplayConfig": false
+        },
+        { "id": "crmne.hyprmoncfg" },
         { "id": "omarchy.tailscale" },
         { "id": "omarchy.agents" },
         { "id": "omarchy.bluetooth" },
@@ -72,7 +95,5 @@
       ]
     }
   },
-  "plugins": [
-    { "id": "io.github.snikulin.omaquote" }
-  ]
+  "plugins": []
 }

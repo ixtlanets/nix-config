@@ -5,10 +5,14 @@ expected_host="${OMARCHY_EXPECTED_HOST:-x1carbon}"
 declare -A syncthing_ids=(
   [x1carbon]="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
   [zenbook]="H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
+  [t14s]="ENCYRPL-WSFOMH7-CJWGNLS-NXVADIL-O7NKZZF-H46XEJS-5Y7YYSI-DR2E2AY"
 )
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source_root="$(cd -- "$script_dir/.." && pwd)"
 tmux_plugins_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins"
+plugins_manifest="$source_root/omarchy/plugins.tsv"
+omaquote_plugin_dir="$HOME/.config/omarchy/plugins/io.github.snikulin.omaquote"
+omaquote_config_dir="$HOME/.config/omarchy/omaquote"
 
 fail() {
   printf '[omarchy:verify] FAIL: %s\n' "$*" >&2
@@ -32,6 +36,12 @@ done
 for package_name in python-curl_cffi python-secretstorage; do
   pacman -Q "$package_name" >/dev/null 2>&1 || fail "$package_name package is missing"
 done
+pacman -Q otf-monaspace >/dev/null 2>&1 || fail "otf-monaspace package is missing"
+fc-match -f '%{family}\n' 'Monaspace Krypton' | grep -Fq 'Monaspace Krypton' ||
+  fail "Monaspace Krypton font is unavailable"
+pacman -Q hyprmoncfg-bin >/dev/null 2>&1 || fail "hyprmoncfg-bin package is missing"
+[[ "$(systemctl --user is-active hyprmoncfgd.service)" == active ]] ||
+  fail "hyprmoncfg user service inactive"
 if [[ "$expected_host" == zenbook ]]; then
   [[ -f /usr/lib/dri/iHD_drv_video.so ]] || fail "Intel iHD VA-API driver is missing"
 fi
@@ -154,10 +164,42 @@ if command -v voxtype >/dev/null 2>&1; then
   [[ "$(systemctl --user is-active voxtype.service)" == active ]] ||
     fail "Voxtype user service inactive"
 fi
-for plugin_id in io.github.sspaeti.timezones io.github.snikulin.omaquote; do
+[[ -f "$plugins_manifest" ]] || fail "Omarchy plugin manifest is missing"
+plugin_catalog="$(OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}" omarchy plugin list --json)" ||
+  fail "could not read Omarchy plugin catalog"
+while read -r plugin_id plugin_url plugin_extra; do
+  [[ -z "${plugin_id:-}" || "$plugin_id" == \#* ]] && continue
+  [[ -n "${plugin_url:-}" && -z "${plugin_extra:-}" ]] ||
+    fail "invalid Omarchy plugin manifest entry for $plugin_id"
   [[ -e "$HOME/.config/omarchy/plugins/$plugin_id" ]] ||
     fail "Omarchy plugin $plugin_id is missing"
-done
+  [[ "$(jq -er '.id' "$HOME/.config/omarchy/plugins/$plugin_id/manifest.json")" == "$plugin_id" ]] ||
+    fail "Omarchy plugin $plugin_id has an invalid manifest"
+  jq -e --arg id "$plugin_id" \
+    'any(.[]; .id == $id and .enabled == true)' <<< "$plugin_catalog" >/dev/null ||
+    fail "Omarchy plugin $plugin_id is not enabled"
+done < "$plugins_manifest"
+
+cmp -s \
+  "$source_root/dotfiles/omarchy/omaquote/config.json" \
+  "$omaquote_config_dir/config.json" || fail "OmaQuote config mismatch"
+omaquote_expected_dir="$(mktemp -d)"
+trap 'rm -rf -- "$omaquote_expected_dir"' EXIT
+"$omaquote_plugin_dir/tools/import-variety.py" \
+  "$source_root/dotfiles/quotes.txt" \
+  "$omaquote_expected_dir/quotes.json" >/dev/null ||
+  fail "could not generate expected OmaQuote collection"
+cmp -s "$omaquote_expected_dir/quotes.json" "$omaquote_config_dir/quotes.json" ||
+  fail "OmaQuote collection mismatch"
+omaquote_status="$(OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}" \
+  omarchy-shell io.github.snikulin.omaquote status)" ||
+  fail "could not read OmaQuote status"
+jq -e '
+  .health == "healthy" and
+  .collectionKind == "user" and
+  .collectionSize == 119 and
+  .intervalMinutes == 10
+' <<< "$omaquote_status" >/dev/null || fail "OmaQuote runtime config mismatch"
 
 if [[ -n "${syncthing_ids[$expected_host]:-}" ]]; then
   [[ "$(systemctl --user is-active syncthing.service)" == active ]] ||

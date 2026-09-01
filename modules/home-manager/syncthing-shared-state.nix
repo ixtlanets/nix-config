@@ -1,5 +1,5 @@
 {
-  capturedAt = "2026-03-07";
+  capturedAt = "2026-09-01";
 
   devices = {
     x1carbon = "ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS";
@@ -8,6 +8,7 @@
     m1max = "A7OSVWX-MC5LYPV-T4ULXK3-SXLBKLS-BTRFOHM-2YML3BN-SVQ3HOS-LG3VFAV";
     m3max = "NQ2KNGN-4ZT42Z3-RGRWOO6-53NLUNM-AQFI25Z-3CED6MP-K2UVMB4-6RW74QV";
     zenbook = "H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7";
+    t14s = "ENCYRPL-WSFOMH7-CJWGNLS-NXVADIL-O7NKZZF-H46XEJS-5Y7YYSI-DR2E2AY";
     desktop = "6BIM5VG-DXQR6OY-YYVFQWQ-JJ2UADE-ZY2UDWF-EEX2D6F-UFUCEXT-CN7RQQS";
     um790pro-wsl = "6EKVJ34-S5EJMZF-ZDS3N6X-4OKRXSK-UB4EGIW-IOQHLXH-Z55D4NT-YRS4JAL";
 
@@ -22,6 +23,7 @@
     "m1max"
     "m3max"
     "zenbook"
+    "t14s"
     "desktop"
     "um790pro-wsl"
   ];
@@ -43,6 +45,7 @@
         "m1max"
         "m3max"
         "zenbook"
+        "t14s"
         "desktop"
         "android-phone"
         "android-tablet"
@@ -61,6 +64,7 @@
         "m1max"
         "m3max"
         "zenbook"
+        "t14s"
         "desktop"
         "android-phone"
       ];
@@ -76,6 +80,7 @@
         "m1max"
         "m3max"
         "zenbook"
+        "t14s"
         "desktop"
       ];
     };
@@ -88,6 +93,7 @@
         "x1carbon"
         "m1max"
         "m3max"
+        "t14s"
       ];
     };
   };

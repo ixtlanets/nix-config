@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "intervalMinutes": 10,
+  "fontFamily": "Monaspace Krypton",
+  "preferredFontSize": 20,
+  "minimumFontSize": 12,
+  "textColor": "#FFFFFF",
+  "attributionColor": "#D9D9D9",
+  "backdropColor": "#505050"
+}

@@ -7,3 +7,4 @@ pass
 git-crypt
 tmux
 yq
+otf-monaspace

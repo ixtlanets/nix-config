@@ -45,14 +45,56 @@ ensure_plugin() {
   local id="$1"
   local url="$2"
   local destination="$HOME/.config/omarchy/plugins/$id"
+  local installed_id
 
   if [[ -d "$destination" || -L "$destination" ]]; then
+    [[ -f "$destination/manifest.json" ]] ||
+      die "plugin $id has no manifest: $destination"
+    installed_id="$(jq -er '.id' "$destination/manifest.json")" ||
+      die "plugin $id has an invalid manifest: $destination"
+    [[ "$installed_id" == "$id" ]] ||
+      die "plugin path $destination contains unexpected id $installed_id"
     log "plugin $id already installed"
     return
   fi
 
   log "installing plugin $id"
   omarchy plugin add "$url" --yes
+}
+
+install_plugins() {
+  local manifest="$source_root/omarchy/plugins.tsv"
+  local id url extra
+
+  [[ -f "$manifest" ]] || die "plugin manifest missing: $manifest"
+  while read -r id url extra; do
+    [[ -z "${id:-}" || "$id" == \#* ]] && continue
+    [[ -n "${url:-}" && -z "${extra:-}" ]] ||
+      die "invalid plugin manifest entry for $id"
+    ensure_plugin "$id" "$url"
+  done < "$manifest"
+}
+
+install_omaquote_config() {
+  local plugin_dir="$HOME/.config/omarchy/plugins/io.github.snikulin.omaquote"
+  local importer="$plugin_dir/tools/import-variety.py"
+  local source_quotes="$source_root/dotfiles/quotes.txt"
+  local destination_dir="$HOME/.config/omarchy/omaquote"
+  local temporary_dir
+
+  [[ -x "$importer" ]] || die "OmaQuote importer is missing: $importer"
+  [[ -f "$source_quotes" ]] || die "shared quote source is missing: $source_quotes"
+  install_file \
+    "$source_root/dotfiles/omarchy/omaquote/config.json" \
+    "$destination_dir/config.json"
+
+  temporary_dir="$(mktemp -d)"
+  if ! "$importer" "$source_quotes" "$temporary_dir/quotes.json"; then
+    rm -rf -- "$temporary_dir"
+    die "could not generate the OmaQuote collection"
+  fi
+  install_file "$temporary_dir/quotes.json" "$destination_dir/quotes.json"
+  rm -rf -- "$temporary_dir"
 }
 
 install_tmux_config() {
@@ -153,7 +195,9 @@ configure_cursor() {
 }
 
 configure_host_gpu() {
-  [[ "$expected_host" == zenbook ]] || return
+  if [[ "$expected_host" != zenbook ]]; then
+    return 0
+  fi
 
   export LIBVA_DRIVER_NAME="iHD"
   export __GLX_VENDOR_LIBRARY_NAME="mesa"
@@ -180,16 +224,12 @@ while IFS= read -r variable; do
 done < <(systemctl --user show-environment | grep -E \
   '^(DBUS_SESSION_BUS_ADDRESS|DISPLAY|HYPRLAND_INSTANCE_SIGNATURE|WAYLAND_DISPLAY|XDG_CURRENT_DESKTOP|XDG_RUNTIME_DIR)=')
 
-ensure_plugin \
-  io.github.sspaeti.timezones \
-  https://github.com/sspaeti/omarchy-timezones-plugin.git
-ensure_plugin \
-  io.github.snikulin.omaquote \
-  https://github.com/snikulin/omaquote.git
+install_plugins
 
 install_file "$source_root/dotfiles/omarchy/zshrc" "$HOME/.zshrc"
 install_file "$source_root/dotfiles/omarchy/starship.toml" "$HOME/.config/starship.toml"
 install_file "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json"
+install_omaquote_config
 install_file "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml"
 install_file "$source_root/dotfiles/omarchy/bin/kbd-backlight" "$HOME/.local/bin/kbd-backlight"
 install_file "$source_root/dotfiles/omarchy/bin/vless" "$HOME/.local/bin/vless"
@@ -216,6 +256,14 @@ configure_foot
 configure_cursor
 configure_host_gpu
 omarchy-shell shell rescanPlugins >/dev/null
+for _ in {1..40}; do
+  if omarchy-shell io.github.snikulin.omaquote reload >/dev/null 2>&1; then
+    omaquote_reloaded=true
+    break
+  fi
+  sleep 0.05
+done
+[[ "${omaquote_reloaded:-false}" == true ]] || die "OmaQuote did not become ready after plugin rescan"
 
 git config --global user.name "Sergey Nikulin"
 git config --global user.email "snikulin@gmail.com"
