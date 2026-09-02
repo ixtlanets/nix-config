@@ -1,0 +1,31 @@
+name: frigate
+
+services:
+  frigate:
+    container_name: frigate
+    image: ghcr.io/blakeblackshear/frigate:stable
+    restart: unless-stopped
+    stop_grace_period: 30s
+    shm_size: "512mb"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    environment:
+      LIBVA_DRIVER_NAME: radeonsi
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/nik/services/frigate/config:/config
+      - /home/nik/services/frigate/storage:/media/frigate
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "192.168.1.241:8971:8971"
+      - "192.168.1.241:8554:8554"
+      - "192.168.1.241:8555:8555/tcp"
+      - "192.168.1.241:8555:8555/udp"
+    logging:
+      driver: local
+      options:
+        max-size: 200m
+        max-file: "3"
