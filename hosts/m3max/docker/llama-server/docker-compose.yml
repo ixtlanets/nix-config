@@ -9,10 +9,9 @@ services:
     ports:
       - "8081:8081"
       - "8082:8082"
-      - "8084:8084"
     environment:
       LLD_UPSTREAMS_JSON: >-
-        [{"key":"generation","label":"Generation","role":"generation","upstreamUrl":"http://host.docker.internal:8080","listener":{"host":"0.0.0.0","port":8081}},{"key":"embedding","label":"Embeddings","role":"embedding","upstreamUrl":"http://host.docker.internal:8083","listener":{"host":"0.0.0.0","port":8084},"inputCapture":false}]
+        [{"key":"generation","label":"Generation","role":"generation","upstreamUrl":"http://host.docker.internal:8080","listener":{"host":"0.0.0.0","port":8081}}]
       LLD_DEFAULT_UPSTREAM_KEY: generation
       LLD_UI_PORT: "8082"
       LLD_HOST: 0.0.0.0

@@ -7,10 +7,8 @@
 let
   homeDirectory = config.home.homeDirectory;
   generationLabel = "ai.llama.server";
-  embeddingLabel = "ai.llama.embedding";
   dashboardLabel = "ai.llama.dashboard";
   generationLogPath = "${homeDirectory}/Library/Logs/llama-server.log";
-  embeddingLogPath = "${homeDirectory}/Library/Logs/embedding-server.log";
   dashboardLogPath = "${homeDirectory}/Library/Logs/llama-dashboard.log";
   dashboardDirectory = "${homeDirectory}/pro/llama-dashboard";
   dashboardDbPath = "${homeDirectory}/Library/Application Support/llama-dashboard/llama-dashboard.db";
@@ -44,7 +42,7 @@ let
     logPath = generationLogPath;
     arguments = [
       "-hf"
-      "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q3_K_XL"
+      "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M"
       "--host"
       "0.0.0.0"
       "--port"
@@ -68,34 +66,6 @@ let
       "off"
       "--chat-template-kwargs"
       ''{"enable_thinking": false}''
-    ];
-  };
-
-  embeddingPlist = mkLlamaPlist {
-    label = embeddingLabel;
-    logPath = embeddingLogPath;
-    arguments = [
-      "-hf"
-      "Qwen/Qwen3-Embedding-4B-GGUF:Q4_K_M"
-      "--host"
-      "0.0.0.0"
-      "--port"
-      "8083"
-      "-c"
-      "8192"
-      "--parallel"
-      "1"
-      "--flash-attn"
-      "on"
-      "--embedding"
-      "--pooling"
-      "last"
-      "--embd-normalize"
-      "2"
-      "--n-gpu-layers"
-      "all"
-      "--metrics"
-      "--no-webui"
     ];
   };
 
@@ -128,17 +98,6 @@ let
               port = 8081;
             };
           }
-          {
-            key = "embedding";
-            label = "Embeddings";
-            role = "embedding";
-            upstreamUrl = "http://127.0.0.1:8083";
-            listener = {
-              host = "0.0.0.0";
-              port = 8084;
-            };
-            inputCapture = false;
-          }
         ];
         LLD_DEFAULT_UPSTREAM_KEY = "generation";
         LLD_UI_PORT = "8082";
@@ -163,16 +122,13 @@ let
       generation_label=${lib.escapeShellArg generationLabel}
       generation_plist=${lib.escapeShellArg (toString generationPlist)}
       generation_log=${lib.escapeShellArg generationLogPath}
-      embedding_label=${lib.escapeShellArg embeddingLabel}
-      embedding_plist=${lib.escapeShellArg (toString embeddingPlist)}
-      embedding_log=${lib.escapeShellArg embeddingLogPath}
       dashboard_label=${lib.escapeShellArg dashboardLabel}
       dashboard_plist=${lib.escapeShellArg (toString dashboardPlist)}
       dashboard_log=${lib.escapeShellArg dashboardLogPath}
       dashboard_dir=${lib.escapeShellArg dashboardDirectory}
       dashboard_db=${lib.escapeShellArg dashboardDbPath}
 
-      # The two loaded Metal models use about 24 GiB at these context sizes.
+      # The loaded Q4 Metal model uses about 24 GiB at this context size.
       # Keep at least 8 GiB for macOS and reject hosts with less than 32 GiB.
       required_total_mib=32768
       estimated_stack_mib=24576
@@ -182,9 +138,9 @@ let
         cat <<'EOF'
       Usage: llama-stack {preflight|start|stop|restart|status|logs [-f]}
 
-        preflight  Verify RAM and disk capacity for both native Metal models
-        start      Start both native Metal servers and the dashboard
-        stop       Stop the dashboard and both llama-server processes
+        preflight  Verify RAM and disk capacity for the native Metal model
+        start      Start the native Metal server and the dashboard
+        stop       Stop the dashboard and llama-server process
         restart    Restart the full stack
         status     Show launchd and API status
         logs       Show recent server and dashboard logs
@@ -219,12 +175,12 @@ let
         available_disk_mib=$((available_disk_kib / 1024))
 
         printf 'RAM: %s MiB total; %s%% currently available\n' "$total_mib" "$free_percent"
-        printf 'Estimated peak for both models: %s MiB; required host RAM: %s MiB\n' \
+        printf 'Estimated peak for the model: %s MiB; required host RAM: %s MiB\n' \
           "$estimated_stack_mib" "$required_total_mib"
         printf 'Disk available for model cache: %s MiB\n' "$available_disk_mib"
 
         if ((total_mib < required_total_mib)); then
-          printf 'llama-stack: both models need a Mac with at least %s MiB RAM\n' \
+          printf 'llama-stack: the model needs a Mac with at least %s MiB RAM\n' \
             "$required_total_mib" >&2
           return 1
         fi
@@ -282,19 +238,12 @@ let
       }
 
       start_servers() {
-        if ! start_service llama-server "$generation_label" "$generation_plist"; then
-          return 1
-        fi
-        if ! start_service embedding-server "$embedding_label" "$embedding_plist"; then
-          stop_service llama-server "$generation_label" || true
-          return 1
-        fi
+        start_service llama-server "$generation_label" "$generation_plist"
       }
 
       stop_servers() {
         local failed=0
 
-        stop_service embedding-server "$embedding_label" || failed=1
         stop_service llama-server "$generation_label" || failed=1
         return "$failed"
       }
@@ -339,7 +288,6 @@ let
 
         printf 'Dashboard: http://localhost:8082\n'
         printf 'Generation proxy: http://localhost:8081\n'
-        printf 'Embedding proxy: http://localhost:8084\n'
       }
 
       stop_stack() {
@@ -368,7 +316,6 @@ let
 
       status_stack() {
         print_service_status llama-server "$generation_label" 8080
-        print_service_status embedding-server "$embedding_label" 8083
         print_service_status llama-dashboard "$dashboard_label" 8082
       }
 
@@ -388,14 +335,12 @@ let
 
         show_file_log llama-server "$generation_log"
         printf '\n'
-        show_file_log embedding-server "$embedding_log"
-        printf '\n'
         show_file_log llama-dashboard "$dashboard_log"
 
         if [[ "$follow" == "-f" ]]; then
           mkdir -p "$(dirname "$generation_log")"
-          touch "$generation_log" "$embedding_log" "$dashboard_log"
-          tail -n 0 -F "$generation_log" "$embedding_log" "$dashboard_log"
+          touch "$generation_log" "$dashboard_log"
+          tail -n 0 -F "$generation_log" "$dashboard_log"
         fi
       }
 
