@@ -230,13 +230,6 @@ fi
 if $install_packages; then
   printf -v package_command '%q ' "${packages[@]}"
   run_privileged_remote "omarchy pkg add $package_command"
-  printf -v aur_package_command '%q ' "${aur_packages[@]}"
-  if ! run_privileged_remote "omarchy pkg aur add $aur_package_command"; then
-    printf 'WARNING: AUR packages could not be installed: %s\n' "${aur_packages[*]}" >&2
-  fi
-  if [[ "$(ssh_remote "tailscale status --json 2>/dev/null | jq -r '.BackendState // \"\"'")" != Running ]]; then
-    run_privileged_remote "omarchy install service tailscale"
-  fi
 else
   printf 'Package install skipped. Run interactively when ready:\n  omarchy pkg add'
   printf ' %q' "${packages[@]}"
@@ -253,6 +246,25 @@ if $import_vless; then
     ssh_remote "rm -f '$remote_root/secrets/vless/$remote_host.json'"
     die "VLESS installation failed"
   fi
+  run_privileged_remote "bash '$remote_root/scripts/omarchy-test-vless.sh' --keep-active --probe-url https://cp.cloudflare.com/generate_204"
+fi
+
+if $install_packages; then
+  printf -v aur_package_command '%q ' "${aur_packages[@]}"
+  if ! run_privileged_remote "omarchy pkg aur add $aur_package_command"; then
+    printf 'WARNING: AUR packages could not be installed: %s\n' "${aur_packages[*]}" >&2
+  fi
+fi
+
+if ! $skip_tailscale; then
+  if [[ "$(ssh_remote "tailscale status --json 2>/dev/null | jq -r '.BackendState // \"\"'")" != Running ]]; then
+    $install_packages || die "Tailscale is not connected; rerun with --install-packages or --skip-tailscale"
+    run_privileged_remote "omarchy install service tailscale"
+  fi
+  run_privileged_remote "sudo tailscale set --accept-dns=true"
+fi
+
+if $import_vless && ! $skip_tailscale; then
   run_privileged_remote "bash '$remote_root/scripts/omarchy-test-vless.sh'"
 fi
 

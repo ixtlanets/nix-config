@@ -40,6 +40,8 @@ pacman -Q otf-monaspace >/dev/null 2>&1 || fail "otf-monaspace package is missin
 fc-match -f '%{family}\n' 'Monaspace Krypton' | grep -Fq 'Monaspace Krypton' ||
   fail "Monaspace Krypton font is unavailable"
 pacman -Q hyprmoncfg-bin >/dev/null 2>&1 || fail "hyprmoncfg-bin package is missing"
+[[ "$(systemctl --user is-enabled hyprmoncfgd.service)" == enabled ]] ||
+  fail "hyprmoncfg user service is not enabled"
 [[ "$(systemctl --user is-active hyprmoncfgd.service)" == active ]] ||
   fail "hyprmoncfg user service inactive"
 if [[ "$expected_host" == zenbook ]]; then
@@ -209,11 +211,29 @@ if [[ -n "${syncthing_ids[$expected_host]:-}" ]]; then
   bash "$script_dir/omarchy-configure-syncthing.sh" --check
 fi
 
-if command -v tailscale >/dev/null 2>&1 && [[ "${OMARCHY_SKIP_TAILSCALE:-false}" != true ]]; then
-  [[ "$(tailscale status --json | jq -r '.BackendState')" == Running ]] ||
+if [[ "${OMARCHY_SKIP_TAILSCALE:-false}" != true ]]; then
+  command -v tailscale >/dev/null 2>&1 || fail "tailscale is missing"
+  tailscale_status="$(tailscale status --json)" || fail "could not read Tailscale status"
+  [[ "$(jq -r '.BackendState' <<< "$tailscale_status")" == Running ]] ||
     fail "Tailscale is not connected"
-  tailscale_dns="$(tailscale status --json | jq -r '.Self.DNSName')"
+  tailscale_dns_status="$(tailscale dns status --json)" || fail "could not read Tailscale DNS status"
+  jq -e '.TailscaleDNS == true and .CurrentTailnet.MagicDNSEnabled == true' \
+    <<< "$tailscale_dns_status" >/dev/null || fail "Tailscale MagicDNS is not enabled"
+  tailscale_dns="$(jq -r '.Self.DNSName' <<< "$tailscale_status")"
   [[ "${tailscale_dns%%.*}" == "$expected_host" ]] || fail "Tailscale DNS name mismatch"
+  getent ahostsv4 "$tailscale_dns" >/dev/null || fail "Tailscale DNS name does not resolve"
+  tailscale_suffix="$(jq -r '.MagicDNSSuffix // empty' <<< "$tailscale_status")"
+  tailscale_peer_short="$(jq -r --arg suffix ".${tailscale_suffix}." '
+    [
+      .Peer[]?.DNSName
+      | select(type == "string")
+      | select(endswith($suffix))
+      | split(".")[0]
+    ][0] // empty
+  ' <<< "$tailscale_status")"
+  [[ -n "$tailscale_peer_short" ]] || fail "no same-tailnet peer available for MagicDNS verification"
+  getent ahostsv4 "$tailscale_peer_short" >/dev/null ||
+    fail "Tailscale short peer name does not resolve"
 fi
 
 while IFS= read -r variable; do

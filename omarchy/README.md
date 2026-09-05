@@ -83,7 +83,7 @@ path needs VLESS. The required order is:
 2. Verify that the managed TUN interface exists and a non-Google HTTPS probe
    succeeds through it.
 3. Keep VLESS active while running and authorizing `tailscale up`.
-4. Verify that Tailscale reaches `BackendState: Running` and receives a DNS name.
+4. Verify that Tailscale reaches `BackendState: Running` and MagicDNS resolves its DNS name.
 5. Verify the final Google-through-London routing policy.
 
 The provisioning root phase enforces this sequence when `--import-vless` is
@@ -106,7 +106,9 @@ import and shared topology support the Omarchy hosts listed in
 Third-party Omarchy shell plugins are declared in `omarchy/plugins.tsv`.
 Provisioning installs every entry and applies the shared `shell.json`, including
 the active OmaQuote, Timezones, wallpaper manager, and multi-monitor manager
-widgets. OmaQuote receives the shared collection generated from
+widgets. The multi-monitor manager package is installed from the AUR and its
+`hyprmoncfgd` user service is enabled for automatic profile switching. OmaQuote
+receives the shared collection generated from
 `dotfiles/quotes.txt` plus its managed display config; `otf-monaspace` supplies
 the configured Monaspace Krypton font. Verification fails if a declared plugin
 is missing or disabled, or if the OmaQuote collection, runtime settings, or font
@@ -118,7 +120,9 @@ With `--import-vless`, provisioning selects
 must have `jq` and `sing-box` so validation finishes before the target is changed.
 On systems using `systemd-resolved`, the VLESS unit removes sing-box's synthetic
 TUN DNS registration after startup. System DNS still traverses the TUN without
-making `198.19.0.2` the host resolver.
+making `198.19.0.2` the host resolver. Tailscale DNS remains enabled so its
+native split DNS configuration resolves MagicDNS names without replacing the
+system resolver for public domains.
 Provisioning performs a temporary VLESS smoke test after importing the config;
 `vless up` returns successfully only after the managed TUN interface appears.
 The root phase keeps that verified tunnel active through the interactive

@@ -52,11 +52,6 @@ cleanup() {
 trap cleanup EXIT
 
 omarchy pkg add "${packages[@]}"
-if ! omarchy pkg aur add "${aur_packages[@]}"; then
-  printf '[omarchy:root] WARNING: AUR packages could not be installed: %s\n' \
-    "${aur_packages[*]}" >&2
-fi
-
 bash "$source_root/scripts/omarchy-install-vless.sh" "$vless_config"
 # The fresh host may need the tunnel before Tailscale can receive its first
 # netmap. Avoid the Google route here because it intentionally uses the
@@ -65,14 +60,21 @@ bash "$source_root/scripts/omarchy-test-vless.sh" \
   --keep-active \
   --probe-url https://cp.cloudflare.com/generate_204
 
+if ! omarchy pkg aur add "${aur_packages[@]}"; then
+  printf '[omarchy:root] WARNING: AUR packages could not be installed: %s\n' \
+    "${aur_packages[*]}" >&2
+fi
+OMARCHY_EXPECTED_HOST="$expected_host" \
+  bash "$source_root/scripts/omarchy-apply-user.sh" "$source_root"
+
 if [[ "$skip_tailscale" == true ]]; then
   printf '[omarchy:root] Tailscale login skipped; package and daemon remain installed.\n'
 else
   if [[ "$(tailscale status --json 2>/dev/null | jq -r '.BackendState // ""')" != Running ]]; then
     sudo systemctl enable --now tailscaled.service
-    sudo tailscale up --accept-routes --accept-dns=false
+    sudo tailscale up --accept-routes --accept-dns=true
   fi
-  sudo tailscale set --operator="$USER" --accept-routes=true --accept-dns=false
+  sudo tailscale set --operator="$USER" --accept-routes=true --accept-dns=true
   systemctl --user enable --now omarchy-tailscale-receive.service
 fi
 

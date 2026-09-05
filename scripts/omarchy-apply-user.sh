@@ -224,6 +224,11 @@ while IFS= read -r variable; do
 done < <(systemctl --user show-environment | grep -E \
   '^(DBUS_SESSION_BUS_ADDRESS|DISPLAY|HYPRLAND_INSTANCE_SIGNATURE|WAYLAND_DISPLAY|XDG_CURRENT_DESKTOP|XDG_RUNTIME_DIR)=')
 
+command -v hyprmoncfgd >/dev/null 2>&1 ||
+  die "hyprmoncfgd is missing; install hyprmoncfg-bin from the AUR"
+systemctl --user daemon-reload
+systemctl --user enable --now hyprmoncfgd.service
+
 install_plugins
 
 install_file "$source_root/dotfiles/omarchy/zshrc" "$HOME/.zshrc"

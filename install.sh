@@ -1172,6 +1172,28 @@ enable_tailscale_service() {
   fi
 }
 
+tailscale_backend_state() {
+  command -v tailscale >/dev/null 2>&1 || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+  tailscale status --json --peers=false 2>/dev/null | jq -r '.BackendState // empty'
+}
+
+configure_tailscale_dns() {
+  local backend_state=""
+  if ! backend_state="$(tailscale_backend_state)"; then
+    log "unable to read Tailscale state; skipping DNS configuration"
+    return
+  fi
+
+  if [[ "$backend_state" != "Running" ]]; then
+    log "tailscale is not authenticated; skipping DNS configuration"
+    return
+  fi
+
+  log "enabling Tailscale DNS for MagicDNS"
+  sudo tailscale set --accept-dns=true
+}
+
 configure_tailscale_subnet_router() {
   local mode="${1:-best-effort}"
   if [[ "$HOSTNAME_SHORT" != "um790pro" ]]; then
@@ -1188,15 +1210,15 @@ configure_tailscale_subnet_router() {
     return 0
   fi
 
-  if ! command -v tailscale >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
-    log "tailscale and jq are required; ${recovery_message}"
+  if ! backend_state="$(tailscale_backend_state)"; then
+    log "unable to read Tailscale state; tailscale and jq are required; ${recovery_message}"
     if [[ "$mode" == "strict" ]]; then
       return 1
     fi
     return 0
   fi
 
-  if ! backend_state="$(tailscale status --json --peers=false 2>/dev/null | jq -r '.BackendState // empty')" || [[ "$backend_state" != "Running" ]]; then
+  if [[ "$backend_state" != "Running" ]]; then
     log "tailscaled is not authenticated (BackendState=${backend_state:-unknown}); ${recovery_message}"
     if [[ "$mode" == "strict" ]]; then
       return 1
@@ -1712,6 +1734,7 @@ main() {
   install_tat
   write_vpn_script
   enable_tailscale_service
+  configure_tailscale_dns
   configure_tailscale_subnet_router best-effort
   configure_wireguard_overlay
   write_vless_script
