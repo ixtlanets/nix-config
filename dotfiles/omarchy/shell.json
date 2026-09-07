@@ -26,6 +26,7 @@
         { "id": "io.github.snikulin.omaquote" },
         {
           "id": "io.github.sspaeti.timezones",
+          "hoverExpand": false,
           "homeZones": ["Europe/Moscow"],
           "zones": [
             {
