@@ -118,6 +118,8 @@ With `--import-vless`, provisioning selects
 `secrets/vless/<hostname>.json`, validates it, installs it at
 `/etc/sing-box/vless.json`, and provides `vless up|down|status`. The source host
 must have `jq` and `sing-box` so validation finishes before the target is changed.
+The installed `vless-sing-box.service` is enabled for automatic startup after the
+network becomes available.
 On systems using `systemd-resolved`, the VLESS unit removes sing-box's synthetic
 TUN DNS registration after startup. System DNS still traverses the TUN without
 making `198.19.0.2` the host resolver. Tailscale DNS remains enabled so its

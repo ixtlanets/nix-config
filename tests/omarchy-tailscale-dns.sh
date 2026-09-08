@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 root_phase="$repo_root/scripts/omarchy-root-phase.sh"
 provision="$repo_root/scripts/omarchy-provision.sh"
 verify="$repo_root/scripts/omarchy-verify.sh"
+vless_installer="$repo_root/scripts/omarchy-install-vless.sh"
 install="$repo_root/install.sh"
 
 grep -Fq 'sudo tailscale up --accept-routes --accept-dns=true' "$root_phase"
@@ -22,5 +23,8 @@ grep -Fq '.TailscaleDNS == true' "$verify"
 grep -Fq 'command -v tailscale >/dev/null 2>&1 || fail "tailscale is missing"' "$verify"
 grep -Fq 'getent ahostsv4 "$tailscale_dns"' "$verify"
 grep -Fq 'getent ahostsv4 "$tailscale_peer_short"' "$verify"
+grep -Fq 'sudo systemctl enable "$service.service"' "$vless_installer"
+grep -Fq 'sudo systemctl enable "$service_name"' "$install"
+grep -Fq 'systemctl is-enabled --quiet vless-sing-box.service' "$verify"
 
-printf 'PASS: Omarchy provisioning enables and verifies Tailscale MagicDNS\n'
+printf 'PASS: Omarchy provisioning enables and verifies Tailscale networking\n'

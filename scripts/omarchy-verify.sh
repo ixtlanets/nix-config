@@ -56,6 +56,7 @@ command -v urlview >/dev/null 2>&1 || warn "urlview is missing; tmux-urlview is 
 if systemctl cat vless-sing-box.service >/dev/null 2>&1; then
   command -v sing-box >/dev/null 2>&1 || fail "sing-box is missing"
   command -v vless >/dev/null 2>&1 || fail "vless helper is missing"
+  systemctl is-enabled --quiet vless-sing-box.service || fail "VLESS service is not enabled"
   [[ -f /etc/sing-box/vless.json ]] || fail "VLESS config is missing"
   [[ -r /etc/sing-box/vless-interface ]] || fail "VLESS interface metadata is missing"
   [[ -x /usr/local/libexec/vless-revert-resolved ]] ||

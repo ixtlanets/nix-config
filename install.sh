@@ -1494,6 +1494,7 @@ WantedBy=multi-user.target
 EOF
 
   sudo systemctl daemon-reload
+  sudo systemctl enable "$service_name"
   $service_was_active && sudo systemctl restart "$service_name"
 }
 

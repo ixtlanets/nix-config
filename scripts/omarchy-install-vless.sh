@@ -103,7 +103,8 @@ sudo install -Dm0755 "$temporary_dir/restore-ipv6-ra" "$restore_path"
 sudo install -Dm0755 "$temporary_dir/revert-resolved" "$resolved_path"
 sudo install -Dm0644 "$temporary_dir/$service.service" "$unit_path"
 sudo systemctl daemon-reload
+sudo systemctl enable "$service.service"
 $service_was_active && sudo systemctl restart "$service.service"
 rm -f "$config_path"
 
-printf '[omarchy:vless] installed; run vless up to connect\n'
+printf '[omarchy:vless] installed and enabled for boot; run vless up to connect now\n'
