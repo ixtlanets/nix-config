@@ -136,6 +136,27 @@ install_tmux_config() {
   fi
 }
 
+install_herdr_config() {
+  local source="$source_root/dotfiles/omarchy/herdr/config.toml"
+  local destination="${XDG_CONFIG_HOME:-$HOME/.config}/herdr/config.toml"
+  local config_check
+  local reload_herdr=false
+
+  command -v herdr >/dev/null 2>&1 || die "herdr is missing"
+  config_check="$(HERDR_CONFIG_PATH="$source" herdr config check)" ||
+    die "could not validate managed herdr config"
+  [[ "$config_check" == "config: ok" ]] ||
+    die "managed herdr config is invalid: $config_check"
+  if [[ ! -f "$destination" ]] || ! cmp -s "$source" "$destination"; then
+    reload_herdr=true
+  fi
+
+  install_file_with_backup "$source" "$destination"
+  if $reload_herdr; then
+    omarchy restart herdr
+  fi
+}
+
 configure_foot() {
   local config="$HOME/.config/foot/foot.ini"
   local temporary
@@ -256,6 +277,7 @@ install_file "$source_root/dotfiles/omarchy/hypr/hosts/$expected_host.lua" "$HOM
 install_file \
   "$source_root/dotfiles/omarchy/yt-dlp/config" \
   "${XDG_CONFIG_HOME:-$HOME/.config}/yt-dlp/config"
+install_herdr_config
 install_tmux_config
 configure_foot
 configure_cursor

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 expected_host="${OMARCHY_EXPECTED_HOST:-x1carbon}"
+herdr_config="${XDG_CONFIG_HOME:-$HOME/.config}/herdr/config.toml"
 declare -A syncthing_ids=(
   [x1carbon]="ACDNQPU-AYZTZJD-43ZO52W-DJQNMLQ-PZWOHHQ-M7LCWID-7WUGJ2U-DJJ4RQS"
   [zenbook]="H5LDAHA-HZQTPI6-S75ZBJ3-LZUFTBM-FW55GVP-DUKYHBB-G73AHIJ-CCCNNQ7"
@@ -30,7 +31,7 @@ source /etc/os-release
 [[ "$(getent passwd "$USER" | cut -d: -f7)" == /usr/bin/bash ]] ||
   fail "login shell must remain Bash"
 
-for command_name in brightnessctl git gpg zsh pass direnv mise codex opencode omarchy python tat tmux wl-copy wl-paste yp yt yt-dlp; do
+for command_name in brightnessctl git gpg herdr zsh pass direnv mise codex opencode omarchy python tat tmux wl-copy wl-paste yp yt yt-dlp; do
   command -v "$command_name" >/dev/null 2>&1 || fail "$command_name is missing"
 done
 for package_name in python-curl_cffi python-secretstorage; do
@@ -149,6 +150,12 @@ cmp -s \
   "$source_root/dotfiles/omarchy/tmux/tmux.conf" \
   "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/tmux.conf" ||
   fail "tmux config mismatch"
+cmp -s \
+  "$source_root/dotfiles/omarchy/herdr/config.toml" \
+  "$herdr_config" ||
+  fail "herdr config mismatch"
+[[ "$(HERDR_CONFIG_PATH="$herdr_config" herdr config check)" == "config: ok" ]] ||
+  fail "herdr config is invalid"
 [[ -x "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/tpm/tpm" ]] ||
   fail "tmux plugin manager is missing"
 for plugin in tmux-sensible tmux-pain-control tmux-urlview tmux-prefix-highlight tmux; do

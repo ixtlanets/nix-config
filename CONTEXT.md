@@ -27,3 +27,26 @@ _Avoid_: File copy, database dump
 **Service cutover**:
 The controlled replacement of a live service endpoint with a rehearsed version using the latest production state, while retaining the previous container and a matching rollback snapshot.
 _Avoid_: Deploy, promote rehearsal
+
+## Omarchy Overlay
+
+**Managed Omarchy configuration**:
+A file under `dotfiles/omarchy/` that the repository installs into the user's live configuration. The repository copy is authoritative after an Omarchy refresh.
+_Avoid_: Upstream default, live-only configuration
+
+## Terminal Multiplexers
+
+**Herdr session**:
+A persistent Herdr server namespace. Normal project work shares the default session.
+_Avoid_: Project, tmux session
+
+**Workspace**:
+The project-level Herdr container corresponding to a tmux session in the daily workflow.
+_Avoid_: Herdr session
+
+**Tab**:
+A layout within a Herdr workspace, corresponding to a tmux window.
+_Avoid_: Window
+
+**Pane**:
+A terminal region inside a Herdr tab or tmux window.
