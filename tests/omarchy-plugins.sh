@@ -7,6 +7,7 @@ shell_config="$repo_root/dotfiles/omarchy/shell.json"
 omaquote_config="$repo_root/dotfiles/omarchy/omaquote/config.json"
 system_apply="$repo_root/scripts/omarchy-apply-system.sh"
 usb_wake_rule="$repo_root/dotfiles/omarchy/system/udev/80-usb-hub-wakeup.rules"
+managed_lock_renderer="$repo_root/scripts/omarchy-render-managed-lock-plugin.sh"
 declare -A declared_plugins=()
 
 jq -e . "$shell_config" >/dev/null
@@ -70,9 +71,62 @@ done < <(jq -r '
   [
     .bar.layout[][]?.id,
     .plugins[]?.id
-  ] | unique[] | select(startswith("omarchy.") | not)
+  ] | unique[] | select(startswith("omarchy.") | not) | select(. != "nik.lock")
 ' "$shell_config")
 
+jq -e '
+  (.plugins | any(.id == "nik.lock")) and
+  (.disabledPlugins | index("omarchy.lock") != null)
+' "$shell_config" >/dev/null
+[[ -f "$repo_root/dotfiles/omarchy/plugins/nik.lock/LockView.patch" ]]
+grep -Fq 'install_local_lock_plugin' "$repo_root/scripts/omarchy-apply-user.sh"
+grep -Fq 'omarchy restart shell' "$repo_root/scripts/omarchy-apply-user.sh"
+grep -Fq 'lock-restart-required' "$repo_root/scripts/omarchy-apply-user.sh"
+grep -Fq 'managed lock plugin restart is pending' "$repo_root/scripts/omarchy-verify.sh"
+grep -Fq 'managed lock plugin is not active' "$repo_root/scripts/omarchy-verify.sh"
+[[ -x "$managed_lock_renderer" ]]
+grep -Fq 'omarchy-render-managed-lock-plugin.sh' "$repo_root/scripts/omarchy-apply-user.sh"
+grep -Fq 'omarchy-render-managed-lock-plugin.sh' "$repo_root/scripts/omarchy-verify.sh"
+grep -Fq 'omarchy-render-managed-lock-plugin.sh' "$repo_root/scripts/omarchy-provision.sh"
+lock_render_fixture="$(mktemp -d)"
+trap 'rm -rf -- "$lock_render_fixture"' EXIT
+mkdir -p \
+  "$lock_render_fixture/omarchy/shell/plugins/lock" \
+  "$lock_render_fixture/rendered"
+cat > "$lock_render_fixture/omarchy/shell/plugins/lock/LockView.qml" <<'EOF'
+Item {
+        anchors.leftMargin: inputField.borderLeft + 18 + root.fingerprintReserve
+        verticalAlignment: TextInput.AlignVCenter
+        horizontalAlignment: TextInput.AlignHCenter
+        activeFocusOnPress: true
+        clip: true
+        enabled: root.inputEnabled && !root.authenticatingPassword
+}
+EOF
+cat > "$lock_render_fixture/omarchy/shell/plugins/lock/manifest.json" <<'EOF'
+{
+  "id": "omarchy.lock",
+  "name": "Lock Screen",
+  "omarchy": {
+    "capabilities": ["authentication"],
+    "clonePaths": [{"source": "LockView.qml", "target": "LockView.qml"}]
+  }
+}
+EOF
+printf 'service\n' > "$lock_render_fixture/omarchy/shell/plugins/lock/Service.qml"
+OMARCHY_PATH="$lock_render_fixture/omarchy" \
+  "$managed_lock_renderer" "$lock_render_fixture/rendered" >/dev/null
+grep -Fq 'focus: root.inputEnabled' "$lock_render_fixture/rendered/LockView.qml"
+grep -Fxq 'service' "$lock_render_fixture/rendered/Service.qml"
+jq -e '
+  .id == "nik.lock" and
+  .name == "My Lock Screen" and
+  .omarchy.clonedFrom == "omarchy.lock" and
+  .omarchy.capabilities == ["authentication"] and
+  (.omarchy | has("clonePaths") | not)
+' "$lock_render_fixture/rendered/manifest.json" >/dev/null
+rm -rf -- "$lock_render_fixture"
+trap - EXIT
 [[ -f "$system_apply" ]]
 [[ -f "$usb_wake_rule" ]]
 grep -Fq '80-usb-hub-wakeup.rules' "$system_apply"

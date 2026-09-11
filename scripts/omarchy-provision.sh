@@ -205,6 +205,7 @@ rsync_remote -a \
   "$repo_root/scripts/omarchy-enable-voxtype.sh" \
   "$repo_root/scripts/omarchy-install-gui.sh" \
   "$repo_root/scripts/omarchy-install-vless.sh" \
+  "$repo_root/scripts/omarchy-render-managed-lock-plugin.sh" \
   "$repo_root/scripts/omarchy-root-phase.sh" \
   "$repo_root/scripts/omarchy-root-phase-terminal.sh" \
   "$repo_root/scripts/omarchy-test-vless.sh" \

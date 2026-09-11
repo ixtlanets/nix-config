@@ -96,5 +96,10 @@
       ]
     }
   },
-  "plugins": []
+  "plugins": [
+    { "id": "nik.lock" }
+  ],
+  "disabledPlugins": [
+    "omarchy.lock"
+  ]
 }

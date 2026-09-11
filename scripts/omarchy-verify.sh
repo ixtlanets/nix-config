@@ -14,6 +14,10 @@ tmux_plugins_dir="${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins"
 plugins_manifest="$source_root/omarchy/plugins.tsv"
 omaquote_plugin_dir="$HOME/.config/omarchy/plugins/io.github.snikulin.omaquote"
 omaquote_config_dir="$HOME/.config/omarchy/omaquote"
+local_lock_dir="$HOME/.config/omarchy/plugins/nik.lock"
+local_lock_restart_marker="$HOME/.local/state/nix-config-omarchy/lock-restart-required"
+omarchy_path="${OMARCHY_PATH:-/usr/share/omarchy}"
+managed_lock_renderer="$source_root/scripts/omarchy-render-managed-lock-plugin.sh"
 
 fail() {
   printf '[omarchy:verify] FAIL: %s\n' "$*" >&2
@@ -143,6 +147,14 @@ cmp -s "$source_root/dotfiles/omarchy/hypr/hosts/$expected_host.lua" "$HOME/.con
   fail "Hyprland host config mismatch"
 cmp -s "$source_root/dotfiles/omarchy/shell.json" "$HOME/.config/omarchy/shell.json" ||
   fail "Omarchy shell config mismatch"
+
+expected_lock_dir="$(mktemp -d)"
+OMARCHY_PATH="$omarchy_path" "$managed_lock_renderer" "$expected_lock_dir" >/dev/null ||
+  fail "could not render expected lock plugin"
+diff -qr "$expected_lock_dir" "$local_lock_dir" >/dev/null ||
+  fail "managed lock plugin mismatch"
+rm -rf -- "$expected_lock_dir"
+[[ ! -e "$local_lock_restart_marker" ]] || fail "managed lock plugin restart is pending"
 cmp -s "$source_root/dotfiles/omarchy/voxtype/config.toml" "$HOME/.config/voxtype/config.toml" ||
   fail "Voxtype config mismatch"
 cmp -s \
@@ -180,6 +192,10 @@ fi
 [[ -f "$plugins_manifest" ]] || fail "Omarchy plugin manifest is missing"
 plugin_catalog="$(OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}" omarchy plugin list --json)" ||
   fail "could not read Omarchy plugin catalog"
+jq -e '
+  any(.[]; .id == "nik.lock" and .enabled == true) and
+  any(.[]; .id == "omarchy.lock" and .enabled == false)
+' <<< "$plugin_catalog" >/dev/null || fail "managed lock plugin is not active"
 while read -r plugin_id plugin_url plugin_extra; do
   [[ -z "${plugin_id:-}" || "$plugin_id" == \#* ]] && continue
   [[ -n "${plugin_url:-}" && -z "${plugin_extra:-}" ]] ||

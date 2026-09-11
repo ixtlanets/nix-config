@@ -1,0 +1,10 @@
+--- a/LockView.qml
++++ b/LockView.qml
+@@ -140,6 +140,7 @@ Item {
+         anchors.leftMargin: inputField.borderLeft + 18 + root.fingerprintReserve
+         verticalAlignment: TextInput.AlignVCenter
+         horizontalAlignment: TextInput.AlignHCenter
++        focus: root.inputEnabled
+         activeFocusOnPress: true
+         clip: true
+         enabled: root.inputEnabled && !root.authenticatingPassword

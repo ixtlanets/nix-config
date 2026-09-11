@@ -3,6 +3,7 @@ set -euo pipefail
 
 source_root="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 expected_host="${OMARCHY_EXPECTED_HOST:-x1carbon}"
+local_lock_restart_marker="$HOME/.local/state/nix-config-omarchy/lock-restart-required"
 
 log() {
   printf '[omarchy:user] %s\n' "$*"
@@ -73,6 +74,37 @@ install_plugins() {
       die "invalid plugin manifest entry for $id"
     ensure_plugin "$id" "$url"
   done < "$manifest"
+}
+
+install_local_lock_plugin() {
+  local destination="$HOME/.config/omarchy/plugins/nik.lock"
+  local renderer="$source_root/scripts/omarchy-render-managed-lock-plugin.sh"
+  local temporary
+  local staged
+
+  [[ -x "$renderer" ]] || die "managed lock renderer is missing: $renderer"
+
+  temporary="$(mktemp -d)"
+  if ! "$renderer" "$temporary"; then
+    rm -rf -- "$temporary"
+    die "could not render the managed lock plugin"
+  fi
+
+  if [[ -d "$destination" ]] && diff -qr "$temporary" "$destination" >/dev/null; then
+    log "unchanged $destination"
+    rm -rf -- "$temporary"
+    return
+  fi
+
+  mkdir -p "$(dirname "$destination")"
+  staged="$(mktemp -d "$(dirname "$destination")/.nik.lock.XXXXXX")"
+  cp -a "$temporary/." "$staged/"
+  rm -rf -- "$destination"
+  mv "$staged" "$destination"
+  mkdir -p "$(dirname "$local_lock_restart_marker")"
+  touch "$local_lock_restart_marker"
+  log "installed $destination"
+  rm -rf -- "$temporary"
 }
 
 install_omaquote_config() {
@@ -251,6 +283,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now hyprmoncfgd.service
 
 install_plugins
+install_local_lock_plugin
 
 install_file "$source_root/dotfiles/omarchy/zshrc" "$HOME/.zshrc"
 install_file "$source_root/dotfiles/omarchy/starship.toml" "$HOME/.config/starship.toml"
@@ -283,6 +316,10 @@ configure_foot
 configure_cursor
 configure_host_gpu
 omarchy-shell shell rescanPlugins >/dev/null
+if [[ -f "$local_lock_restart_marker" ]]; then
+  omarchy restart shell
+  rm -f "$local_lock_restart_marker"
+fi
 for _ in {1..40}; do
   if omarchy-shell io.github.snikulin.omaquote reload >/dev/null 2>&1; then
     omaquote_reloaded=true
