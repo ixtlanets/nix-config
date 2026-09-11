@@ -296,7 +296,7 @@ in
       };
     };
     monitor = [
-      "desc:Huawei Technologies Co. Inc. MateView,3840x2560@60.000Hz,auto,2.0"
+      "desc:Huawei Technologies Co. Inc. MateView,modeline 619.603 3840 3848 3880 3920 2560 2619 2627 2633 +hsync -vsync,auto,2.0"
     ];
     workspace = [
       # Ensure no conflicting defaultFloat rules here unless intended statically
