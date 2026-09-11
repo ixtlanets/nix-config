@@ -5,6 +5,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 manifest="$repo_root/omarchy/plugins.tsv"
 shell_config="$repo_root/dotfiles/omarchy/shell.json"
 omaquote_config="$repo_root/dotfiles/omarchy/omaquote/config.json"
+system_apply="$repo_root/scripts/omarchy-apply-system.sh"
+usb_wake_rule="$repo_root/dotfiles/omarchy/system/udev/80-usb-hub-wakeup.rules"
 declare -A declared_plugins=()
 
 jq -e . "$shell_config" >/dev/null
@@ -71,6 +73,12 @@ done < <(jq -r '
   ] | unique[] | select(startswith("omarchy.") | not)
 ' "$shell_config")
 
+[[ -f "$system_apply" ]]
+[[ -f "$usb_wake_rule" ]]
+grep -Fq '80-usb-hub-wakeup.rules' "$system_apply"
+grep -Fq 'scripts/omarchy-apply-system.sh' "$repo_root/scripts/omarchy-provision.sh"
+grep -Fq 'USB hub wake rule mismatch' "$repo_root/scripts/omarchy-verify.sh"
+
 [[ "${#declared_plugins[@]}" -eq 4 ]] || {
   printf 'Expected four shared third-party Omarchy plugins, found %s\n' \
     "${#declared_plugins[@]}" >&2
@@ -85,6 +93,7 @@ grep -Fq 'dotfiles/quotes.txt' "$repo_root/scripts/omarchy-provision.sh"
 grep -Fxq 'otf-monaspace' "$repo_root/omarchy/packages/required.txt"
 grep -Fxq 'hyprmoncfg-bin' "$repo_root/omarchy/packages/aur.txt"
 grep -Fq 'scripts/omarchy-apply-user.sh' "$repo_root/scripts/omarchy-root-phase.sh"
+grep -Fq 'scripts/omarchy-apply-system.sh' "$repo_root/scripts/omarchy-root-phase.sh"
 apply_user_line="$(grep -nF 'scripts/omarchy-apply-user.sh' \
   "$repo_root/scripts/omarchy-root-phase.sh" | cut -d: -f1)"
 root_aur_line="$(grep -nF 'omarchy pkg aur add "${aur_packages[@]}"' \

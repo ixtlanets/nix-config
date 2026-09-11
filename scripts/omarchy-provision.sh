@@ -200,6 +200,7 @@ rsync_remote -a --delete "$repo_root/omarchy/packages/" "$target:$remote_root/om
 rsync_remote -a "$repo_root/omarchy/plugins.tsv" "$target:$remote_root/omarchy/plugins.tsv"
 rsync_remote -a \
   "$repo_root/scripts/omarchy-apply-user.sh" \
+  "$repo_root/scripts/omarchy-apply-system.sh" \
   "$repo_root/scripts/omarchy-configure-syncthing.sh" \
   "$repo_root/scripts/omarchy-enable-voxtype.sh" \
   "$repo_root/scripts/omarchy-install-gui.sh" \
@@ -225,6 +226,10 @@ fi
 if $stage_only; then
   printf 'Omarchy provisioning files staged on %s:%s\n' "$target" "$remote_root"
   exit 0
+fi
+
+if [[ "$remote_host" == zenbook ]]; then
+  run_privileged_remote "sudo bash \"\$HOME/$remote_root/scripts/omarchy-apply-system.sh\" \"\$HOME/$remote_root\""
 fi
 
 if $install_packages; then

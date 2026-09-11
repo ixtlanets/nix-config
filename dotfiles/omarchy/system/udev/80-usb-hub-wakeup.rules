@@ -1,0 +1,2 @@
+# Let keyboards and mice behind USB-C monitor/dock hubs wake the laptop.
+ACTION=="add|change", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{bDeviceClass}=="09", TEST=="power/wakeup", ATTR{power/wakeup}="enabled"

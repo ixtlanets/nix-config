@@ -51,6 +51,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
+OMARCHY_EXPECTED_HOST="$expected_host" \
+  sudo bash "$source_root/scripts/omarchy-apply-system.sh" "$source_root"
+
 omarchy pkg add "${packages[@]}"
 bash "$source_root/scripts/omarchy-install-vless.sh" "$vless_config"
 # The fresh host may need the tunnel before Tailscale can receive its first

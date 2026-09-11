@@ -74,6 +74,7 @@ in
   services.hardware.bolt.enable = true;
   services.udev.extraRules = ''
     SUBSYSTEM=="thunderbolt", ATTR{authorized}=="0", ATTR{authorized}="1"
+    ACTION=="add|change", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{bDeviceClass}=="09", TEST=="power/wakeup", ATTR{power/wakeup}="enabled"
   '';
   services = {
     asusd.enable = true;

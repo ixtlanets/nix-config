@@ -47,6 +47,9 @@ pacman -Q hyprmoncfg-bin >/dev/null 2>&1 || fail "hyprmoncfg-bin package is miss
   fail "hyprmoncfg user service inactive"
 if [[ "$expected_host" == zenbook ]]; then
   [[ -f /usr/lib/dri/iHD_drv_video.so ]] || fail "Intel iHD VA-API driver is missing"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/udev/80-usb-hub-wakeup.rules" \
+    /etc/udev/rules.d/80-usb-hub-wakeup.rules || fail "USB hub wake rule mismatch"
 fi
 python -c 'import curl_cffi, secretstorage' >/dev/null 2>&1 ||
   fail "yt-dlp Python dependencies could not be imported"
