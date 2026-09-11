@@ -7,6 +7,7 @@
 {
   # example = pkgs.callPackage ./example { };
   marker-pdf = pkgs.callPackage ./marker-pdf.nix { };
+  mise-bin = pkgs.callPackage ./mise-bin.nix { };
   google-genai = pkgs.callPackage ./google-genai.nix { };
   pdftext = pkgs.callPackage ./pdftext.nix { };
   surya-ocr = pkgs.callPackage ./surya-ocr.nix { };

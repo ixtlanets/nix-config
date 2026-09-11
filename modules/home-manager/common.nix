@@ -280,6 +280,7 @@ in
     mise = {
       enable = true;
       enableZshIntegration = true;
+      package = outputs.packages.${pkgs.stdenv.hostPlatform.system}.mise-bin;
       globalConfig = {
         settings.minimum_release_age = "24h";
         tools = {
