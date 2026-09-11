@@ -97,6 +97,7 @@ in
     ./ips-script.nix
     ./yt-dlp-helper.nix
     ./yt-script.nix
+    ./transcribe-media-script.nix
   ];
   nixpkgs = {
     # You can add overlays here

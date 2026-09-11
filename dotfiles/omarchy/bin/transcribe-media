@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+Usage: transcribe-media [--force] <media-file> [<media-file> ...]
+
+Transcribes local audio or video files with Spokenly and writes sidecars next
+ to each input file:
+  <name>.transcript.json  canonical timed transcript
+  <name>.transcript.md    readable transcript with timestamps and speakers
+
+Options:
+  -f, --force  replace existing transcript sidecars
+  -h, --help   show this help
+USAGE
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'transcribe-media: required command not found: %s\n' "$1" >&2
+    exit 1
+  }
+}
+
+format_markdown() {
+  local json_file="$1"
+  local title="$2"
+
+  jq -r --arg title "$title" '
+    def pad2:
+      tostring | if length < 2 then "0" + . else . end;
+    def timestamp:
+      floor as $total
+      | ($total / 3600 | floor | pad2) as $hours
+      | (($total % 3600) / 60 | floor | pad2) as $minutes
+      | ($total % 60 | pad2) as $seconds
+      | "\($hours):\($minutes):\($seconds)";
+    (reduce (.segments[] | select(.speakerId != null and .speakerId != "")) as $segment
+      ({labels: {}, count: 0};
+       ($segment.speakerId | tostring) as $speaker_id
+       | if .labels[$speaker_id] then .
+         else .labels[$speaker_id] = "Speaker \(.count + 1)" | .count += 1
+         end)
+    ) as $speakers
+    | "# \($title)\n\n## Transcript\n"
+    , (.segments[]
+       | (.speakerId // "" | tostring) as $speaker_id
+       | ($speakers.labels[$speaker_id] // "Speaker") as $speaker
+       | "[\(.start | timestamp)] \($speaker): \(.text)")
+  ' "$json_file"
+}
+
+transcribe_file() {
+  local input_file="$1"
+  local input_dir file_name extension stem output_json output_markdown temp_json temp_markdown
+
+  [[ -f "$input_file" ]] || {
+    printf 'transcribe-media: file not found: %s\n' "$input_file" >&2
+    return 1
+  }
+
+  input_dir="$(cd "$(dirname "$input_file")" && pwd)"
+  file_name="$(basename "$input_file")"
+  extension="${file_name##*.}"
+  case "$extension" in
+    mp3|wav|m4a|flac|opus|ogg|mp4|mov|m4v)
+      ;;
+    *)
+      printf 'transcribe-media: unsupported file format for %s (supported: mp3, wav, m4a, flac, opus, ogg, mp4, mov, m4v)\n' "$input_file" >&2
+      return 1
+      ;;
+  esac
+  stem="${file_name%.*}"
+  [[ "$stem" != "$file_name" ]] || stem="$file_name"
+  input_file="$input_dir/$file_name"
+  output_json="$input_dir/$stem.transcript.json"
+  output_markdown="$input_dir/$stem.transcript.md"
+
+  if [[ "$force" != true && ( -e "$output_json" || -e "$output_markdown" ) ]]; then
+    printf 'transcribe-media: transcript already exists for %s (use --force to replace it)\n' "$input_file" >&2
+    return 1
+  fi
+
+  temp_json="$(mktemp "$input_dir/.${stem}.transcript.XXXXXX.json")"
+  temp_markdown="$(mktemp "$input_dir/.${stem}.transcript.XXXXXX.md")"
+
+  if ! spokenly transcribe "$input_file" --format json --speakers > "$temp_json"; then
+    printf 'transcribe-media: Spokenly failed for %s\n' "$input_file" >&2
+    rm -f "$temp_json" "$temp_markdown"
+    return 1
+  fi
+
+  if ! jq -e '
+    (.segments | type == "array")
+    and all(.segments[]; (.text | type == "string") and (.start | type == "number") and (.end | type == "number"))
+  ' "$temp_json" >/dev/null; then
+    printf 'transcribe-media: Spokenly returned invalid transcript JSON for %s\n' "$input_file" >&2
+    rm -f "$temp_json" "$temp_markdown"
+    return 1
+  fi
+
+  if ! format_markdown "$temp_json" "$stem" > "$temp_markdown"; then
+    printf 'transcribe-media: could not render Markdown for %s\n' "$input_file" >&2
+    rm -f "$temp_json" "$temp_markdown"
+    return 1
+  fi
+
+  mv -f "$temp_json" "$output_json"
+  mv -f "$temp_markdown" "$output_markdown"
+  printf 'transcribe-media: wrote %s and %s\n' "$output_json" "$output_markdown"
+}
+
+force=false
+files=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--force)
+      force=true
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      files+=("$@")
+      break
+      ;;
+    -*)
+      printf 'transcribe-media: unknown option: %s\n' "$1" >&2
+      usage
+      exit 1
+      ;;
+    *)
+      files+=("$1")
+      ;;
+  esac
+  shift
+done
+
+if [[ ${#files[@]} -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+require_command spokenly
+require_command jq
+
+status=0
+for file in "${files[@]}"; do
+  transcribe_file "$file" || status=1
+done
+
+exit "$status"
