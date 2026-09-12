@@ -1,0 +1,27 @@
+{
+  "abs_library_id": "REPLACE_WITH_AUDIOBOOKSHELF_LIBRARY_ID",
+  "abs_token_file": "${CREDENTIALS_DIRECTORY}/abs-api-token",
+  "abs_url": "http://100.81.67.47:13378",
+  "allowed_extensions": [
+    ".m4b",
+    ".m4a",
+    ".mp3",
+    ".flac"
+  ],
+  "ffprobe_bin": "/usr/bin/ffprobe",
+  "max_release_gib": 20,
+  "min_local_free_gib": 100,
+  "min_remote_free_gib": 200,
+  "known_hosts_file": "/home/nik/.ssh/known_hosts",
+  "publisher_identity_file": "${CREDENTIALS_DIRECTORY}/publisher-ssh-key",
+  "remote_host": "nik@100.81.67.47",
+  "rmab_token_file": "${CREDENTIALS_DIRECTORY}/rmab-api-token",
+  "rmab_url": "http://100.95.213.117:3030",
+  "rmab_media_root": "/media",
+  "rsync_bin": "/usr/bin/rsync",
+  "ssh_bin": "/usr/bin/ssh",
+  "stability_seconds": 30,
+  "staging_retention_hours": 24,
+  "staging_root": "/home/nik/services/readmeabook/staging",
+  "state_dir": "/home/nik/.local/state/readmeabook-publisher"
+}

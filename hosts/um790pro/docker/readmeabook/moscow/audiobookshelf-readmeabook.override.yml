@@ -1,0 +1,4 @@
+services:
+  audiobookshelf:
+    volumes:
+      - /media/disk1/media/ReadMeABook:/readmeabook:ro

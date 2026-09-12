@@ -1,0 +1,7 @@
+{
+  "admin_password_file": "${READMABOOK_ADMIN_PASSWORD_FILE}",
+  "admin_username": "nik",
+  "requester_password_file": "${READMABOOK_REQUESTER_PASSWORD_FILE}",
+  "requester_username": "nik-requester",
+  "rmab_url": "http://100.95.213.117:3030"
+}

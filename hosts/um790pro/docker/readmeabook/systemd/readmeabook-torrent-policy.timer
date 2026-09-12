@@ -1,0 +1,11 @@
+[Unit]
+Description=Poll ReadMeABook download capacity and seeding policy
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=readmeabook-torrent-policy.service
+
+[Install]
+WantedBy=timers.target

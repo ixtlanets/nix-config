@@ -1,0 +1,12 @@
+[Unit]
+Description=Poll ReadMeABook for one publishable request
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=readmeabook-publisher.service
+
+[Install]
+WantedBy=timers.target
+

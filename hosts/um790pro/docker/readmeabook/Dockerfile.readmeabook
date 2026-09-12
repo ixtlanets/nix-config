@@ -1,0 +1,6 @@
+FROM ghcr.io/kikootwo/readmeabook@sha256:91fb3ee1943678003cd9c86990430c6268428f52c6ea3fb8a57e179f84855d45
+
+COPY scripts/patch-readmeabook-transmission.js /usr/local/bin/patch-readmeabook-transmission.js
+
+RUN node /usr/local/bin/patch-readmeabook-transmission.js /app/.next/server \
+    && node /usr/local/bin/patch-readmeabook-transmission.js /app/.next/standalone/.next/server

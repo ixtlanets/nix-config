@@ -1,0 +1,24 @@
+[Unit]
+Description=Publish one verified ReadMeABook request to Moscow
+After=docker.service network-online.target tailscaled.service
+Wants=network-online.target
+ConditionPathExists=/home/nik/.config/readmeabook/publisher.json
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+LoadCredential=rmab-api-token:/etc/readmeabook/secrets/rmab-api-token
+LoadCredential=abs-api-token:/etc/readmeabook/secrets/abs-api-token
+LoadCredential=publisher-ssh-key:/etc/readmeabook/secrets/publisher-ssh-key
+ExecStart=/usr/bin/flock --exclusive --timeout 1800 /home/nik/.local/state/readmeabook-publisher /usr/bin/python3 /home/nik/.local/share/nix-config-services/readmeabook/scripts/publisher.py --config /home/nik/.config/readmeabook/publisher.json run-once --execute
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/nik/.local/state/readmeabook-publisher
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
