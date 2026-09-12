@@ -1,0 +1,18 @@
+{
+  "abs_url": "http://100.81.67.47:13378",
+  "database_path": "/var/lib/audiobook-ops/audiobook-ops.sqlite3",
+  "downloads_root": "/downloads",
+  "health": {
+    "catalog_component": "catalog",
+    "external_search_component": "external-search"
+  },
+  "limits": {
+    "max_release_gib": 20,
+    "max_working_set_gib": 50,
+    "min_local_free_gib": 100,
+    "min_remote_free_gib": 200
+  },
+  "prowlarr_url": "http://prowlarr:9696",
+  "staging_root": "/staging",
+  "transmission_url": "http://transmission:9091/transmission/rpc"
+}

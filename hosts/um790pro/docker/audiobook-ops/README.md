@@ -1,8 +1,9 @@
 # Audiobook Ops on UM790Pro
 
-> Target-state operator documentation. The service is approved but not yet
-> implemented or deployed. Until service cutover, use the current production
-> documentation under `../readmeabook/`.
+> Target-state operator documentation. The non-production bundle scaffold is
+> implemented, but the domain service and adapters are not yet complete and
+> nothing here has been deployed. Until service cutover, use the current
+> production documentation under `../readmeabook/`.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
 audiobook workflow. It reads and updates Audiobookshelf, searches RuTracker via
@@ -26,6 +27,35 @@ The execution checklist is
 | publisher systemd unit | verified atomic transfer to Moscow |
 | policy systemd unit | queue, disk, and cleanup enforcement |
 | backup/health systemd units | operations and recovery evidence |
+
+## Repository scaffold
+
+The bundle currently provides:
+
+- `docker-compose.yml` with the target five-service topology and retained
+  Prowlarr, Transmission, download, FlareSolverr, and gateway state paths;
+- a digest-pinned `linux/amd64` Python base in `Dockerfile`;
+- `src/audiobook_ops/`, the package seam extended by the domain tickets;
+- `config/audiobook-ops.example.json`, containing policy and endpoint examples
+  but no credential values;
+- retained neutral gateway and Transmission entrypoint scripts;
+- `tests/run.sh`, which renders Compose without launching it and checks the
+  private bind, state roots, image pins, secret files, and scaffold health.
+
+Render it safely with an explicit private address. This reads files only and
+does not start containers:
+
+```bash
+AUDIOBOOK_OPS_TAILSCALE_IP=100.95.213.117 \
+  docker compose \
+    -f hosts/um790pro/docker/audiobook-ops/docker-compose.yml \
+    config
+
+hosts/um790pro/docker/audiobook-ops/tests/run.sh
+```
+
+The Compose project must not be started against the retained production paths
+until the owner-approved cutover.
 
 ## Fixed topology
 
