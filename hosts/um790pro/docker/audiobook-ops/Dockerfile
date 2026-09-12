@@ -8,6 +8,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY src ./src
+COPY bin/audiobookctl /usr/local/bin/audiobookctl
 
 USER 1000:1000
 

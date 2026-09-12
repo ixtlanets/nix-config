@@ -1,9 +1,9 @@
 # Audiobook Ops on UM790Pro
 
-> Target-state operator documentation. The non-production bundle scaffold is
-> implemented, but the domain service and adapters are not yet complete and
-> nothing here has been deployed. Until service cutover, use the current
-> production documentation under `../readmeabook/`.
+> Target-state operator documentation. The non-production bundle and domain
+> core are implemented, but the external adapters and Streamable HTTP transport
+> are not yet complete and nothing here has been deployed. Until service
+> cutover, use the current production documentation under `../readmeabook/`.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
 audiobook workflow. It reads and updates Audiobookshelf, searches RuTracker via
@@ -35,7 +35,10 @@ The bundle currently provides:
 - `docker-compose.yml` with the target five-service topology and retained
   Prowlarr, Transmission, download, FlareSolverr, and gateway state paths;
 - a digest-pinned `linux/amd64` Python base in `Dockerfile`;
-- `src/audiobook_ops/`, the package seam extended by the domain tickets;
+- `src/audiobook_ops/interface.py`, the shared SQLite-backed domain seam;
+- `src/audiobook_ops/contract.py`, the explicit typed MCP tool allowlist;
+- `src/audiobook_ops/mcp_adapter.py` and `bin/audiobookctl`, thin adapters over
+  the same domain seam;
 - `config/audiobook-ops.example.json`, containing policy and endpoint examples
   but no credential values;
 - retained neutral gateway and Transmission entrypoint scripts;
@@ -97,28 +100,24 @@ use the native Hermes approval prompt.
 
 ## Emergency CLI contract
 
-The final CLI must call the same domain module as MCP. Target command groups are:
+The current CLI calls the same domain module as MCP for durable task and event
+operations:
 
 ```text
-audiobookctl system status
-audiobookctl library search --query <text>
-audiobookctl library audit
-audiobookctl release search --query <text>
-audiobookctl release inspect <candidate-id>
-audiobookctl task list
-audiobookctl task show <task-id>
-audiobookctl task cancel <task-id> --execute
-audiobookctl metadata plan <item-id> --patch <file>
-audiobookctl metadata apply <plan-id> --revision <hash> --execute
-audiobookctl metadata undo <change-id> --revision <hash> --execute
-audiobookctl backup
-audiobookctl restore-rehearsal
+audiobookctl --database <sqlite-file> task list
+audiobookctl --database <sqlite-file> task show <task-id>
+audiobookctl --database <sqlite-file> task cancel <task-id> \
+  --expected-revision <number> --idempotency-key <key> --execute
+audiobookctl --database <sqlite-file> task retry <task-id> \
+  --expected-revision <number> --idempotency-key <key> --execute
+audiobookctl --database <sqlite-file> notification list \
+  --after-event-id <number> --limit <number>
 ```
 
-Exact flags are part of implementation acceptance. Mutating commands must require
-an immutable plan/revision where applicable and an explicit execution flag. The
-CLI must not offer arbitrary upstream URL, ABS endpoint, filesystem path, shell,
-magnet, or raw JSON proxy commands.
+Additional adapter-specific read and metadata commands arrive with their owning
+tickets. Mutating commands require an expected revision, an idempotency key, and
+an explicit execution flag. The CLI does not offer arbitrary upstream URLs, ABS
+endpoints, filesystem paths, shell fragments, magnets, or raw proxy commands.
 
 ## Expected task states
 
