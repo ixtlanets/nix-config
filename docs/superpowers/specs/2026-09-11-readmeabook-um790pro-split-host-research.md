@@ -1,10 +1,11 @@
 # ReadMeABook на `um790pro`, библиотека и Transmission на `moscow`
 
-**Дата проверки:** 2026-09-11  
+**Дата проверки:** 2026-09-11
+
 **Статус:** research complete / architecture grill input; принятые решения
 зафиксированы в
 [`2026-09-11-readmeabook-um790pro-design.md`](./2026-09-11-readmeabook-um790pro-design.md).
-Сервисы и конфигурации в рамках исследования не изменялись.  
+Сервисы и конфигурации в рамках исследования не изменялись.
 
 **Проверенный ReadMeABook:** release
 [`v1.2.2`](https://github.com/kikootwo/ReadMeABook/releases/tag/v1.2.2)

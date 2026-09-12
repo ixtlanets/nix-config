@@ -9,4 +9,3 @@ Unit=readmeabook-publisher.service
 
 [Install]
 WantedBy=timers.target
-

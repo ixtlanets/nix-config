@@ -1,8 +1,10 @@
 # ReadMeABook на UM790Pro: утверждённый split-host design
 
-**Дата:** 2026-09-11  
+**Дата:** 2026-09-11
+
 **Статус:** superseded 2026-09-12 by
-[`2026-09-12-hermes-audiobook-automation-design.md`](./2026-09-12-hermes-audiobook-automation-design.md)  
+[`2026-09-12-hermes-audiobook-automation-design.md`](./2026-09-12-hermes-audiobook-automation-design.md)
+
 **Research:**
 [`2026-09-11-readmeabook-um790pro-split-host-research.md`](./2026-09-11-readmeabook-um790pro-split-host-research.md)
 
