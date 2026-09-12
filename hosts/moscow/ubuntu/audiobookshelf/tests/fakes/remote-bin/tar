@@ -8,4 +8,10 @@ if [[ ${FAKE_TAR_FAIL:-0} == 1 ]]; then
   exit 1
 fi
 
-exec /run/current-system/sw/bin/tar "$@"
+if [[ -n ${REAL_TAR:-} ]]; then
+  exec "$REAL_TAR" "$@"
+elif [[ -x /usr/bin/tar ]]; then
+  exec /usr/bin/tar "$@"
+else
+  exec /run/current-system/sw/bin/tar "$@"
+fi

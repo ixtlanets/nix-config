@@ -14,3 +14,4 @@ services:
       - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/config"
       - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/metadata"
       - "${MEDIA_DIR:-/media/disk1/media/Audiobooks}:/audiobooks"
+      - "${READMABOOK_MEDIA_DIR:-/media/disk1/media/ReadMeABook}:/readmeabook:ro"

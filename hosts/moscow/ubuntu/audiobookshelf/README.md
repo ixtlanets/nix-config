@@ -31,8 +31,8 @@
 
 ## Layout
 
-- `docker-compose.yml` preserves the current production mounts, port and restart policy.
-- `docker-compose.rehearsal.yml` binds only to Tailscale, uses cloned state and mounts media read-only.
+- `docker-compose.yml` preserves the original production mounts, port and restart policy and adds the publisher-owned `/readmeabook` tree read-only.
+- `docker-compose.rehearsal.yml` binds only to Tailscale, uses cloned state and mounts both media trees read-only.
 - `scripts/lib.sh` contains the recorded fingerprints and path defaults.
 - `scripts/preflight.sh` validates the unchanged source container and host prerequisites.
 - `scripts/prepare-image.sh` prepares a verified single-platform target image.
@@ -50,6 +50,8 @@ Remote defaults:
 - rehearsals: `/home/nik/.local/state/audiobookshelf/rehearsals`;
 - production state: `/media/disk1/media/meta`;
 - media: `/media/disk1/media/Audiobooks`.
+- ReadMeABook published media: `/media/disk1/media/ReadMeABook`, mounted at
+  `/readmeabook` read-only.
 
 State directories are created with mode `0700`. They contain the Audiobookshelf database, including password hashes and auth state, and must never be copied into the repository.
 
@@ -197,7 +199,7 @@ For controlled testing, the local scripts accept environment overrides:
 - `REMOTE` and `SSH_BIN`;
 - `DOCKER_BIN` and `SCP_BIN`;
 - `REMOTE_BUNDLE_DIR` and `REMOTE_STATE_DIR`;
-- `SOURCE_STATE_DIR`, `MEDIA_DIR` and `TAILSCALE_IP`.
+- `SOURCE_STATE_DIR`, `MEDIA_DIR`, `READMABOOK_MEDIA_DIR` and `TAILSCALE_IP`.
 
 Production-changing remote scripts still restrict destructive paths to the known `/home/nik` state root and `/media/disk1/media/meta` production path. Do not use overrides to bypass a failed fingerprint.
 

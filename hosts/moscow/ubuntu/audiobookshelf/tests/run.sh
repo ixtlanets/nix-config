@@ -103,7 +103,9 @@ production_compose_preserves_current_topology() {
     [[ $rendered == *"target: /config"* ]] &&
     [[ $rendered == *"target: /metadata"* ]] &&
     [[ $rendered == *"target: /audiobooks"* ]] &&
-    [[ $rendered != *"read_only: true"* ]]
+    [[ $rendered == *"source: /media/disk1/media/ReadMeABook"* ]] &&
+    [[ $rendered == *"target: /readmeabook"* ]] &&
+    [[ $rendered == *"read_only: true"* ]]
 }
 
 rehearsal_compose_is_private_and_media_read_only() {
@@ -117,6 +119,8 @@ rehearsal_compose_is_private_and_media_read_only() {
     [[ $rendered == *"target: /config"* ]] &&
     [[ $rendered == *"target: /metadata"* ]] &&
     [[ $rendered == *"target: /audiobooks"* ]] &&
+    [[ $rendered == *"source: /media/disk1/media/ReadMeABook"* ]] &&
+    [[ $rendered == *"target: /readmeabook"* ]] &&
     [[ $rendered == *"read_only: true"* ]]
 }
 
