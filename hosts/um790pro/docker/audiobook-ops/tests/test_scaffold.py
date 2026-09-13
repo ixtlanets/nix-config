@@ -119,6 +119,7 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
             r"(?m)^FROM python:3\.13\.7-slim-bookworm@sha256:[0-9a-f]{64}$",
         )
         self.assertNotIn(":latest", dockerfile)
+        self.assertRegex(dockerfile, r"apt-get install[^\n]*ffmpeg")
 
     def test_secrets_are_file_mounted_and_absent_from_environment(self) -> None:
         rendered = self.render_compose()

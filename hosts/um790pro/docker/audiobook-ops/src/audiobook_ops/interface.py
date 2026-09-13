@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from copy import deepcopy
+from difflib import SequenceMatcher
 import hashlib
 import json
 from pathlib import Path
@@ -19,7 +20,11 @@ class Clock(Protocol):
 
 
 class ReleaseAdapter(Protocol):
+    def search(self, queries: list[str]) -> list[dict[str, object]]: ...
+
     def inspect(self, candidate_id: str) -> dict[str, object]: ...
+
+    def resolve(self, candidate_id: str) -> dict[str, object]: ...
 
 
 class ExternalActionAdapter(Protocol):
@@ -40,7 +45,13 @@ class SystemClock:
 
 
 class UnavailableReleaseAdapter:
+    def search(self, queries: list[str]) -> list[dict[str, object]]:
+        raise OperationError("release search adapter is unavailable")
+
     def inspect(self, candidate_id: str) -> dict[str, object]:
+        raise KeyError(candidate_id)
+
+    def resolve(self, candidate_id: str) -> dict[str, object]:
         raise KeyError(candidate_id)
 
 
@@ -66,6 +77,23 @@ WRITE_TOOLS = {
     "task_cancel",
     "task_retry",
 }
+CANDIDATE_PUBLIC_FIELDS = frozenset(
+    {
+        "candidate_id",
+        "format",
+        "leechers",
+        "matched_queries",
+        "rank_evidence",
+        "revision",
+        "seeders",
+        "size_bytes",
+        "source",
+        "title",
+        "topic_excerpt",
+        "topic_id",
+        "topic_title",
+    }
+)
 
 LEGAL_TRANSITIONS = {
     "queued": {"cancelled", "downloading", "failed", "needs_input"},
@@ -92,7 +120,7 @@ ACTIVE_STATES = {
     "applying_metadata",
 }
 RETRY_DELAYS_SECONDS = (60, 300, 900)
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 METADATA_FIELDS = frozenset(
     {
         "abridged",
@@ -132,6 +160,10 @@ def _timestamp(value: datetime) -> str:
 
 def _non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
+
+
+def _normalized_text(value: object) -> str:
+    return " ".join(str(value).casefold().replace("ё", "е").split())
 
 
 class AudiobookOperations:
@@ -208,6 +240,9 @@ class AudiobookOperations:
 
             INSERT OR IGNORE INTO schema_migrations(version, applied_at)
             VALUES (1, '2026-09-13T00:00:00+00:00');
+
+            INSERT OR IGNORE INTO schema_migrations(version, applied_at)
+            VALUES (2, '2026-09-13T12:00:00+00:00');
 
             CREATE TABLE IF NOT EXISTS acquisition_plans (
               plan_id TEXT PRIMARY KEY,
@@ -321,6 +356,20 @@ class AudiobookOperations:
               created_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS acquisition_artifacts (
+              task_id TEXT PRIMARY KEY REFERENCES acquisition_tasks(task_id),
+              torrent_hash TEXT NOT NULL,
+              staging_id TEXT NOT NULL UNIQUE,
+              manifest_json TEXT NOT NULL,
+              created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS acquisition_cleanups (
+              task_id TEXT PRIMARY KEY REFERENCES acquisition_tasks(task_id),
+              terminal_state TEXT NOT NULL,
+              completed_at TEXT NOT NULL
+            );
+
             COMMIT;
             """
         )
@@ -430,7 +479,41 @@ class AudiobookOperations:
             return self._notification_list(arguments)
         if tool_name == "metadata_plan":
             return self._metadata_plan(arguments)
+        if tool_name == "release_search":
+            return self._release_search(arguments)
+        if tool_name == "release_inspect":
+            return self._candidate_public(
+                self._inspect_candidate(str(arguments.get("candidate_id", "")))
+            )
         raise OperationError(f"unknown operation: {tool_name}")
+
+    def _release_search(self, arguments: dict[str, object]) -> dict[str, object]:
+        queries = arguments.get("queries")
+        if (
+            not isinstance(queries, list)
+            or not 1 <= len(queries) <= 12
+            or any(not _non_empty_string(query) for query in queries)
+        ):
+            raise OperationError("one to twelve non-empty search queries are required")
+        try:
+            candidates = self._releases.search(queries)
+        except (KeyError, ValueError) as error:
+            raise OperationError("release search failed") from error
+        if not isinstance(candidates, list) or any(
+            not isinstance(candidate, dict) for candidate in candidates
+        ):
+            raise OperationError("release adapter returned invalid candidates")
+        return {
+            "candidates": [self._candidate_public(candidate) for candidate in candidates]
+        }
+
+    @staticmethod
+    def _candidate_public(candidate: dict[str, object]) -> dict[str, object]:
+        return {
+            key: deepcopy(value)
+            for key, value in candidate.items()
+            if key in CANDIDATE_PUBLIC_FIELDS
+        }
 
     def register_managed_audiobook(
         self,
@@ -490,6 +573,146 @@ class AudiobookOperations:
                 },
                 "task": task_view,
             }
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+
+    def acquisition_source(self, task_id: str) -> dict[str, object]:
+        row = self._connection.execute(
+            """
+            SELECT plan.payload_json
+              FROM acquisition_tasks AS task
+              JOIN acquisition_plans AS plan ON plan.plan_id = task.plan_id
+             WHERE task.task_id = ?
+            """,
+            (task_id,),
+        ).fetchone()
+        if row is None:
+            raise OperationError("unknown acquisition task")
+        payload = json.loads(row["payload_json"])
+        resolution = payload.get("candidate_resolution")
+        if not isinstance(resolution, dict):
+            raise OperationError("task has no internal release resolution")
+        return deepcopy(resolution)
+
+    def record_validated_artifact(
+        self,
+        task_id: str,
+        expected_revision: int,
+        torrent_hash: str,
+        artifact: dict[str, object],
+    ) -> dict[str, object]:
+        staging_id = artifact.get("staging_id")
+        manifest = artifact.get("manifest")
+        if (
+            not _non_empty_string(torrent_hash)
+            or not _non_empty_string(staging_id)
+            or not isinstance(manifest, list)
+            or not manifest
+        ):
+            raise OperationError("validated acquisition artifact is incomplete")
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            task = self._connection.execute(
+                "SELECT state, revision FROM acquisition_tasks WHERE task_id = ?",
+                (task_id,),
+            ).fetchone()
+            if task is None:
+                raise OperationError("unknown acquisition task")
+            if task["revision"] != expected_revision:
+                raise OperationError("stale task revision")
+            if task["state"] != "validating":
+                raise OperationError("artifact can only bind while validating")
+            existing = self._connection.execute(
+                "SELECT * FROM acquisition_artifacts WHERE task_id = ?", (task_id,)
+            ).fetchone()
+            if existing is not None:
+                if (
+                    existing["torrent_hash"] != torrent_hash
+                    or existing["staging_id"] != staging_id
+                    or existing["manifest_json"] != _canonical(manifest)
+                ):
+                    raise OperationError("validated acquisition artifact changed")
+                result = self._transition_locked(
+                    task_id, expected_revision, "ready_to_publish", None
+                )
+                self._connection.execute("COMMIT")
+                return result
+            now = _timestamp(self._clock.now())
+            self._connection.execute(
+                """
+                INSERT INTO acquisition_artifacts(
+                  task_id, torrent_hash, staging_id, manifest_json, created_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (task_id, torrent_hash, staging_id, _canonical(manifest), now),
+            )
+            result = self._transition_locked(
+                task_id, expected_revision, "ready_to_publish", None
+            )
+            self._connection.execute("COMMIT")
+            return result
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+
+    def validated_artifact(self, task_id: str) -> dict[str, object]:
+        row = self._connection.execute(
+            "SELECT * FROM acquisition_artifacts WHERE task_id = ?", (task_id,)
+        ).fetchone()
+        if row is None:
+            raise OperationError("task has no validated acquisition artifact")
+        return {
+            "task_id": row["task_id"],
+            "torrent_hash": row["torrent_hash"],
+            "staging_id": row["staging_id"],
+            "manifest": json.loads(row["manifest_json"]),
+            "created_at": row["created_at"],
+        }
+
+    def cleanup_pending_tasks(self) -> list[dict[str, object]]:
+        rows = self._connection.execute(
+            """
+            SELECT task.task_id
+              FROM acquisition_tasks AS task
+              LEFT JOIN acquisition_cleanups AS cleanup
+                ON cleanup.task_id = task.task_id
+             WHERE task.state IN ('cancelled', 'verified')
+               AND cleanup.task_id IS NULL
+             ORDER BY task.created_at, task.task_id
+            """
+        ).fetchall()
+        return [self._task_view(str(row["task_id"])) for row in rows]
+
+    def mark_acquisition_cleanup(self, task_id: str, terminal_state: str) -> None:
+        if terminal_state not in {"cancelled", "verified"}:
+            raise OperationError("cleanup requires a terminal acquisition state")
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            task = self._connection.execute(
+                "SELECT state FROM acquisition_tasks WHERE task_id = ?", (task_id,)
+            ).fetchone()
+            if task is None:
+                raise OperationError("unknown acquisition task")
+            if task["state"] != terminal_state:
+                raise OperationError("cleanup terminal state changed")
+            existing = self._connection.execute(
+                "SELECT terminal_state FROM acquisition_cleanups WHERE task_id = ?",
+                (task_id,),
+            ).fetchone()
+            if existing is not None and existing["terminal_state"] != terminal_state:
+                raise OperationError("cleanup completion identity changed")
+            self._connection.execute(
+                """
+                INSERT OR IGNORE INTO acquisition_cleanups(
+                  task_id, terminal_state, completed_at
+                ) VALUES (?, ?, ?)
+                """,
+                (task_id, terminal_state, _timestamp(self._clock.now())),
+            )
+            self._connection.execute("COMMIT")
         except Exception:
             if self._connection.in_transaction:
                 self._connection.execute("ROLLBACK")
@@ -1104,17 +1327,54 @@ class AudiobookOperations:
         candidate = self._inspect_candidate(candidate_id)
         if candidate["revision"] != expected_revision:
             raise OperationError("candidate revision changed")
+        try:
+            candidate_resolution = self._releases.resolve(candidate_id)
+        except (KeyError, ValueError) as error:
+            raise OperationError("release candidate cannot be resolved") from error
+        if not isinstance(candidate_resolution, dict):
+            raise OperationError("release candidate resolution is invalid")
         work = dict(work)
         work["work_id"] = str(uuid4())
         audio_edition = dict(audio_edition)
         audio_edition["edition_id"] = str(uuid4())
         audio_edition["work_id"] = work["work_id"]
+        work_title = _normalized_text(work["title"])
+        work_authors = tuple(
+            sorted(_normalized_text(author) for author in work["authors"])
+        )
+        warnings: list[str] = []
+        existing_plans = self._connection.execute(
+            """
+            SELECT plan.payload_json
+              FROM acquisition_tasks AS task
+              JOIN acquisition_plans AS plan ON plan.plan_id = task.plan_id
+            """
+        ).fetchall()
+        for existing_plan in existing_plans:
+            existing_work = json.loads(existing_plan["payload_json"])["work"]
+            existing_title = _normalized_text(existing_work.get("title"))
+            existing_authors = tuple(
+                sorted(
+                    _normalized_text(author)
+                    for author in existing_work.get("authors", [])
+                )
+            )
+            title_similarity = SequenceMatcher(
+                None, existing_title, work_title, autojunk=False
+            ).ratio()
+            if existing_authors == work_authors and title_similarity >= 0.8:
+                warnings.append(
+                    "possible existing work or audio edition requires owner review"
+                )
+                break
         now = self._clock.now()
         plan_id = str(uuid4())
         payload = {
             "audio_edition": audio_edition,
             "candidate": candidate,
+            "candidate_resolution": candidate_resolution,
             "origin_conversation_id": origin,
+            "warnings": warnings,
             "work": work,
         }
         revision = _digest(payload)
@@ -1136,11 +1396,7 @@ class AudiobookOperations:
                 _timestamp(expires_at),
             ),
         )
-        public_candidate = {
-            key: value
-            for key, value in candidate.items()
-            if key not in {"infohash", "magnet_uri"}
-        }
+        public_candidate = self._candidate_public(candidate)
         return {
             "plan_id": plan_id,
             "revision": revision,
@@ -1149,6 +1405,7 @@ class AudiobookOperations:
             "candidate": public_candidate,
             "work": work,
             "audio_edition": audio_edition,
+            "warnings": warnings,
         }
 
     def _inspect_candidate(self, candidate_id: str) -> dict[str, object]:
@@ -1188,6 +1445,10 @@ class AudiobookOperations:
         now = _timestamp(self._clock.now())
         task_id = str(uuid4())
         payload = json.loads(plan["payload_json"])
+        candidate_resolution = payload.get("candidate_resolution", {})
+        if not isinstance(candidate_resolution, dict):
+            raise OperationError("release candidate resolution is invalid")
+        infohash = candidate_resolution.get("infohash")
         try:
             self._connection.execute("BEGIN IMMEDIATE")
             replay = self._idempotent_replay(
@@ -1206,7 +1467,7 @@ class AudiobookOperations:
                 (
                     str(candidate["source"]),
                     candidate.get("topic_id"),
-                    candidate.get("infohash"),
+                    infohash,
                 ),
             ).fetchone()
             if duplicate is not None:
@@ -1225,7 +1486,7 @@ class AudiobookOperations:
                     plan["candidate_id"],
                     str(candidate["source"]),
                     candidate.get("topic_id"),
-                    candidate.get("infohash"),
+                    infohash,
                     payload["origin_conversation_id"],
                     now,
                     now,
@@ -1346,6 +1607,7 @@ class AudiobookOperations:
             "next_retry_at": row["next_retry_at"],
             "resume_state": row["resume_state"],
             "origin_conversation_id": row["origin_conversation_id"],
+            "candidate": self._candidate_public(payload["candidate"]),
             "work": payload["work"],
             "audio_edition": payload["audio_edition"],
             "transitions": [dict(transition) for transition in transitions],

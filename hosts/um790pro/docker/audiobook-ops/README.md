@@ -1,8 +1,8 @@
 # Audiobook Ops on UM790Pro
 
-> Target-state operator documentation. The non-production bundle and domain
-> core are implemented, but the external adapters and Streamable HTTP transport
-> are not yet complete and nothing here has been deployed. Until service
+> Target-state operator documentation. The non-production bundle, domain core,
+> and acquisition adapters are implemented, but the catalog/publisher adapters
+> and Streamable HTTP transport are not yet complete and nothing here has been deployed. Until service
 > cutover, use the current production documentation under `../readmeabook/`.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
@@ -44,6 +44,21 @@ The bundle currently provides:
 - retained neutral gateway and Transmission entrypoint scripts;
 - `tests/run.sh`, which renders Compose without launching it and checks the
   private bind, state roots, image pins, secret files, and scaffold health.
+
+The acquisition module sends raw Unicode query variants to Prowlarr, accepts
+only exact internal RuTracker topic URLs, returns opaque candidates, and keeps
+magnet resolution inside the worker boundary. Search and topic inspection call
+a live VLESS route-health endpoint before every upstream operation; the exact
+endpoint is wired by the production bundle and must return
+`{"status":"ok","route":"vless"}`. Any missing, redirected, oversized, or
+negative response fails closed.
+
+Dedicated Transmission jobs use task-derived labels for restart-safe
+reconciliation. Completed releases are stream-probed with `ffprobe`, checked by
+two stable sorted SHA-256 manifests, and copied byte-for-byte into task staging.
+Safe `.cue`, `.nfo`, and `.txt` files are ignored only within the configured
+count and byte limits. Cleanup completion is recorded in SQLite, so one old
+terminal task cannot starve later cleanup after a restart.
 
 Render it safely with an explicit private address. This reads files only and
 does not start containers:

@@ -66,7 +66,7 @@ class SQLiteDurabilityTests(unittest.TestCase):
                 operations.close()
 
             self.assertEqual(evidence["integrity"], "ok")
-            self.assertEqual(evidence["schema_version"], 1)
+            self.assertEqual(evidence["schema_version"], 2)
             restore_evidence = AudiobookOperations.restore_backup(backup, restored)
             self.assertEqual(restore_evidence["integrity"], "ok")
 
@@ -86,15 +86,15 @@ class SQLiteDurabilityTests(unittest.TestCase):
                     "version integer primary key, applied_at text not null)"
                 )
                 connection.execute(
-                    "insert into schema_migrations values (0, '2026-09-12T00:00:00+00:00')"
+                    "insert into schema_migrations values (1, '2026-09-12T00:00:00+00:00')"
                 )
                 connection.commit()
 
             operations = AudiobookOperations.open(database, **self.adapters())
-            self.assertEqual(operations.schema_version(), 1)
+            self.assertEqual(operations.schema_version(), 2)
             operations.close()
             reopened = AudiobookOperations.open(database, **self.adapters())
-            self.assertEqual(reopened.schema_version(), 1)
+            self.assertEqual(reopened.schema_version(), 2)
             reopened.close()
 
             future = root / "future.sqlite3"

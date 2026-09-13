@@ -9,10 +9,13 @@
   "limits": {
     "max_release_gib": 20,
     "max_working_set_gib": 50,
+    "max_ancillary_files": 20,
+    "max_ancillary_mib": 10,
     "min_local_free_gib": 100,
     "min_remote_free_gib": 200
   },
   "prowlarr_url": "http://prowlarr:9696",
   "staging_root": "/staging",
-  "transmission_url": "http://transmission:9091/transmission/rpc"
+  "transmission_url": "http://transmission:9091/transmission/rpc",
+  "vless_route_health_url": "http://vless-route-guard:8081/health"
 }

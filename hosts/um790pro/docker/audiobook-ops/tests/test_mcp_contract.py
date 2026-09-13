@@ -125,6 +125,17 @@ class MCPContractTests(unittest.TestCase):
             finally:
                 operations.close()
 
+    def test_unconfigured_release_adapter_fails_through_the_domain_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            operations = AudiobookOperations.open(
+                Path(temporary_directory) / "state.sqlite3"
+            )
+            try:
+                with self.assertRaisesRegex(OperationError, "adapter is unavailable"):
+                    operations.invoke("release_search", {"queries": ["Кроткая"]})
+            finally:
+                operations.close()
+
 
 if __name__ == "__main__":
     unittest.main()

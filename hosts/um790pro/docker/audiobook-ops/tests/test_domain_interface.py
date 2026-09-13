@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -42,10 +43,37 @@ class FakeReleaseAdapter:
                 "title": "Глубокий рейд 5",
                 "size_bytes": 543_823_726,
             },
+            "candidate-three": {
+                "candidate_id": "candidate-three",
+                "revision": "source-revision-three",
+                "source": "rutracker",
+                "topic_id": "7999999",
+                "infohash": "1a5eb6b90595e74de2d12f5366e733795de29071",
+                "title": "Кляксы, повторная раздача",
+                "size_bytes": 572_920_033,
+            },
         }
 
     def inspect(self, candidate_id: str) -> dict[str, object]:
-        return dict(self.candidates[candidate_id])
+        return {
+            key: value
+            for key, value in self.candidates[candidate_id].items()
+            if key != "infohash"
+        }
+
+    def search(self, queries: list[str]) -> list[dict[str, object]]:
+        return [
+            {**candidate, "matched_queries": list(queries)}
+            for candidate_id, candidate in self.candidates.items()
+            if candidate_id != "candidate-three"
+        ]
+
+    def resolve(self, candidate_id: str) -> dict[str, object]:
+        candidate = self.candidates[candidate_id]
+        return {
+            "infohash": candidate["infohash"],
+            "magnet_uri": "magnet:?xt=urn:btih:" + str(candidate["infohash"]),
+        }
 
 
 class FakeExternalActionAdapter:
@@ -106,7 +134,12 @@ class RequestLifecycleTests(unittest.TestCase):
         self.operations.close()
         self.temporary_directory.cleanup()
 
-    def request_plan(self, candidate_id: str = "candidate-one") -> dict[str, object]:
+    def request_plan(
+        self,
+        candidate_id: str = "candidate-one",
+        *,
+        title: str = "Глубокий рейд. Кляксы",
+    ) -> dict[str, object]:
         candidate = self.releases.inspect(candidate_id)
         return self.operations.invoke(
             "request_plan",
@@ -114,7 +147,7 @@ class RequestLifecycleTests(unittest.TestCase):
                 "candidate_id": candidate_id,
                 "candidate_revision": candidate["revision"],
                 "work": {
-                    "title": "Глубокий рейд. Кляксы",
+                    "title": title,
                     "authors": ["Борис Конофальский"],
                     "series": [{"name": "Глубокий рейд", "sequence": "4.5"}],
                 },
@@ -143,6 +176,7 @@ class RequestLifecycleTests(unittest.TestCase):
         self.assertEqual(plan["status"], "awaiting_approval")
         self.assertEqual(plan["expires_at"], "2026-09-14T00:00:00+00:00")
         self.assertNotIn("infohash", plan["candidate"])
+        self.assertNotIn("magnet:", json.dumps(plan))
         first = self.apply(plan, "request-key-one")
         replay = self.apply(plan, "request-key-one")
 
@@ -157,6 +191,21 @@ class RequestLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(OperationError, "idempotency key conflict"):
             second_plan = self.request_plan("candidate-two")
             self.apply(second_plan, "request-key-one")
+
+    def test_release_tools_return_only_safe_candidate_evidence(self) -> None:
+        searched = self.operations.invoke(
+            "release_search", {"queries": ["Фёдор", "Федор"]}
+        )
+        inspected = self.operations.invoke(
+            "release_inspect",
+            {"candidate_id": searched["candidates"][0]["candidate_id"]},
+        )
+
+        self.assertEqual(len(searched["candidates"]), 2)
+        self.assertEqual(searched["candidates"][0]["matched_queries"], ["Фёдор", "Федор"])
+        encoded = json.dumps({"searched": searched, "inspected": inspected})
+        self.assertNotIn("infohash", encoded)
+        self.assertNotIn("magnet", encoded)
 
     def test_work_audio_edition_and_release_candidate_remain_distinct(self) -> None:
         plan = self.request_plan()
@@ -277,9 +326,32 @@ class RequestLifecycleTests(unittest.TestCase):
         with self.assertRaisesRegex(OperationError, "exact release duplicate"):
             self.apply(self.request_plan(), "request-key-two")
 
-        second = self.apply(self.request_plan("candidate-two"), "request-key-three")
+        with self.assertRaisesRegex(OperationError, "exact release duplicate"):
+            self.apply(self.request_plan("candidate-three"), "request-key-infohash")
+
+        alternate_plan = self.request_plan("candidate-two")
+        self.assertEqual(
+            alternate_plan["warnings"],
+            ["possible existing work or audio edition requires owner review"],
+        )
+        second = self.apply(alternate_plan, "request-key-three")
         self.assertNotEqual(first["task_id"], second["task_id"])
         self.assertEqual(second["candidate_id"], "candidate-two")
+
+    def test_near_duplicate_title_warns_without_blocking_a_distinct_release(self) -> None:
+        first = self.request_plan()
+        self.apply(first, "request-key-one")
+
+        near_duplicate = self.request_plan(
+            "candidate-two", title="Глубокий рейд: Клякса"
+        )
+        applied = self.apply(near_duplicate, "request-key-two")
+
+        self.assertEqual(
+            near_duplicate["warnings"],
+            ["possible existing work or audio edition requires owner review"],
+        )
+        self.assertEqual(applied["state"], "queued")
 
     def test_write_tools_require_an_explicit_execution_gate(self) -> None:
         plan = self.request_plan()
