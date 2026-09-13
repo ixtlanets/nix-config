@@ -185,6 +185,14 @@ until the owner-approved cutover.
 - Final media root: `/media/disk1/media/ReadMeABook` on `moscow`.
 - Audiobookshelf display name: `Загруженные книги`.
 
+The control container keeps those host secrets root-only. Its minimal bootstrap
+starts with only `CHOWN`, `SETGID`, and `SETUID`, validates the exact root-owned
+mounts, copies config and secrets into a per-container tmpfs as mode `0400`
+files owned by UID 1000, clears supplementary groups, drops to UID/GID 1000,
+and then replaces itself with the control process. The long-running process has
+no effective capabilities; secret values never enter Compose environment or
+the image filesystem.
+
 ## Normal use through Hermes
 
 Examples of intended requests:

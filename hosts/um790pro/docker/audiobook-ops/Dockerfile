@@ -14,10 +14,11 @@ COPY pyproject.toml ./
 COPY src ./src
 COPY scripts/worker.py ./scripts/worker.py
 COPY bin/audiobookctl /usr/local/bin/audiobookctl
+COPY --chmod=0755 scripts/container-entrypoint.py /usr/local/bin/audiobook-ops-entrypoint
 
-USER 1000:1000
+USER 0:0
 
 EXPOSE 8000
 
-ENTRYPOINT ["python", "-m", "audiobook_ops"]
+ENTRYPOINT ["/usr/local/bin/audiobook-ops-entrypoint"]
 CMD ["serve", "--host", "0.0.0.0", "--port", "8000"]

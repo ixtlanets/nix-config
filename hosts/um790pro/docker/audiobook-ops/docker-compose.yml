@@ -26,10 +26,14 @@ services:
     command: ["serve", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       AUDIOBOOK_OPS_CONFIG: /etc/audiobook-ops/config.json
-    user: "1000:1000"
+    user: "0:0"
     read_only: true
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
     security_opt:
       - no-new-privileges:true
     volumes:
@@ -49,13 +53,14 @@ services:
     ports:
       - "${AUDIOBOOK_OPS_TAILSCALE_IP:?set AUDIOBOOK_OPS_TAILSCALE_IP to the UM790Pro Tailscale address}:8300:8000"
     healthcheck:
-      test: ["CMD", "python", "-m", "audiobook_ops", "health", "core"]
+      test: ["CMD", "/usr/local/bin/audiobook-ops-entrypoint", "health", "core"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
     tmpfs:
       - /tmp:mode=1777
+      - /run/audiobook-ops-runtime:mode=0711,uid=0,gid=0
     logging: *common-logging
     networks:
       - backend

@@ -130,6 +130,35 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
         for internal_service in ("flaresolverr", "rutracker-gateway", "transmission"):
             self.assertNotIn("ports", services[internal_service])
 
+    def test_control_plane_bootstraps_root_only_mounts_then_drops_privileges(self) -> None:
+        service = self.render_compose()["services"]["audiobook-ops"]
+
+        self.assertEqual(service["user"], "0:0")
+        self.assertEqual(set(service["cap_add"]), {"CHOWN", "SETGID", "SETUID"})
+        self.assertEqual(service["cap_drop"], ["ALL"])
+        self.assertEqual(
+            service["healthcheck"]["test"],
+            [
+                "CMD",
+                "/usr/local/bin/audiobook-ops-entrypoint",
+                "health",
+                "core",
+            ],
+        )
+        self.assertIn(
+            "/run/audiobook-ops-runtime:mode=0711,uid=0,gid=0",
+            service["tmpfs"],
+        )
+
+        dockerfile = (BUNDLE / "Dockerfile").read_text()
+        self.assertIn("COPY --chmod=0755 scripts/container-entrypoint.py", dockerfile)
+        self.assertIn('ENTRYPOINT ["/usr/local/bin/audiobook-ops-entrypoint"]', dockerfile)
+
+        entrypoint = (BUNDLE / "scripts/container-entrypoint.py").read_text()
+        self.assertIn("os.setgroups([])", entrypoint)
+        self.assertIn("os.setgid(RUNTIME_GID)", entrypoint)
+        self.assertIn("os.setuid(RUNTIME_UID)", entrypoint)
+
     def test_rehearsal_compose_is_loopback_only_and_uses_unique_names(self) -> None:
         rendered = self.render_rehearsal()
 
