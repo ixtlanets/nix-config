@@ -1,9 +1,9 @@
 # Audiobook Ops production runbook
 
-This runbook separates read-only preparation from owner-gated installation and
-cutover. Do not run a privileged command, stop a production service, install a
-credential, edit the Moscow authorized key, or change Hermes until the matching
-owner gate in #10 or #11 is explicitly approved.
+This runbook separates read-only verification from owner-gated production
+changes. Do not run a privileged command, stop a production service, install a
+credential, edit the Moscow authorized key, or change Hermes without explicit
+owner approval.
 
 ## Production paths
 
@@ -13,14 +13,14 @@ owner gate in #10 or #11 is explicitly approved.
 | Operator config | `/etc/audiobook-ops/config` |
 | Runtime secrets | `/etc/audiobook-ops/secrets` |
 | Control state | `/home/nik/services/audiobook-ops` |
-| Retained service state | `/home/nik/services/readmeabook` |
+| Retained Prowlarr/Transmission/download state | `/home/nik/services/readmeabook` |
 | Backups | `/var/backups/audiobook-ops` |
 | Host logs | `/var/log/audiobook-ops` |
 | Units | `/etc/systemd/system/audiobook-ops-*` |
 
-The old and new Compose request managers must never run together. Prowlarr,
-Transmission, FlareSolverr, gateway state, and downloads remain under the
-retained service root during cutover.
+The retained service root keeps its physical name to avoid copying live
+Prowlarr, Transmission, FlareSolverr, and download state. It is not a
+ReadMeABook application dependency.
 
 ## Read-only repository verification
 
@@ -100,7 +100,7 @@ errors, and no production container or timer has changed state.
 
 ## Preflight and resolved Compose
 
-After credentials and configs exist, but before the old service is stopped:
+After credentials and configs exist, run:
 
 ```bash
 sudo /usr/local/lib/audiobook-ops/scripts/preflight.sh --host um790pro
@@ -114,20 +114,14 @@ Compose exits zero without creating or starting a container.
 
 The Moscow gate installs the reviewed forced-command wrapper and verifies that
 `capacity` returns one JSON integer while a shell command is denied. The exact
-commands are in the README publisher cutover section and must be approved before
-use.
+commands are in the README publisher installation and recovery section and must
+be approved before use.
 
-## Owner gate: service cutover
+## Owner gate: production startup
 
-Issue #11 supplies the final timestamped snapshot path and repeats these exact
-commands only after confirming no active download/publication. The cutover is:
+After preflight passes, enable the production service and timers:
 
 ```bash
-sudo systemctl stop readmeabook-publisher.timer \
-  readmeabook-torrent-policy.timer readmeabook-cleanup.timer \
-  readmeabook-healthcheck.timer readmeabook-backup.timer
-cd /home/nik/.local/share/nix-config-services/readmeabook
-sudo docker compose down
 sudo systemctl enable --now audiobook-ops-compose.service
 sudo systemctl enable --now audiobook-ops-policy.timer \
   audiobook-ops-worker.timer audiobook-ops-publisher.timer \
@@ -135,8 +129,8 @@ sudo systemctl enable --now audiobook-ops-policy.timer \
   audiobook-ops-healthcheck.timer
 ```
 
-Expected result: the old request manager is absent, exactly five new containers
-are running, and the new service plus six timers are active. Run:
+Expected result: exactly five audiobook-ops containers are running, and the
+service plus six timers are active. Run:
 
 ```bash
 sudo /usr/local/lib/audiobook-ops/scripts/verify-startup.sh
@@ -146,9 +140,17 @@ sudo tail -n 1 /var/log/audiobook-ops/health.jsonl
 ```
 
 The checklist must pass; health JSON must be `ok` or only
-`external-search=degraded`. If a critical check fails before acceptance, stop
-the new units, run new Compose `down`, and restore the old Compose with the exact
-retained paths from the final snapshot. Do not operate a mixed deployment.
+`external-search=degraded`. If a critical check fails, stop and diagnose the
+new stack from its logs and durable state; do not resurrect the removed request
+manager or operate a mixed deployment.
+
+## ReadMeABook retirement record
+
+Production acceptance in issue #11 retired the ReadMeABook request manager.
+The retained root above contains only generalized infrastructure state. The
+final consistent legacy snapshot is retained for 30 days under
+`/var/backups/readmeabook/20260913T145146Z`; deleting that exact snapshot is a
+separate owner-gated operation after 2026-10-13.
 
 ## Backup and disposable restore
 

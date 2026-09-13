@@ -204,17 +204,22 @@ class ProductionAssetTests(unittest.TestCase):
         self.assertIn("operator config root-owned and service-readable", preflight)
         self.assertIn("$gid == 1000 && $mode == 640", preflight)
 
-    def test_runbook_makes_operator_config_readable_by_service_group(self) -> None:
+    def test_runbook_matches_the_post_cutover_service(self) -> None:
         runbook = (BUNDLE / "PRODUCTION-RUNBOOK.md").read_text()
         self.assertIn(
             "install -d -o root -g nik -m 0750 /etc/audiobook-ops/config",
             runbook,
         )
-        self.assertIn(
+        self.assertIn("`root:nik` mode `0640`", runbook)
+        self.assertNotIn("readmeabook-publisher.timer", runbook)
+        self.assertNotIn(
             "cd /home/nik/.local/share/nix-config-services/readmeabook",
             runbook,
         )
-        self.assertIn("`root:nik` mode `0640`", runbook)
+        self.assertIn(
+            "/var/backups/readmeabook/20260913T145146Z",
+            runbook,
+        )
 
     def test_runtime_secret_values_do_not_enter_sqlite_or_tool_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

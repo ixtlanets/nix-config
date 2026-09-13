@@ -1,12 +1,9 @@
 # Audiobook Ops on UM790Pro
 
-> Target-state operator documentation. The bundle, domain core, acquisition,
+> Production operator documentation. The bundle, domain core, acquisition,
 > publisher, legacy-history importer, Audiobookshelf 2.36.0 adapter, Streamable
 > HTTP transport, Hermes skills/notifications, health, policy, backup, restore,
-> and host service assets are implemented and tested. Nothing here has been
-> deployed.
-> Until service cutover, use the current production documentation under
-> `../readmeabook/`.
+> and host service assets are deployed and acceptance-tested.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
 audiobook workflow. It reads and updates Audiobookshelf, searches RuTracker via
@@ -184,8 +181,8 @@ The result must contain one `sha256:` image ID and `amd64`. Put that exact image
 ID in the owner-reviewed production `compose.env`; the Compose file does not
 contain a mutable fallback tag and does not build at service start.
 
-The Compose project must not be started against the retained production paths
-until the owner-approved cutover.
+Production changes to the Compose project remain owner-gated. Run preflight and
+the full local test suite before replacing the pinned application image.
 
 ## Fixed topology
 
@@ -193,10 +190,13 @@ until the owner-approved cutover.
 - Catalog/media host: `moscow` (Ubuntu).
 - Access: Tailscale private access path only.
 - Public tracker/cover egress: existing VLESS route, fail closed.
-- Existing reusable state:
-  `/home/nik/services/readmeabook/{prowlarr,transmission,downloads}`.
+- Existing reusable state (the physical parent name is retained for a safe,
+  no-copy migration):
+  `/home/nik/services/readmeabook/{flaresolverr,prowlarr,transmission,downloads}`.
 - New control state: `/home/nik/services/audiobook-ops/`.
 - Runtime secrets: `/etc/audiobook-ops/secrets/`, root-owned mode `0600`.
+- Encrypted recovery copies of reused credentials:
+  `secrets/audiobook-ops/um790pro/`; RMAB-only credentials are removed.
 - Backups: `/var/backups/audiobook-ops/`.
 - Final media root: `/media/disk1/media/ReadMeABook` on `moscow`.
 - Audiobookshelf display name: `Загруженные книги`.
@@ -355,11 +355,10 @@ The first production import must report `imported: 4`, `unchanged: 0`, and
 exact results and retained three published plus one unpublished record without
 creating tasks.
 
-## Publisher cutover gate
+## Publisher installation and recovery gate
 
-Do not run these commands or change the production key before owner approval in
-the cutover ticket. On `moscow`, install the reviewed wrapper as the unprivileged
-`nik` user:
+Do not run these commands or change the production key without owner approval.
+On `moscow`, install the reviewed wrapper as the unprivileged `nik` user:
 
 ```bash
 install -Dm0755 remote-wrapper.py \

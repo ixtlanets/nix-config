@@ -227,7 +227,7 @@ To add another Apple Silicon Mac, copy `hosts/m3max`, rename host-specific paths
 Secrets are managed with git-crypt. To unlock: `git-crypt unlock` (requires GPG key).
 
 Encrypted paths currently include `secrets/gpg/**`, `secrets/ssh/**`, `secrets/syncthing/**`,
-`secrets/vless/**`, `secrets/proxy/**`, and `secrets/readmeabook/**`.
+`secrets/vless/**`, `secrets/proxy/**`, and `secrets/audiobook-ops/**`.
 
 ## Contributing
 

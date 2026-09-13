@@ -271,6 +271,10 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
         )
         self.assertIsNone(re.search(r"rmab[_-](api|request|job)", source_text, re.I))
 
+        self.assertFalse((BUNDLE.parent / "readmeabook").exists())
+        repository_root = BUNDLE.parents[3]
+        self.assertFalse((repository_root / "secrets" / "readmeabook").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
