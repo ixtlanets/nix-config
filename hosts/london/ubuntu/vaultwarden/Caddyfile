@@ -1,7 +1,16 @@
+{
+	# Docker publishes TCP/443 only. Do not advertise HTTP/3 over an
+	# unreachable UDP/443 listener to browsers and media clients.
+	servers :443 {
+		protocols h1 h2
+	}
+}
+
 vault.nikcode.xyz {
 	encode zstd gzip
 
 	header {
+		Alt-Svc "clear"
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
@@ -15,6 +24,7 @@ books.nikcode.xyz {
 	encode zstd gzip
 
 	header {
+		Alt-Svc "clear"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "no-referrer"

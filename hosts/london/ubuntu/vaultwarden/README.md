@@ -74,6 +74,13 @@ WebSocket upgrades and HTTP range requests through its standard `reverse_proxy`.
 Cloudflare serves DNS only; changing the record to proxied would put audiobook
 delivery behind Cloudflare's large-file/CDN restrictions.
 
+The Compose ingress publishes TCP `443` only, so Caddy is explicitly limited to
+HTTP/1.1 and HTTP/2. Do not enable HTTP/3 unless UDP `443` is also published and
+allowed through both the host and Oracle Cloud firewalls; otherwise Caddy's
+`Alt-Svc` advertisement can make mobile media requests stall before falling back.
+Responses send `Alt-Svc: clear` so clients discard previously cached HTTP/3
+alternatives.
+
 Moscow currently runs EOL Ubuntu 21.10. The accepted interim risk is bounded by
 keeping the Raspberry Pi off the public network and allowing public requests to
 reach only Audiobookshelf through this reverse-proxy path. Do not attempt a
