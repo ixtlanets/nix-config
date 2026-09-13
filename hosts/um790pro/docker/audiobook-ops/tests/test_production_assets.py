@@ -75,6 +75,7 @@ class ProductionAssetTests(unittest.TestCase):
         serialized = {
             "audiobook-ops-backup.service",
             "audiobook-ops-cleanup.service",
+            "audiobook-ops-healthcheck.service",
             "audiobook-ops-policy.service",
             "audiobook-ops-publisher.service",
             "audiobook-ops-worker.service",
@@ -97,6 +98,10 @@ class ProductionAssetTests(unittest.TestCase):
                 body,
                 name,
             )
+        healthcheck = (systemd / "audiobook-ops-healthcheck.service").read_text()
+        self.assertIn(
+            "ReadWritePaths=/home/nik/services/audiobook-ops", healthcheck
+        )
         tmpfiles = (BUNDLE / "tmpfiles/audiobook-ops.conf").read_text()
         self.assertIn("/run/audiobook-ops/operations.lock 0660 nik nik", tmpfiles)
         checklist = BUNDLE / "scripts/verify-startup.sh"

@@ -12,8 +12,8 @@ UMask=0077
 Environment=PYTHONPATH=/usr/local/lib/audiobook-ops/src
 StandardOutput=append:/var/log/audiobook-ops/health.jsonl
 StandardError=append:/var/log/audiobook-ops/health.jsonl
-ExecStart=/usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/healthcheck.py --config /etc/audiobook-ops/config/health.json
-TimeoutStartSec=5min
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/healthcheck.py --config /etc/audiobook-ops/config/health.json
+TimeoutStartSec=10min
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectControlGroups=true
@@ -21,4 +21,5 @@ ProtectKernelModules=true
 ProtectKernelTunables=true
 ProtectSystem=strict
 ProtectHome=read-only
+ReadWritePaths=/home/nik/services/audiobook-ops
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

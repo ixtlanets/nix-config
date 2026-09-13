@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -41,25 +42,36 @@ def http_status(url: str) -> dict[str, object]:
     return {"status": value["status"]}
 
 
-def container_status(docker_bin: str, name: str) -> dict[str, object]:
-    result = subprocess.run(
-        [
-            docker_bin,
-            "inspect",
-            "--format",
-            "{{.State.Running}}|{{if .State.Health}}{{.State.Health.Status}}{{end}}",
-            name,
-        ],
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    state = result.stdout.strip()
-    if result.returncode != 0 or not state.startswith("true|"):
-        return {"status": "failed"}
-    health = state.split("|", 1)[1]
-    return {"status": "ok" if health in {"", "healthy"} else "failed"}
+def container_status(
+    docker_bin: str,
+    name: str,
+    *,
+    attempts: int = 7,
+    interval_seconds: float = 5.0,
+) -> dict[str, object]:
+    for attempt in range(attempts):
+        result = subprocess.run(
+            [
+                docker_bin,
+                "inspect",
+                "--format",
+                "{{.State.Running}}|{{if .State.Health}}{{.State.Health.Status}}{{end}}",
+                name,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        state = result.stdout.strip()
+        if result.returncode != 0 or not state.startswith("true|"):
+            return {"status": "failed"}
+        health = state.split("|", 1)[1]
+        if health in {"", "healthy"}:
+            return {"status": "ok"}
+        if attempt + 1 < attempts:
+            time.sleep(interval_seconds)
+    return {"status": "failed"}
 
 
 def publisher_status(config: dict[str, object]) -> dict[str, object]:
