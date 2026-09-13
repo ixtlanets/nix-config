@@ -214,6 +214,18 @@ class AudiobookshelfAdapterTests(unittest.TestCase):
             [],
         )
 
+    def test_exact_path_lookup_scans_all_book_libraries_and_rejects_duplicates(self) -> None:
+        found = self.adapter.find_by_path(
+            "/audiobooks/Фёдор Достоевский/Идиот"
+        )
+        missing = self.adapter.find_by_path("/readmeabook/Автор/Нет такой книги")
+
+        self.assertEqual(found["item_id"], "item-three")
+        self.assertIsNone(missing)
+        self.http.second["path"] = self.http.item["path"]
+        with self.assertRaisesRegex(OperationError, "path is not unique"):
+            self.adapter.find_by_path(self.http.item["path"])
+
     def test_search_expands_only_a_bounded_number_of_ranked_candidates(self) -> None:
         class ManyItemsHTTP(MemoryAbsHTTP):
             def __init__(self) -> None:

@@ -5,11 +5,11 @@ from copy import deepcopy
 from difflib import SequenceMatcher
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sqlite3
 from typing import Any, Protocol
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 
 class OperationError(RuntimeError):
@@ -48,6 +48,8 @@ class CatalogAdapter(Protocol):
     def audit(self, library_ids: list[str]) -> dict[str, object]: ...
 
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]: ...
+
+    def find_by_path(self, path: str) -> dict[str, object] | None: ...
 
     def prepare_cover(self, source_url: str) -> dict[str, object]: ...
 
@@ -90,6 +92,9 @@ class UnavailableCatalogAdapter:
 
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]:
         raise KeyError((library_id, item_id))
+
+    def find_by_path(self, path: str) -> dict[str, object] | None:
+        raise OperationError("catalog adapter is unavailable")
 
     def prepare_cover(self, source_url: str) -> dict[str, object]:
         raise OperationError("catalog adapter is unavailable")
@@ -835,6 +840,177 @@ class AudiobookOperations:
             raise OperationError("task has no internal release resolution")
         return deepcopy(resolution)
 
+    def find_published_catalog_item(
+        self, task_id: str, managed_path_prefix: str
+    ) -> dict[str, object] | None:
+        prefix = PurePosixPath(managed_path_prefix)
+        if not prefix.is_absolute() or any(part in {".", ".."} for part in prefix.parts):
+            raise OperationError("managed ABS path prefix is invalid")
+        row = self._connection.execute(
+            """
+            SELECT task.state, publication.status, publication.final_relative_path
+              FROM acquisition_tasks AS task
+              JOIN publications AS publication ON publication.task_id = task.task_id
+             WHERE task.task_id = ?
+            """,
+            (task_id,),
+        ).fetchone()
+        if row is None:
+            raise OperationError("published acquisition identity is missing")
+        if row["state"] != "awaiting_abs" or row["status"] != "acknowledged":
+            raise OperationError("acquisition is not awaiting ABS")
+        relative = PurePosixPath(str(row["final_relative_path"] or ""))
+        if (
+            relative.is_absolute()
+            or not relative.parts
+            or any(part in {"", ".", ".."} for part in relative.parts)
+        ):
+            raise OperationError("publication path is invalid")
+        expected_path = str(prefix / relative)
+        item = self._catalog.find_by_path(expected_path)
+        if item is None:
+            return None
+        required = ("library_id", "item_id", "path", "revision")
+        if (
+            item.get("path") != expected_path
+            or any(not _non_empty_string(item.get(key)) for key in required)
+        ):
+            raise OperationError("catalog adapter returned a different item")
+        return deepcopy(item)
+
+    def apply_acquisition_metadata(
+        self, task_id: str, expected_revision: int
+    ) -> dict[str, object]:
+        plan = self._acquisition_metadata_plan(task_id, expected_revision)
+        result = self._metadata_apply(
+            {
+                "plan_id": plan["plan_id"],
+                "revision": plan["revision"],
+                "idempotency_key": f"acquisition-metadata:{task_id}",
+            }
+        )
+        item = result.get("item")
+        if not isinstance(item, dict) or not _non_empty_string(item.get("revision")):
+            raise OperationError("applied acquisition metadata is invalid")
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            task = self._connection.execute(
+                "SELECT state, revision FROM acquisition_tasks WHERE task_id = ?",
+                (task_id,),
+            ).fetchone()
+            if task is None:
+                raise OperationError("unknown acquisition task")
+            if task["state"] != "applying_metadata":
+                raise OperationError("acquisition is not applying metadata")
+            if int(task["revision"]) != expected_revision:
+                raise OperationError("stale task revision")
+            self._connection.execute(
+                "UPDATE managed_audiobooks SET item_revision = ? WHERE task_id = ?",
+                (item["revision"], task_id),
+            )
+            verified = self._transition_locked(
+                task_id, expected_revision, "verified", None
+            )
+            self._connection.execute("COMMIT")
+            return verified
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+
+    def _acquisition_metadata_plan(
+        self, task_id: str, expected_revision: int
+    ) -> dict[str, object]:
+        plan_id = str(
+            uuid5(NAMESPACE_URL, f"audiobook-ops:acquisition-metadata:{task_id}")
+        )
+        existing = self._connection.execute(
+            "SELECT * FROM metadata_plans WHERE plan_id = ?", (plan_id,)
+        ).fetchone()
+        if existing is not None:
+            return self._metadata_plan_view(existing)
+        row = self._connection.execute(
+            """
+            SELECT task.state, task.revision, acquisition.payload_json,
+                   acquisition.created_at, managed.library_id, managed.item_id,
+                   managed.item_path, managed.item_revision
+              FROM acquisition_tasks AS task
+              JOIN acquisition_plans AS acquisition ON acquisition.plan_id = task.plan_id
+              JOIN managed_audiobooks AS managed ON managed.task_id = task.task_id
+             WHERE task.task_id = ?
+            """,
+            (task_id,),
+        ).fetchone()
+        if row is None:
+            raise OperationError("managed acquisition identity is missing")
+        if row["state"] != "applying_metadata":
+            raise OperationError("acquisition is not applying metadata")
+        if int(row["revision"]) != expected_revision:
+            raise OperationError("stale task revision")
+        payload = json.loads(row["payload_json"])
+        changes = self._approved_acquisition_metadata_changes(
+            payload, str(row["created_at"])
+        )
+        return self._metadata_plan(
+            {
+                "library_id": row["library_id"],
+                "item_id": row["item_id"],
+                "item_revision": row["item_revision"],
+                "changes": changes,
+            },
+            plan_id=plan_id,
+        )
+
+    @staticmethod
+    def _approved_acquisition_metadata_changes(
+        payload: dict[str, object], observed_at: str
+    ) -> dict[str, object]:
+        work = payload.get("work")
+        edition = payload.get("audio_edition")
+        candidate = payload.get("candidate")
+        if not isinstance(work, dict) or not isinstance(edition, dict):
+            raise OperationError("approved acquisition metadata is invalid")
+        source = "approved acquisition plan"
+        if isinstance(candidate, dict) and _non_empty_string(candidate.get("source")):
+            source = str(candidate["source"])
+            if _non_empty_string(candidate.get("topic_id")):
+                source = f"{source}:{candidate['topic_id']}"
+        values: dict[str, object] = {
+            "title": work.get("title"),
+            "authors": work.get("authors"),
+            "series": work.get("series", []),
+        }
+        if edition.get("narrators"):
+            values["narrators"] = edition["narrators"]
+        for field in ("publisher", "abridged"):
+            if edition.get(field) is not None:
+                values[field] = edition[field]
+        for field in (
+            "subtitle",
+            "genres",
+            "published_year",
+            "published_date",
+            "description",
+            "language",
+            "isbn",
+            "asin",
+            "explicit",
+            "tags",
+        ):
+            if work.get(field) is not None:
+                values[field] = work[field]
+        changes: dict[str, object] = {}
+        for field, value in values.items():
+            AudiobookOperations._validate_metadata_value(field, value, clear=False)
+            changes[field] = {
+                "operation": "set",
+                "value": deepcopy(value),
+                "source": source,
+                "observed_at": observed_at,
+                "confidence": "high",
+            }
+        return changes
+
     def record_validated_artifact(
         self,
         task_id: str,
@@ -1100,7 +1276,9 @@ class AudiobookOperations:
             raise OperationError("catalog adapter returned a different item")
         return item
 
-    def _metadata_plan(self, arguments: dict[str, object]) -> dict[str, object]:
+    def _metadata_plan(
+        self, arguments: dict[str, object], *, plan_id: str | None = None
+    ) -> dict[str, object]:
         library_id = str(arguments.get("library_id", ""))
         item_id = str(arguments.get("item_id", ""))
         item_revision = str(arguments.get("item_revision", ""))
@@ -1178,7 +1356,7 @@ class AudiobookOperations:
         }
         payload = {"target": target, "before": before, "after": after, "changes": changes}
         revision = _digest(payload)
-        plan_id = str(uuid4())
+        plan_id = plan_id or str(uuid4())
         self._connection.execute(
             """
             INSERT INTO metadata_plans(
@@ -1203,6 +1381,17 @@ class AudiobookOperations:
             "plan_id": plan_id,
             "revision": revision,
             "expires_at": _timestamp(expires_at),
+            **_public_value(payload),
+        }
+
+    @staticmethod
+    def _metadata_plan_view(row: sqlite3.Row) -> dict[str, object]:
+        payload = json.loads(row["payload_json"])
+        return {
+            "entity_kind": "metadata_plan",
+            "plan_id": row["plan_id"],
+            "revision": row["revision"],
+            "expires_at": row["expires_at"],
             **_public_value(payload),
         }
 

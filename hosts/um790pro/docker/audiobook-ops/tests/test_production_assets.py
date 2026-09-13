@@ -190,6 +190,12 @@ class ProductionAssetTests(unittest.TestCase):
         self.assertIn("installed bundle root-owned and immutable", preflight)
         self.assertIn("operator config root-owned and service-readable", preflight)
 
+    def test_worker_builds_the_catalog_adapter_for_abs_finalization(self) -> None:
+        worker = (BUNDLE / "scripts/worker.py").read_text()
+
+        self.assertIn("build_catalog_adapter(config)", worker)
+        self.assertIn("catalog_adapter=", worker)
+
     def test_preflight_permission_masks_group_arithmetic_before_comparison(self) -> None:
         preflight = (BUNDLE / "scripts/preflight.sh").read_text()
         self.assertIn("(( (8#$mode & 8#022) == 0 ))", preflight)

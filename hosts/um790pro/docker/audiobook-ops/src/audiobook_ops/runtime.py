@@ -60,6 +60,32 @@ def read_secret(value: object, name: str) -> str:
     return secret
 
 
+def build_abs_http(config: dict[str, Any]) -> AudiobookshelfHTTPClient:
+    abs_token = read_secret(config.get("abs_api_token_file"), "ABS API token")
+    return AudiobookshelfHTTPClient(str(config.get("abs_url", "")), abs_token)
+
+
+def build_catalog_adapter(
+    config: dict[str, Any],
+    route_guard: HTTPVlessRouteGuard | None = None,
+    abs_http: AudiobookshelfHTTPClient | None = None,
+) -> AudiobookshelfAdapter:
+    guard = route_guard or HTTPVlessRouteGuard(
+        str(config.get("vless_route_health_url", ""))
+    )
+    http = abs_http or build_abs_http(config)
+    cover_fetcher = CoverFetcher(
+        PinnedHTTPSCoverHTTP(),
+        SystemResolver(),
+        SubprocessImageDecoder(
+            str(config.get("ffprobe_bin", "/usr/bin/ffprobe")),
+            str(config.get("ffmpeg_bin", "/usr/bin/ffmpeg")),
+        ),
+        guard,
+    )
+    return AudiobookshelfAdapter(http, cover_fetcher)
+
+
 class RuntimeStatus:
     def __init__(
         self,
@@ -211,7 +237,6 @@ class Runtime:
 
 def build_runtime(config_path: Path) -> Runtime:
     config = load_config(config_path)
-    abs_token = read_secret(config.get("abs_api_token_file"), "ABS API token")
     prowlarr_key = read_secret(
         config.get("prowlarr_api_key_file"), "Prowlarr API key"
     )
@@ -222,17 +247,8 @@ def build_runtime(config_path: Path) -> Runtime:
     route_guard = HTTPVlessRouteGuard(str(config.get("vless_route_health_url", "")))
     prowlarr_http = ProwlarrHTTPClient(str(config.get("prowlarr_url", "")), prowlarr_key)
     release_adapter = ProwlarrReleaseAdapter(prowlarr_http, route_guard)
-    abs_http = AudiobookshelfHTTPClient(str(config.get("abs_url", "")), abs_token)
-    cover_fetcher = CoverFetcher(
-        PinnedHTTPSCoverHTTP(),
-        SystemResolver(),
-        SubprocessImageDecoder(
-            str(config.get("ffprobe_bin", "/usr/bin/ffprobe")),
-            str(config.get("ffmpeg_bin", "/usr/bin/ffmpeg")),
-        ),
-        route_guard,
-    )
-    catalog_adapter = AudiobookshelfAdapter(abs_http, cover_fetcher)
+    abs_http = build_abs_http(config)
+    catalog_adapter = build_catalog_adapter(config, route_guard, abs_http)
     transmission_rpc = TransmissionHTTPRPC(
         str(config.get("transmission_url", "")),
         str(config.get("transmission_username", "audiobook-ops")),

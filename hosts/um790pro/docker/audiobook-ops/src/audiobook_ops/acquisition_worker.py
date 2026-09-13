@@ -31,14 +31,21 @@ class AcquisitionCoordinator:
         clock: Clock,
         *,
         stall_after_seconds: int = 900,
+        managed_abs_path_prefix: str = "/readmeabook",
     ) -> None:
         self._operations = operations
         self._transmission = transmission
         self._validator = validator
         self._clock = clock
         self._stall_after_seconds = stall_after_seconds
+        self._managed_abs_path_prefix = managed_abs_path_prefix
 
     def reconcile_once(self) -> dict[str, object] | None:
+        finalizing = self._operations.invoke(
+            "task_list", {"states": ["awaiting_abs", "applying_metadata"]}
+        )["tasks"]
+        if finalizing:
+            return self._advance_finalization(finalizing[0])
         active = self._operations.invoke(
             "task_list", {"states": ["downloading", "validating"]}
         )["tasks"]
@@ -63,6 +70,47 @@ class AcquisitionCoordinator:
             return self._advance(task)
 
         return self.cleanup_once()
+
+    def _advance_finalization(self, task: dict[str, object]) -> dict[str, object]:
+        task_id = str(task["task_id"])
+        next_retry_at = task.get("next_retry_at")
+        if isinstance(next_retry_at, str):
+            retry_at = datetime.fromisoformat(next_retry_at)
+            if self._clock.now() < retry_at:
+                return task
+        if task["state"] == "awaiting_abs":
+            try:
+                item = self._operations.find_published_catalog_item(
+                    task_id, self._managed_abs_path_prefix
+                )
+            except OperationError:
+                return self._operations.record_transient_failure(
+                    task_id,
+                    int(task["revision"]),
+                    "Audiobookshelf catalog is unavailable",
+                )
+            if item is None:
+                return task
+            try:
+                task = self._operations.register_managed_audiobook(
+                    task_id, int(task["revision"]), item
+                )["task"]
+            except OperationError:
+                return self._operations.record_transient_failure(
+                    task_id,
+                    int(task["revision"]),
+                    "Audiobookshelf item identity changed",
+                )
+        try:
+            return self._operations.apply_acquisition_metadata(
+                task_id, int(task["revision"])
+            )
+        except OperationError:
+            return self._operations.record_transient_failure(
+                task_id,
+                int(task["revision"]),
+                "Audiobookshelf metadata update is unavailable",
+            )
 
     def cleanup_once(self) -> dict[str, object] | None:
         terminal = self._operations.cleanup_pending_tasks()

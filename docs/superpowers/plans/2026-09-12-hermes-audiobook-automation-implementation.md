@@ -56,6 +56,9 @@ verification recorded in the implementation handoff.
 - [ ] Validate exact library/item/path revision before every write.
 - [ ] Implement combined metadata+cover plan, snapshot, apply, reread, verify,
       compensating rollback, and 30-day undo.
+- [ ] Reconcile an acknowledged publication by exact ABS media path, bind its
+      immutable item identity, and idempotently apply the approved acquisition
+      metadata before recording `verified`.
 - [ ] Reject global series rename, Quick Match, fuzzy write targets, delete, and
       admin scan.
 - [ ] Add contract tests against a disposable/rehearsal ABS instance.

@@ -91,12 +91,13 @@ class AcquisitionCoordinatorTests(unittest.TestCase):
         (self.release / "book.m4b").write_bytes(b"audio bytes")
         self.clock = FakeClock(datetime(2026, 9, 13, tzinfo=UTC))
         self.releases = FakeReleaseAdapter()
+        self.catalog = FakeCatalogAdapter()
         self.operations = AudiobookOperations.open(
             self.root / "state.sqlite3",
             clock=self.clock,
             release_adapter=self.releases,
             external_action_adapter=FakeExternalActionAdapter(),
-            catalog_adapter=FakeCatalogAdapter(),
+            catalog_adapter=self.catalog,
         )
         self.transmission = FakeTransmission(self.release)
         self.validator = MediaValidator(
@@ -142,6 +143,69 @@ class AcquisitionCoordinatorTests(unittest.TestCase):
             mutation_authorized=True,
         )
 
+    def acknowledge_publication(self) -> dict[str, object]:
+        task = self.create_task()
+        task = self.operations.claim_next_task("acquisition")
+        for state in ("validating", "ready_to_publish"):
+            task = self.operations.transition_task(
+                str(task["task_id"]), int(task["revision"]), state
+            )
+        publication = self.operations.claim_publication("publisher-one")
+        publication_id = str(publication["publication"]["publication_id"])
+        publication = self.operations.advance_publication(
+            publication_id,
+            "claimed",
+            "validated",
+            {
+                "final_relative_path": "Достоевский/Кроткая",
+                "manifest_id": "b" * 64,
+                "manifest": [
+                    {
+                        "relative_path": "book.m4b",
+                        "size_bytes": 11,
+                        "sha256": "c" * 64,
+                        "duration_seconds": 100.0,
+                    }
+                ],
+                "total_size_bytes": 11,
+            },
+        )
+        for state in (
+            "prepared",
+            "transferred",
+            "remote_verified",
+            "promoted",
+            "acknowledged",
+        ):
+            evidence = (
+                {"remote_manifest_id": "b" * 64}
+                if state == "remote_verified"
+                else None
+            )
+            publication = self.operations.advance_publication(
+                publication_id,
+                str(publication["publication"]["status"]),
+                state,
+                evidence,
+            )
+        return publication["task"]
+
+    def expose_published_item(self, *, path: str = "/readmeabook/Достоевский/Кроткая") -> None:
+        self.catalog.items[("library-managed", "item-new")] = {
+            "library_id": "library-managed",
+            "item_id": "item-new",
+            "path": path,
+            "revision": "item-new-revision-one",
+            "metadata": {
+                "title": "Кроткая",
+                "authors": [],
+                "narrators": [],
+                "series": [],
+                "publisher": None,
+            },
+            "cover": None,
+        }
+
     def test_complete_download_reaches_ready_and_cleanup_waits_for_verified(self) -> None:
         task = self.create_task()
 
@@ -165,6 +229,66 @@ class AcquisitionCoordinatorTests(unittest.TestCase):
         self.assertEqual(cleaned["state"], "verified")
         self.assertEqual(self.transmission.removals, ["a" * 40])
         self.assertFalse((self.staging / task["task_id"]).exists())
+
+    def test_acknowledged_publication_is_bound_and_metadata_verified(self) -> None:
+        self.acknowledge_publication()
+        self.expose_published_item()
+
+        verified = self.coordinator.reconcile_once()
+
+        self.assertEqual(verified["state"], "verified")
+        self.assertEqual(
+            self.catalog.items[("library-managed", "item-new")]["metadata"],
+            {
+                "title": "Кроткая",
+                "authors": ["Достоевский"],
+                "narrators": ["Иван"],
+                "series": [],
+                "publisher": None,
+            },
+        )
+        event = self.operations.invoke(
+            "notification_list", {"after_event_id": 0}
+        )["events"][-1]
+        self.assertEqual(event["kind"], "verified")
+
+    def test_finalization_waits_for_the_exact_abs_path(self) -> None:
+        awaiting = self.acknowledge_publication()
+        self.expose_published_item(path="/readmeabook/Достоевский/Другая Кроткая")
+
+        unchanged = self.coordinator.reconcile_once()
+
+        self.assertEqual(unchanged["task_id"], awaiting["task_id"])
+        self.assertEqual(unchanged["state"], "awaiting_abs")
+        self.assertEqual(self.catalog.apply_calls, 0)
+
+    def test_finalization_resumes_after_crash_before_abs_write(self) -> None:
+        awaiting = self.acknowledge_publication()
+        self.expose_published_item()
+        self.catalog.fail_mode = "crash_before"
+        with self.assertRaisesRegex(SystemExit, "simulated worker crash"):
+            self.coordinator.reconcile_once()
+        applying = self.operations.invoke(
+            "task_get", {"task_id": awaiting["task_id"]}
+        )
+        self.assertEqual(applying["state"], "applying_metadata")
+        self.catalog.fail_mode = None
+        self.operations.close()
+        self.operations = AudiobookOperations.open(
+            self.root / "state.sqlite3",
+            clock=self.clock,
+            release_adapter=self.releases,
+            external_action_adapter=FakeExternalActionAdapter(),
+            catalog_adapter=self.catalog,
+        )
+        self.coordinator = AcquisitionCoordinator(
+            self.operations, self.transmission, self.validator, self.clock
+        )
+
+        verified = self.coordinator.reconcile_once()
+
+        self.assertEqual(verified["state"], "verified")
+        self.assertEqual(self.catalog.apply_calls, 2)
 
     def test_restart_observes_the_existing_transmission_identity_before_submit(self) -> None:
         task = self.create_task()

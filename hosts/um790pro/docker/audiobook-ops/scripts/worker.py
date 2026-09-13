@@ -10,7 +10,12 @@ import time
 
 from audiobook_ops.acquisition_worker import AcquisitionCoordinator
 from audiobook_ops.interface import AudiobookOperations, OperationError, SystemClock
-from audiobook_ops.runtime import expanded_path, load_config, read_secret
+from audiobook_ops.runtime import (
+    build_catalog_adapter,
+    expanded_path,
+    load_config,
+    read_secret,
+)
 from audiobook_ops.transmission import TransmissionAdapter, TransmissionHTTPRPC
 from audiobook_ops.validation import CapacitySnapshot, MediaValidator, SubprocessAudioProbe
 
@@ -119,7 +124,8 @@ def main() -> int:
     try:
         config = load_config(arguments.config)
         operations = AudiobookOperations.open(
-            expanded_path(config.get("database_path"), "database path")
+            expanded_path(config.get("database_path"), "database path"),
+            catalog_adapter=build_catalog_adapter(config),
         )
         if arguments.command == "status":
             snapshot = capacity_snapshot(config)

@@ -120,6 +120,12 @@ class FakeCatalogAdapter:
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]:
         return dict(self.items[(library_id, item_id)])
 
+    def find_by_path(self, path: str) -> dict[str, object] | None:
+        matches = [dict(item) for item in self.items.values() if item["path"] == path]
+        if len(matches) > 1:
+            raise OperationError("catalog path is not unique")
+        return matches[0] if matches else None
+
     def search(self, query: str) -> list[dict[str, object]]:
         return [
             dict(item)

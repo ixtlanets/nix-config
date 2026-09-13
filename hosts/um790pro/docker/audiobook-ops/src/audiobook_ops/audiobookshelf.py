@@ -325,6 +325,26 @@ class AudiobookshelfAdapter:
             raise OperationError("Audiobookshelf returned a different item")
         return self._normalize_item(raw, fetch_cover=True)
 
+    def find_by_path(self, path: str) -> dict[str, object] | None:
+        matches: list[dict[str, object]] = []
+        for library in self._book_libraries():
+            library_id = str(library["id"])
+            for listed in self._paged_entities(library_id, "items"):
+                if listed.get("path") != path:
+                    continue
+                item_id = listed.get("id")
+                if not isinstance(item_id, str) or not item_id:
+                    raise OperationError("Audiobookshelf returned invalid item identity")
+                exact = self._http.json(
+                    "GET", f"/api/items/{quote(item_id, safe='')}?expanded=1"
+                )
+                if not isinstance(exact, dict) or exact.get("libraryId") != library_id:
+                    raise OperationError("Audiobookshelf returned a different item")
+                matches.append(self._normalize_item(exact))
+        if len(matches) > 1:
+            raise OperationError("Audiobookshelf path is not unique")
+        return matches[0] if matches else None
+
     def prepare_cover(self, source_url: str) -> dict[str, object]:
         return self._cover_fetcher.fetch(source_url)
 

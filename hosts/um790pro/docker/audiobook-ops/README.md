@@ -116,6 +116,15 @@ hosts, a hidden incoming directory, exact remote verification, and atomic
 rename. It never transcodes or rewrites audio bytes and exposes no delete or
 unpublish operation.
 
+The acquisition worker also owns post-publication reconciliation. It scans all
+book libraries for the one item whose ABS media path exactly equals the
+acknowledged publication path under `/readmeabook`; title similarity is never a
+write target. The worker binds that immutable identity, creates one
+deterministic internal metadata plan from the already approved acquisition
+fields, applies it through the normal snapshot/apply/reread verifier, and only
+then records `verified`. Both the plan and apply idempotency identities survive
+process restarts, including a crash immediately before or after the ABS write.
+
 The Moscow forced command accepts only `capacity`, `prepare`, receive-only
 `rsync-receive`, `verify`, and `promote`. It confines writes to the retained
 `/media/disk1/media/.readmeabook-incoming` and
