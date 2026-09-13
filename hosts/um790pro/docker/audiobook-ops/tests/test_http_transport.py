@@ -65,6 +65,7 @@ class FakeStatus:
             "core": {"status": "ok", "schema_version": 4},
             "catalog": {"status": "ok", "libraries": 1},
             "external-search": {"status": "degraded"},
+            "vless-route": {"status": "ok"},
         }
 
 
@@ -219,11 +220,14 @@ class HTTPTransportTests(unittest.TestCase):
         core = self.request("GET", "/health/core")
         catalog = self.request("GET", "/health/catalog")
         external = self.request("GET", "/health/external-search")
+        route = self.request("GET", "/vless-route/health")
 
         self.assertEqual(core[0], 200)
         self.assertEqual(catalog[0], 200)
         self.assertEqual(external[0], 503)
         self.assertEqual(external[1], {"component": "external-search", "status": "degraded"})
+        self.assertEqual(route[0], 200)
+        self.assertEqual(route[1], {"route": "vless", "status": "ok"})
         self.assertEqual(self.request("GET", "/health/arbitrary")[0], 404)
 
 

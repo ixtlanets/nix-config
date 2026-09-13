@@ -132,7 +132,7 @@ class AudiobookRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
-        if self.path.startswith("/health/"):
+        if self.path.startswith("/health/") or self.path == "/vless-route/health":
             self._health()
             return
         if self.path == "/mcp":
