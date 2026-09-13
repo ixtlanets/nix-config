@@ -12,6 +12,7 @@ RUN apt-get update \
 
 COPY pyproject.toml ./
 COPY src ./src
+COPY scripts/worker.py ./scripts/worker.py
 COPY bin/audiobookctl /usr/local/bin/audiobookctl
 
 USER 1000:1000

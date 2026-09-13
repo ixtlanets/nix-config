@@ -14,10 +14,7 @@ x-common-logging: &common-logging
 
 services:
   audiobook-ops:
-    image: localhost/audiobook-ops:0.1.0
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${AUDIOBOOK_OPS_IMAGE:?set AUDIOBOOK_OPS_IMAGE to the reviewed local sha256 image ID}
     platform: linux/amd64
     container_name: audiobook-ops
     restart: unless-stopped
@@ -36,7 +33,7 @@ services:
     security_opt:
       - no-new-privileges:true
     volumes:
-      - ${AUDIOBOOK_OPS_CONFIG_FILE:-/home/nik/.config/audiobook-ops/audiobook-ops.json}:/etc/audiobook-ops/config.json:ro
+      - ${AUDIOBOOK_OPS_CONFIG_FILE:-/etc/audiobook-ops/config/audiobook-ops.json}:/etc/audiobook-ops/config.json:ro
       - ${AUDIOBOOK_OPS_STATE_ROOT:-/home/nik/services/audiobook-ops}:/var/lib/audiobook-ops
       - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/downloads:/downloads
       - ${AUDIOBOOK_OPS_STATE_ROOT:-/home/nik/services/audiobook-ops}/staging:/staging
@@ -116,7 +113,9 @@ services:
       start_period: 10s
     logging: *common-logging
     networks:
-      - backend
+      backend:
+        aliases:
+          - readmeabook-rutracker-gateway
 
   prowlarr:
     image: lscr.io/linuxserver/prowlarr@sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c

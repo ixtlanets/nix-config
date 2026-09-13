@@ -1,0 +1,22 @@
+[Unit]
+Description=Advance one audiobook acquisition task
+After=audiobook-ops-policy.service audiobook-ops-compose.service
+Requires=audiobook-ops-compose.service
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+StandardOutput=append:/var/log/audiobook-ops/worker.jsonl
+StandardError=append:/var/log/audiobook-ops/worker.jsonl
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/docker exec audiobook-ops /usr/local/bin/python /app/scripts/worker.py --config /etc/audiobook-ops/config.json run-once --execute
+TimeoutStartSec=2h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX

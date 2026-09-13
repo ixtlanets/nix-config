@@ -1,0 +1,12 @@
+[Unit]
+Description=Poll audiobook acquisition work
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+Persistent=true
+RandomizedDelaySec=15s
+Unit=audiobook-ops-worker.service
+
+[Install]
+WantedBy=timers.target

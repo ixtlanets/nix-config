@@ -1,0 +1,22 @@
+[Unit]
+Description=Remove terminal audiobook acquisition staging safely
+After=audiobook-ops-worker.service audiobook-ops-publisher.service
+Requires=audiobook-ops-compose.service
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+StandardOutput=append:/var/log/audiobook-ops/cleanup.jsonl
+StandardError=append:/var/log/audiobook-ops/cleanup.jsonl
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/docker exec audiobook-ops /usr/local/bin/python /app/scripts/worker.py --config /etc/audiobook-ops/config.json cleanup-once --execute
+TimeoutStartSec=30min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX

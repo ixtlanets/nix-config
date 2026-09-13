@@ -62,6 +62,9 @@ class AcquisitionCoordinator:
         if task is not None:
             return self._advance(task)
 
+        return self.cleanup_once()
+
+    def cleanup_once(self) -> dict[str, object] | None:
         terminal = self._operations.cleanup_pending_tasks()
         if not terminal:
             return None

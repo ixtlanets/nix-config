@@ -2,7 +2,7 @@
   "database_path": "/home/nik/services/audiobook-ops/audiobook-ops.sqlite3",
   "ffprobe_bin": "/usr/bin/ffprobe",
   "known_hosts_file": "/home/nik/.ssh/known_hosts",
-  "lock_path": "/home/nik/.local/state/audiobook-ops/publisher.lock",
+  "lock_path": "/home/nik/services/audiobook-ops/publisher.lock",
   "max_release_gib": 20,
   "min_local_free_gib": 100,
   "min_remote_free_gib": 200,

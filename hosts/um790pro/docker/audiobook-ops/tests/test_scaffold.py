@@ -28,6 +28,7 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
                     "AUDIOBOOK_OPS_CONFIG_FILE": str(
                         BUNDLE / "config" / "audiobook-ops.example.json"
                     ),
+                    "AUDIOBOOK_OPS_IMAGE": "sha256:" + "a" * 64,
                     "AUDIOBOOK_OPS_RETAINED_STATE_ROOT": str(retained),
                     "AUDIOBOOK_OPS_SECRETS_ROOT": str(secrets),
                     "AUDIOBOOK_OPS_STATE_ROOT": str(state),
@@ -52,9 +53,54 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
             )
         return json.loads(result.stdout)
 
+    def render_rehearsal(self) -> dict[str, object]:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            retained = root / "retained"
+            state = root / "state"
+            secrets = root / "secrets"
+            backups = root / "backups"
+            for directory in (retained, state, secrets, backups):
+                directory.mkdir()
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "AUDIOBOOK_OPS_CONFIG_FILE": str(
+                        BUNDLE / "config" / "audiobook-ops.example.json"
+                    ),
+                    "AUDIOBOOK_OPS_IMAGE": "sha256:" + "a" * 64,
+                    "AUDIOBOOK_OPS_RETAINED_STATE_ROOT": str(retained),
+                    "AUDIOBOOK_OPS_SECRETS_ROOT": str(secrets),
+                    "AUDIOBOOK_OPS_STATE_ROOT": str(state),
+                    "AUDIOBOOK_OPS_TAILSCALE_IP": "127.0.0.1",
+                }
+            )
+            result = subprocess.run(
+                [
+                    "docker",
+                    "compose",
+                    "-f",
+                    str(BUNDLE / "docker-compose.yml"),
+                    "-f",
+                    str(BUNDLE / "docker-compose.rehearsal.yml"),
+                    "config",
+                    "--format",
+                    "json",
+                ],
+                check=True,
+                cwd=BUNDLE,
+                env=environment,
+                text=True,
+                capture_output=True,
+            )
+        return json.loads(result.stdout)
+
     def test_compose_renders_the_target_topology_without_public_ingress(self) -> None:
         rendered = self.render_compose()
         services = rendered["services"]
+
+        for service in services.values():
+            self.assertEqual(service["restart"], "unless-stopped")
 
         self.assertEqual(
             set(services),
@@ -84,6 +130,18 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
         for internal_service in ("flaresolverr", "rutracker-gateway", "transmission"):
             self.assertNotIn("ports", services[internal_service])
 
+    def test_rehearsal_compose_is_loopback_only_and_uses_unique_names(self) -> None:
+        rendered = self.render_rehearsal()
+
+        self.assertEqual(rendered["name"], "audiobook-ops-rehearsal")
+        for service in rendered["services"].values():
+            self.assertIn("rehearsal", service["container_name"])
+            for port in service.get("ports", []):
+                self.assertEqual(port["host_ip"], "127.0.0.1")
+        serialized = json.dumps(rendered)
+        self.assertNotIn("/home/nik/services/audiobook-ops", serialized)
+        self.assertNotIn("/etc/audiobook-ops/secrets", serialized)
+
     def test_compose_preserves_retained_state_and_uses_a_neutral_control_root(self) -> None:
         rendered = self.render_compose()
         services = rendered["services"]
@@ -109,7 +167,7 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
         rendered = self.render_compose()
         for name, service in rendered["services"].items():
             if name == "audiobook-ops":
-                self.assertEqual(service["image"], "localhost/audiobook-ops:0.1.0")
+                self.assertEqual(service["image"], "sha256:" + "a" * 64)
                 continue
             self.assertRegex(service["image"], r"@sha256:[0-9a-f]{64}$")
 
@@ -150,7 +208,7 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
             },
         )
 
-    def test_package_entrypoint_reports_distinct_scaffold_health(self) -> None:
+    def test_package_entrypoint_fails_closed_without_runtime_configuration(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(BUNDLE / "src")
 
@@ -164,15 +222,10 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
             )
             return result.returncode, json.loads(result.stdout)
 
-        self.assertEqual(health("core"), (0, {"component": "core", "status": "ok"}))
-        self.assertEqual(
-            health("catalog"),
-            (1, {"component": "catalog", "status": "unconfigured"}),
-        )
-        self.assertEqual(
-            health("external-search"),
-            (1, {"component": "external-search", "status": "unconfigured"}),
-        )
+        code, output = health("core")
+        self.assertEqual(code, 1)
+        self.assertEqual(output["event"], "startup_error")
+        self.assertNotIn("traceback", json.dumps(output).casefold())
 
     def test_new_bundle_has_no_readmeabook_application_dependency(self) -> None:
         rendered = self.render_compose()

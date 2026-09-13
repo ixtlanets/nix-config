@@ -61,6 +61,10 @@ class CatalogAdapter(Protocol):
     ) -> dict[str, object]: ...
 
 
+class StatusAdapter(Protocol):
+    def status(self) -> dict[str, object]: ...
+
+
 class SystemClock:
     def now(self) -> datetime:
         return datetime.now(UTC)
@@ -110,6 +114,11 @@ class UnavailableExternalActionAdapter:
         self, kind: str, payload: dict[str, object], idempotency_key: str
     ) -> str:
         raise OperationError("external action adapter is unavailable")
+
+
+class UnavailableStatusAdapter:
+    def status(self) -> dict[str, object]:
+        raise OperationError("system status adapter is unavailable")
 
 
 WRITE_TOOLS = {
@@ -240,12 +249,14 @@ class AudiobookOperations:
         release_adapter: ReleaseAdapter,
         external_action_adapter: ExternalActionAdapter,
         catalog_adapter: CatalogAdapter,
+        status_adapter: StatusAdapter,
     ) -> None:
         self._connection = connection
         self._clock = clock
         self._releases = release_adapter
         self._external_actions = external_action_adapter
         self._catalog = catalog_adapter
+        self._status = status_adapter
 
     @classmethod
     def open(
@@ -256,6 +267,7 @@ class AudiobookOperations:
         release_adapter: ReleaseAdapter | None = None,
         external_action_adapter: ExternalActionAdapter | None = None,
         catalog_adapter: CatalogAdapter | None = None,
+        status_adapter: StatusAdapter | None = None,
     ) -> AudiobookOperations:
         connection = sqlite3.connect(database, isolation_level=None, check_same_thread=False)
         connection.row_factory = sqlite3.Row
@@ -274,6 +286,7 @@ class AudiobookOperations:
                 external_action_adapter or UnavailableExternalActionAdapter()
             ),
             catalog_adapter=catalog_adapter or UnavailableCatalogAdapter(),
+            status_adapter=status_adapter or UnavailableStatusAdapter(),
         )
 
     @classmethod
@@ -668,6 +681,13 @@ class AudiobookOperations:
             return self._candidate_public(
                 self._inspect_candidate(str(arguments.get("candidate_id", "")))
             )
+        if tool_name == "system_status":
+            if arguments:
+                raise OperationError("system status accepts no arguments")
+            result = self._status.status()
+            if not isinstance(result, dict):
+                raise OperationError("system status adapter returned invalid data")
+            return deepcopy(result)
         raise OperationError(f"unknown operation: {tool_name}")
 
     def _library_search(self, arguments: dict[str, object]) -> dict[str, object]:

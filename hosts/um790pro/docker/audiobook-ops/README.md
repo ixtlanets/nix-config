@@ -1,9 +1,9 @@
 # Audiobook Ops on UM790Pro
 
-> Target-state operator documentation. The non-production bundle, domain core,
-> acquisition, publisher, legacy-history importer, and Audiobookshelf 2.36.0
-> adapters are implemented, but the Streamable HTTP transport and production
-> service integration are not yet complete. Nothing here has been deployed.
+> Target-state operator documentation. The bundle, domain core, acquisition,
+> publisher, legacy-history importer, Audiobookshelf 2.36.0 adapter, Streamable
+> HTTP transport, health, policy, backup, restore, and host service assets are
+> implemented and tested. Nothing here has been deployed.
 > Until service cutover, use the current production documentation under
 > `../readmeabook/`.
 
@@ -30,9 +30,9 @@ The execution checklist is
 | policy systemd unit | queue, disk, and cleanup enforcement |
 | backup/health systemd units | operations and recovery evidence |
 
-## Repository scaffold
+## Repository bundle
 
-The bundle currently provides:
+The bundle provides:
 
 - `docker-compose.yml` with the target five-service topology and retained
   Prowlarr, Transmission, download, FlareSolverr, and gateway state paths;
@@ -41,11 +41,23 @@ The bundle currently provides:
 - `src/audiobook_ops/contract.py`, the explicit typed MCP tool allowlist;
 - `src/audiobook_ops/mcp_adapter.py` and `bin/audiobookctl`, thin adapters over
   the same domain seam;
+- `src/audiobook_ops/http_server.py`, the bearer-authenticated Streamable HTTP
+  MCP endpoint at `/mcp` with a serialized tool execution boundary;
 - `config/audiobook-ops.example.json`, containing policy and endpoint examples
   but no credential values;
+- neutral Compose/systemd policy, worker, publisher, cleanup, health, backup,
+  and restore assets under root-owned production paths;
 - retained neutral gateway and Transmission entrypoint scripts;
 - `tests/run.sh`, which renders Compose without launching it and checks the
-  private bind, state roots, image pins, secret files, and scaffold health.
+  private bind, state roots, image pins, secret files, transport, backups, and
+  operational invariants.
+
+The MCP endpoint accepts JSON-RPC POSTs only at `/mcp`, requires an exact bearer,
+rejects browser `Origin` requests, validates calls against the exported tool
+schemas, and never exposes arbitrary URLs, paths, magnets, or shell input.
+Health is split into `core`, `catalog`, `external-search`, `acquisition`, and
+`backup`; a failed VLESS observation degrades external search without hiding a
+healthy catalog. The VLESS and capacity evidence files expire after 15 minutes.
 
 The acquisition module sends raw Unicode query variants to Prowlarr, accepts
 only exact internal RuTracker topic URLs, returns opaque candidates, and keeps
@@ -138,6 +150,20 @@ AUDIOBOOK_OPS_TAILSCALE_IP=100.95.213.117 \
 
 hosts/um790pro/docker/audiobook-ops/tests/run.sh
 ```
+
+Build the reviewed local application image without starting production:
+
+```bash
+cd /home/nik/nix-config/hosts/um790pro/docker/audiobook-ops
+docker build --platform linux/amd64 \
+  --tag localhost/audiobook-ops:0.2.0-ticket9 .
+docker image inspect localhost/audiobook-ops:0.2.0-ticket9 \
+  --format '{{.Id}} {{.Architecture}}'
+```
+
+The result must contain one `sha256:` image ID and `amd64`. Put that exact image
+ID in the owner-reviewed production `compose.env`; the Compose file does not
+contain a mutable fallback tag and does not build at service start.
 
 The Compose project must not be started against the retained production paths
 until the owner-approved cutover.
@@ -246,7 +272,30 @@ without a new plan and approval.
 
 Daily backup includes SQLite, operator configuration, publication history,
 metadata/cover undo snapshots, and required secrets. Restore rehearsal uses only
-a disposable destination and must reject production paths.
+a disposable destination and rejects production paths, checksum changes,
+unexpected files, symlinks, and replay over an existing destination. Scheduled
+mutations and backup share `/run/audiobook-ops/operations.lock`; the backup then
+pauses all five containers, takes the SQLite online snapshot, copies retained
+configuration, writes exact SHA-256 checksums, atomically publishes the backup,
+and emits only a non-secret health timestamp into control state.
+
+Preview and execute a disposable restore as follows; `--production-path` may be
+repeated and must name every live state root:
+
+```bash
+PYTHONPATH=src python scripts/backup.py \
+  --config config/backup.example.json
+
+PYTHONPATH=src python scripts/restore-rehearsal.py \
+  --backup /var/backups/audiobook-ops/20260913T120000Z \
+  --destination /var/tmp/audiobook-ops-restore-20260913T120000Z \
+  --production-path /home/nik/services/audiobook-ops \
+  --production-path /home/nik/services/readmeabook
+```
+
+Both commands above are previews and make no changes. Add `--execute` only in an
+owner-approved rehearsal. Full installation, start, verification, rollback, and
+restore commands are in [`PRODUCTION-RUNBOOK.md`](PRODUCTION-RUNBOOK.md).
 
 All OCI images are digest-pinned. Before changing the Audiobookshelf 2.36.0 pin,
 run the adapter contract suite against an upgrade rehearsal because the upstream

@@ -40,7 +40,7 @@ class HTTPVlessRouteGuard:
             or not parsed.hostname
             or parsed.username is not None
             or parsed.password is not None
-            or parsed.path != "/health"
+            or not parsed.path.endswith("/health")
             or parsed.params
             or parsed.query
             or parsed.fragment
@@ -105,6 +105,21 @@ class ProwlarrHTTPClient:
         if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
             raise OperationError("Prowlarr returned an invalid search result")
         return value
+
+    def health(self) -> None:
+        request = Request(
+            f"{self._base_url}/api/v1/health",
+            headers={"Accept": "application/json", "X-Api-Key": self._api_key},
+        )
+        payload = self._read(request, 1024 * 1024)
+        try:
+            value = json.loads(payload)
+        except json.JSONDecodeError as error:
+            raise OperationError("Prowlarr returned invalid health data") from error
+        if not isinstance(value, list) or value:
+            if isinstance(value, list) and value:
+                raise OperationError("Prowlarr reports health problems")
+            raise OperationError("Prowlarr returned invalid health data")
 
     def topic(self, internal_url: str) -> str:
         request = Request(internal_url, headers={"Accept": "text/html"})

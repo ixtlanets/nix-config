@@ -251,6 +251,36 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
         self.assertEqual(requests[0]["api_key"], "test-api-key")
         self.assertIsNone(requests[1]["api_key"])
 
+    def test_prowlarr_health_rejects_reported_health_problems(self) -> None:
+        class Handler(BaseHTTPRequestHandler):
+            problems: list[dict[str, str]] = []
+
+            def do_GET(self) -> None:
+                body = json.dumps(self.problems).encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, _format: str, *_args: object) -> None:
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        host, port = server.server_address
+        try:
+            client = ProwlarrHTTPClient(f"http://{host}:{port}", "test-api-key")
+            client.health()
+            Handler.problems = [
+                {"type": "warning", "message": "indexer unavailable"}
+            ]
+            with self.assertRaisesRegex(OperationError, "health problems"):
+                client.health()
+        finally:
+            server.shutdown()
+            server.server_close()
+
     def test_tracker_http_failure_is_bounded_and_does_not_expose_the_api_key(self) -> None:
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self) -> None:

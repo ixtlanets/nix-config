@@ -1,6 +1,6 @@
 [project]
 name = "audiobook-ops"
-version = "0.1.0"
+version = "0.2.0"
 description = "Deterministic audiobook control plane for Hermes"
 requires-python = ">=3.13"
 dependencies = []

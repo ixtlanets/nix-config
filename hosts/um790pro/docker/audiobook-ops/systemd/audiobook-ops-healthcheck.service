@@ -1,0 +1,24 @@
+[Unit]
+Description=Structured Audiobook Ops health check
+After=audiobook-ops-compose.service audiobook-ops-policy.service audiobook-ops-publisher.service
+Requires=audiobook-ops-compose.service
+ConditionPathExists=/etc/audiobook-ops/config/health.json
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+Environment=PYTHONPATH=/usr/local/lib/audiobook-ops/src
+StandardOutput=append:/var/log/audiobook-ops/health.jsonl
+StandardError=append:/var/log/audiobook-ops/health.jsonl
+ExecStart=/usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/healthcheck.py --config /etc/audiobook-ops/config/health.json
+TimeoutStartSec=5min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

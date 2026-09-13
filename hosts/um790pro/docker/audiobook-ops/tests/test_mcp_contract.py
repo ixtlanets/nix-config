@@ -37,6 +37,14 @@ EXPECTED_WRITE = {
     "task_cancel",
     "task_retry",
 }
+
+
+class FakeStatusAdapter:
+    def status(self) -> dict[str, object]:
+        return {
+            "core": {"status": "ok", "schema_version": 4},
+            "external-search": {"status": "degraded"},
+        }
 FORBIDDEN_ARGUMENT_NAMES = {
     "command",
     "cookie",
@@ -135,6 +143,20 @@ class MCPContractTests(unittest.TestCase):
                     operations.invoke("release_search", {"queries": ["Кроткая"]})
             finally:
                 operations.close()
+
+    def test_system_status_uses_the_runtime_status_adapter(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            operations = AudiobookOperations.open(
+                Path(temporary_directory) / "state.sqlite3",
+                status_adapter=FakeStatusAdapter(),
+            )
+            try:
+                result = MCPAdapter(operations).call("system_status", {})
+            finally:
+                operations.close()
+
+        self.assertEqual(result["core"], {"status": "ok", "schema_version": 4})
+        self.assertEqual(result["external-search"], {"status": "degraded"})
 
 
 if __name__ == "__main__":

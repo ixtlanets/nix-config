@@ -21,6 +21,8 @@ from audiobook_ops.validation import SubprocessAudioProbe
 
 
 def load_config(path: Path) -> dict[str, object]:
+    if path.is_symlink() or not path.is_file():
+        raise OperationError("publisher configuration is missing or unsafe")
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
@@ -122,7 +124,13 @@ def main() -> int:
             )
         return 0
     except (OSError, TypeError, ValueError, OperationError) as error:
-        print(f"publisher error: {error}", file=sys.stderr)
+        print(
+            json.dumps(
+                {"event": "publisher_error", "reason": str(error)},
+                separators=(",", ":"),
+            ),
+            file=sys.stderr,
+        )
         return 1
 
 

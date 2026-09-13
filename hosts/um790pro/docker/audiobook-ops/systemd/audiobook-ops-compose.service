@@ -1,0 +1,32 @@
+[Unit]
+Description=Audiobook Ops production Compose bundle
+After=docker.service network-online.target tailscaled.service
+Requires=docker.service
+Wants=network-online.target
+ConditionPathExists=/etc/audiobook-ops/config/compose.env
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/usr/local/lib/audiobook-ops
+Environment=AUDIOBOOK_OPS_COMPOSE_ENV=/etc/audiobook-ops/config/compose.env
+ExecStartPre=/usr/local/lib/audiobook-ops/scripts/preflight.sh --host um790pro
+ExecStart=/usr/bin/docker compose --env-file /etc/audiobook-ops/config/compose.env -f /usr/local/lib/audiobook-ops/docker-compose.yml up --detach --remove-orphans
+ExecStop=/usr/bin/docker compose --env-file /etc/audiobook-ops/config/compose.env -f /usr/local/lib/audiobook-ops/docker-compose.yml down
+RemainAfterExit=true
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=15min
+TimeoutStopSec=5min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
