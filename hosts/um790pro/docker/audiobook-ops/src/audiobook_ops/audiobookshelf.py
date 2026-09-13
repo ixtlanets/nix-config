@@ -169,6 +169,9 @@ def _digest(value: object) -> str:
 class AudiobookshelfAdapter:
     """Version-isolated Audiobookshelf 2.36.0 catalog and mutation adapter."""
 
+    _SEARCH_RESULT_LIMIT = 20
+    _SEARCH_MINIMUM_SCORE = 0.35
+
     _FIELDS = {
         "title": "title",
         "subtitle": "subtitle",
@@ -190,42 +193,79 @@ class AudiobookshelfAdapter:
         self._cover_fetcher = cover_fetcher
 
     def search(self, query: str) -> list[dict[str, object]]:
-        tokens = set(re.findall(r"\w+", _normalized(query)))
-        ranked: list[tuple[float, dict[str, object]]] = []
+        query_normalized = _normalized(query)
+        tokens = set(re.findall(r"\w+", query_normalized))
+        ranked_candidates: list[tuple[float, str, str, str]] = []
         for library in self._book_libraries():
-            for item in self._items(str(library["id"])):
-                normalized = self._normalize_item(item)
-                metadata = normalized["metadata"]
-                haystack = " ".join(
-                    [
-                        str(metadata.get("title", "")),
-                        *[str(value) for value in metadata.get("authors", [])],
-                        *[str(value) for value in metadata.get("narrators", [])],
-                        *[
-                            str(value.get("name", ""))
-                            for value in metadata.get("series", [])
-                            if isinstance(value, dict)
-                        ],
-                    ]
-                )
-                haystack_normalized = _normalized(haystack)
+            library_id = str(library["id"])
+            for item in self._paged_entities(library_id, "items"):
+                item_id, title, haystack_normalized = self._searchable_item(item)
                 haystack_tokens = set(re.findall(r"\w+", haystack_normalized))
                 overlap = len(tokens & haystack_tokens) / len(tokens) if tokens else 0.0
                 similarity = SequenceMatcher(
-                    None, _normalized(metadata.get("title", "")), _normalized(query), autojunk=False
+                    None,
+                    _normalized(title),
+                    query_normalized,
+                    autojunk=False,
                 ).ratio()
                 score = max(overlap, similarity)
-                if score > 0:
-                    normalized["match_score_milli"] = round(score * 1000)
-                    ranked.append((score, normalized))
-        ranked.sort(
-            key=lambda pair: (
-                -pair[0],
-                _normalized(pair[1]["metadata"].get("title", "")),
-                str(pair[1]["item_id"]),
+                if score >= self._SEARCH_MINIMUM_SCORE:
+                    ranked_candidates.append(
+                        (score, _normalized(title), library_id, item_id)
+                    )
+        ranked_candidates.sort(
+            key=lambda candidate: (
+                -candidate[0],
+                candidate[1],
+                candidate[2],
+                candidate[3],
             )
         )
-        return [item for _score, item in ranked]
+        results: list[dict[str, object]] = []
+        for score, _title, library_id, item_id in ranked_candidates[
+            : self._SEARCH_RESULT_LIMIT
+        ]:
+            exact = self._http.json(
+                "GET", f"/api/items/{quote(item_id, safe='')}?expanded=1"
+            )
+            if not isinstance(exact, dict) or exact.get("libraryId") != library_id:
+                raise OperationError("Audiobookshelf returned a different item")
+            normalized = self._normalize_item(exact)
+            normalized["match_score_milli"] = round(score * 1000)
+            results.append(normalized)
+        return results
+
+    @staticmethod
+    def _searchable_item(item: dict[str, object]) -> tuple[str, str, str]:
+        item_id = item.get("id")
+        media = item.get("media")
+        if (
+            not isinstance(item_id, str)
+            or not item_id
+            or item.get("mediaType") != "book"
+            or not isinstance(media, dict)
+            or not isinstance(media.get("metadata"), dict)
+        ):
+            raise OperationError("Audiobookshelf returned invalid search metadata")
+        metadata = media["metadata"]
+        title = metadata.get("title")
+        if not isinstance(title, str):
+            raise OperationError("Audiobookshelf returned invalid search metadata")
+        searchable = [title]
+        for key in ("authorName", "authorNameLF", "narratorName", "seriesName"):
+            value = metadata.get(key)
+            if isinstance(value, str):
+                searchable.append(value)
+        for key in ("authors", "narrators", "series"):
+            values = metadata.get(key, [])
+            if not isinstance(values, list):
+                continue
+            for value in values:
+                if isinstance(value, str):
+                    searchable.append(value)
+                elif isinstance(value, dict) and isinstance(value.get("name"), str):
+                    searchable.append(str(value["name"]))
+        return item_id, title, _normalized(" ".join(searchable))
 
     def audit(self, library_ids: list[str]) -> dict[str, object]:
         libraries = self._book_libraries()

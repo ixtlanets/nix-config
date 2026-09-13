@@ -83,6 +83,14 @@ class MemoryAbsHTTP:
     @staticmethod
     def _minified(item: dict[str, object]) -> dict[str, object]:
         listed = deepcopy(item)
+        metadata = listed["media"]["metadata"]
+        metadata["authorName"] = ", ".join(
+            author["name"] for author in metadata.get("authors", [])
+        )
+        metadata["narratorName"] = ", ".join(metadata.get("narrators", []))
+        metadata["seriesName"] = ", ".join(
+            series["name"] for series in metadata.get("series", [])
+        )
         listed["media"]["metadata"].pop("authors", None)
         return listed
 
@@ -199,6 +207,66 @@ class AudiobookshelfAdapterTests(unittest.TestCase):
 
         self.assertEqual(item["metadata"]["narrators"], [])
         self.assertEqual(item["metadata"]["genres"], [])
+
+    def test_search_rejects_weak_fuzzy_matches(self) -> None:
+        self.assertEqual(
+            self.adapter.search("Совершенно отсутствующее произведение"),
+            [],
+        )
+
+    def test_search_expands_only_a_bounded_number_of_ranked_candidates(self) -> None:
+        class ManyItemsHTTP(MemoryAbsHTTP):
+            def __init__(self) -> None:
+                super().__init__()
+                self.items = []
+                for index in range(30):
+                    item = deepcopy(self.item)
+                    item["id"] = f"item-{index:02d}"
+                    item["path"] = f"/readmeabook/Автор/Кроткая {index:02d}"
+                    item["media"]["metadata"]["title"] = f"Кроткая {index:02d}"
+                    self.items.append(item)
+
+            def json(
+                self,
+                method: str,
+                path: str,
+                payload: dict[str, object] | None = None,
+            ) -> object:
+                if method == "GET" and path.startswith(
+                    "/api/libraries/library-one/items?"
+                ):
+                    self.calls.append((method, path, deepcopy(payload)))
+                    return {
+                        "results": [self._minified(item) for item in self.items],
+                        "total": len(self.items),
+                    }
+                if method == "GET" and path.startswith(
+                    "/api/libraries/library-two/items?"
+                ):
+                    self.calls.append((method, path, deepcopy(payload)))
+                    return {"results": [], "total": 0}
+                if method == "GET" and path.startswith("/api/items/"):
+                    self.calls.append((method, path, deepcopy(payload)))
+                    item_id = path.removeprefix("/api/items/").removesuffix(
+                        "?expanded=1"
+                    )
+                    return deepcopy(
+                        next(item for item in self.items if item["id"] == item_id)
+                    )
+                return super().json(method, path, payload)
+
+        http = ManyItemsHTTP()
+        adapter = AudiobookshelfAdapter(http, FakeCoverFetcher())
+
+        items = adapter.search("Кроткая")
+
+        self.assertEqual(len(items), 20)
+        exact_reads = [
+            path
+            for method, path, _payload in http.calls
+            if method == "GET" and path.startswith("/api/items/")
+        ]
+        self.assertEqual(len(exact_reads), 20)
 
     def test_partial_metadata_and_cover_update_round_trips_without_moving_item(self) -> None:
         current = self.adapter.get_item("library-one", "item-one")
