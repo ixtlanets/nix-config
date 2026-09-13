@@ -53,7 +53,7 @@ check_root_immutable_file() {
   fi
   mode=$(stat -c %a -- "$path" 2>/dev/null || true)
   uid=$(stat -c %u -- "$path" 2>/dev/null || true)
-  if [[ $uid == 0 && $mode =~ ^[0-7]{3,4}$ ]] && ((8#$mode & 8#022 == 0)); then
+  if [[ $uid == 0 && $mode =~ ^[0-7]{3,4}$ ]] && (( (8#$mode & 8#022) == 0 )); then
     pass "$label: $path"
   else
     fail "$label: $path"
@@ -68,7 +68,7 @@ check_nik_directory() {
   fi
   mode=$(stat -c %a -- "$path" 2>/dev/null || true)
   uid=$(stat -c %u -- "$path" 2>/dev/null || true)
-  if [[ $uid == 1000 && $mode =~ ^[0-7]{3,4}$ ]] && ((8#$mode & 8#200 != 0)); then
+  if [[ $uid == 1000 && $mode =~ ^[0-7]{3,4}$ ]] && (( (8#$mode & 8#200) != 0 )); then
     pass "nik-owned writable state directory: $path"
   else
     fail "nik-owned writable state directory: $path"

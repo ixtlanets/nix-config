@@ -163,6 +163,11 @@ class ProductionAssetTests(unittest.TestCase):
         self.assertIn("installed bundle root-owned and immutable", preflight)
         self.assertIn("operator config root-owned and immutable", preflight)
 
+    def test_preflight_permission_masks_group_arithmetic_before_comparison(self) -> None:
+        preflight = (BUNDLE / "scripts/preflight.sh").read_text()
+        self.assertIn("(( (8#$mode & 8#022) == 0 ))", preflight)
+        self.assertIn("(( (8#$mode & 8#200) != 0 ))", preflight)
+
     def test_runtime_secret_values_do_not_enter_sqlite_or_tool_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
