@@ -341,8 +341,9 @@ The validator:
 
 - rejects symlinks, devices, sockets, executables, archives, path traversal, and
   content outside the claimed download root;
-- ignores bounded safe `.cue`, `.nfo`, and `.txt` ancillary files rather than
-  publishing them as authoritative metadata;
+- ignores bounded safe `.cue`, `.nfo`, `.txt`, JPEG, PNG, and WebP ancillary
+  files rather than publishing them as authoritative metadata or an unapproved
+  cover;
 - validates every audio stream with `ffprobe` and requires positive duration;
 - validates the one selected cover separately;
 - requires two identical sorted size/SHA-256 manifests across a stability

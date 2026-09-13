@@ -120,6 +120,22 @@ class MediaValidatorTests(unittest.TestCase):
                 "task-ancillary-size", release
             )
 
+    def test_bounded_unselected_cover_image_is_not_published(self) -> None:
+        release = self.downloads / "bundled-cover"
+        release.mkdir()
+        (release / "book.mp3").write_bytes(b"audio")
+        (release / "Сады-пяти-стремлений_1.jpeg").write_bytes(b"jpeg")
+
+        result = self.validator().validate_and_stage("task-bundled-cover", release)
+
+        self.assertEqual(result["audio_file_count"], 1)
+        self.assertEqual(
+            [entry["relative_path"] for entry in result["manifest"]], ["book.mp3"]
+        )
+        self.assertFalse(
+            (self.staging / "task-bundled-cover" / "Сады-пяти-стремлений_1.jpeg").exists()
+        )
+
     def test_unsafe_filesystem_entries_fail_closed(self) -> None:
         cases = ("symlink", "archive", "executable", "special")
         for case in cases:

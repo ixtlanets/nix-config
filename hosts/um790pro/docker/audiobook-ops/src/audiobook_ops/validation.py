@@ -15,7 +15,9 @@ from audiobook_ops.interface import OperationError
 
 
 AUDIO_EXTENSIONS = frozenset({".flac", ".m4a", ".m4b", ".mp3"})
-IGNORED_ANCILLARY_EXTENSIONS = frozenset({".cue", ".nfo", ".txt"})
+IGNORED_ANCILLARY_EXTENSIONS = frozenset(
+    {".cue", ".jpeg", ".jpg", ".nfo", ".png", ".txt", ".webp"}
+)
 FORBIDDEN_EXTENSIONS = frozenset(
     {
         ".7z",

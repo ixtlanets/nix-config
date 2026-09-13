@@ -78,9 +78,11 @@ of exercising its outbound and therefore fails closed as a timeout.
 Dedicated Transmission jobs use task-derived labels for restart-safe
 reconciliation. Completed releases are stream-probed with `ffprobe`, checked by
 two stable sorted SHA-256 manifests, and copied byte-for-byte into task staging.
-Safe `.cue`, `.nfo`, and `.txt` files are ignored only within the configured
-count and byte limits. Cleanup completion is recorded in SQLite, so one old
-terminal task cannot starve later cleanup after a restart.
+Safe `.cue`, `.nfo`, `.txt`, JPEG, PNG, and WebP ancillary files are ignored
+only within the configured count and byte limits. Bundled images are not
+published or treated as an approved cover; cover selection and validation stay
+in the separate cover workflow. Cleanup completion is recorded in SQLite, so
+one old terminal task cannot starve later cleanup after a restart.
 
 The Audiobookshelf adapter reads every accessible book library and paginates its
 items, authors, and series without mirroring the catalog in SQLite. Search is
