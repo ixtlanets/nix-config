@@ -184,6 +184,27 @@ class NotificationPollerTests(unittest.TestCase):
         self.assertEqual((code, stdout, stderr), (0, "", ""))
         self.assertEqual(len(self.sent_commands()), 3)
 
+    def test_verified_event_without_failure_reason_is_delivered(self) -> None:
+        MCPHandler.events = [
+            {
+                "event_id": 1,
+                "task_id": "task-one",
+                "kind": "verified",
+                "origin_conversation_id": "telegram:42424242",
+                "reason": None,
+                "created_at": "2026-09-13T10:00:00Z",
+            }
+        ]
+
+        code, stdout, stderr = self.run_poller()
+
+        self.assertEqual((code, stdout, stderr), (0, "", ""))
+        message = self.sent_commands()[0][3]
+        self.assertIn("Аудиокнига проверена и опубликована", message)
+        self.assertIn("Задача: task-one.", message)
+        self.assertNotIn("Результат:", message)
+        self.assertEqual(self.cursor.read_text(), "1\n")
+
     def test_rejects_unapproved_origin_without_advancing_cursor(self) -> None:
         MCPHandler.events[0]["origin_conversation_id"] = "telegram:999"
 

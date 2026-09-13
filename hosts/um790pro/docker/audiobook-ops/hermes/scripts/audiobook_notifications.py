@@ -267,16 +267,20 @@ def deliver(config: dict[str, object], event: dict[str, object], bearer_env: str
     task_id = clean_text(event.get("task_id"))
     kind = event.get("kind")
     origin = event.get("origin_conversation_id")
-    reason = clean_text(event.get("reason"))
     if kind not in OUTCOME_LABELS or not isinstance(origin, str):
+        fail("invalid_notification_event")
+    raw_reason = event.get("reason")
+    reason = None if raw_reason is None else clean_text(raw_reason)
+    if kind != "verified" and not reason:
         fail("invalid_notification_event")
     if not origin_allowed(origin, config["allowed_origins"]):
         fail("origin_not_allowed")
     message = (
         f"{OUTCOME_LABELS[kind]} (event #{event_id}).\n"
-        f"Задача: {task_id}.\n"
-        f"Результат: {reason}"
+        f"Задача: {task_id}."
     )
+    if reason:
+        message += f"\nРезультат: {reason}"
     child_env = os.environ.copy()
     child_env.pop(bearer_env, None)
     try:
