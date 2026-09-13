@@ -168,13 +168,15 @@ class ProductionAssetTests(unittest.TestCase):
         self.assertNotIn("docker compose up", preflight)
         self.assertNotIn("systemctl start", preflight)
         self.assertIn("installed bundle root-owned and immutable", preflight)
-        self.assertIn("operator config root-owned and immutable", preflight)
+        self.assertIn("operator config root-owned and service-readable", preflight)
 
     def test_preflight_permission_masks_group_arithmetic_before_comparison(self) -> None:
         preflight = (BUNDLE / "scripts/preflight.sh").read_text()
         self.assertIn("(( (8#$mode & 8#022) == 0 ))", preflight)
         self.assertIn("(( (8#$mode & 8#200) != 0 ))", preflight)
         self.assertIn("operator config readable by service group", preflight)
+        self.assertIn("operator config root-owned and service-readable", preflight)
+        self.assertIn("$gid == 1000 && $mode == 640", preflight)
 
     def test_runbook_makes_operator_config_readable_by_service_group(self) -> None:
         runbook = (BUNDLE / "PRODUCTION-RUNBOOK.md").read_text()
@@ -186,6 +188,7 @@ class ProductionAssetTests(unittest.TestCase):
             "cd /home/nik/.local/share/nix-config-services/readmeabook",
             runbook,
         )
+        self.assertIn("`root:nik` mode `0640`", runbook)
 
     def test_runtime_secret_values_do_not_enter_sqlite_or_tool_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

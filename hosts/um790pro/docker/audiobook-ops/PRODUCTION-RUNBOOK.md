@@ -73,6 +73,10 @@ set the exact reviewed image ID in `compose.env`:
 /etc/audiobook-ops/config/publisher.json
 ```
 
+Install every operator config file as `root:nik` mode `0640`: host services run
+as `nik` and require read access, while only root may modify the files. Keep the
+config directory itself `root:nik` mode `0750`.
+
 Do not put credentials in those files. The five separate root-owned mode `0600`
 files are `abs-api-token`, `mcp-bearer`, `prowlarr-api-key`,
 `publisher-ssh-key`, and `transmission-password`. Their creation or installation

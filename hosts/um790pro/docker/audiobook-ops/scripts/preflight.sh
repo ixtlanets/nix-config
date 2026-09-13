@@ -46,14 +46,16 @@ check_secret() {
 }
 
 check_root_immutable_file() {
-  local path=$1 label=$2 mode uid
+  local path=$1 label=$2 mode uid gid
   if [[ ! -f $path || -L $path ]]; then
     fail "$label: $path"
     return
   fi
   mode=$(stat -c %a -- "$path" 2>/dev/null || true)
   uid=$(stat -c %u -- "$path" 2>/dev/null || true)
-  if [[ $uid == 0 && $mode =~ ^[0-7]{3,4}$ ]] && (( (8#$mode & 8#022) == 0 )); then
+  gid=$(stat -c %g -- "$path" 2>/dev/null || true)
+  if [[ $uid == 0 && $gid == 1000 && $mode == 640 ]] \
+    && (( (8#$mode & 8#022) == 0 )); then
     pass "$label: $path"
   else
     fail "$label: $path"
@@ -132,7 +134,7 @@ if [[ $host == um790pro ]]; then
   fi
   check_operator_config_directory "$config_root"
   for name in audiobook-ops.json backup.json compose.env health.json policy.json publisher.json; do
-    check_root_immutable_file "$config_root/$name" "operator config root-owned and immutable"
+    check_root_immutable_file "$config_root/$name" "operator config root-owned and service-readable"
   done
   for root in "$state_root" "$state_root/staging" "$retained_root/prowlarr" "$retained_root/transmission" "$retained_root/downloads"; do
     check_nik_directory "$root"
