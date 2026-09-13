@@ -59,6 +59,58 @@ class FakeAdapter:
         return {"name": name, "arguments": arguments}
 
 
+class BlockingReadAdapter(FakeAdapter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.release_started = threading.Event()
+        self.release_continue = threading.Event()
+
+    def list_tools(self) -> list[dict[str, object]]:
+        return super().list_tools() + [
+            {
+                "name": "release_search",
+                "description": "Search releases.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "queries": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "additionalProperties": False,
+                    "required": ["queries"],
+                },
+                "outputSchema": {"type": "object"},
+                "annotations": {"readOnlyHint": True},
+            },
+            {
+                "name": "notification_list",
+                "description": "List notifications.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False,
+                },
+                "outputSchema": {"type": "object"},
+                "annotations": {"readOnlyHint": True},
+            },
+        ]
+
+    def call(
+        self,
+        name: str,
+        arguments: dict[str, object],
+        *,
+        mutation_authorized: bool = False,
+    ) -> dict[str, object]:
+        if name == "release_search":
+            self.release_started.set()
+            self.release_continue.wait(timeout=5)
+        return super().call(
+            name,
+            arguments,
+            mutation_authorized=mutation_authorized,
+        )
+
+
 class FakeStatus:
     def status(self) -> dict[str, object]:
         return {
@@ -229,6 +281,53 @@ class HTTPTransportTests(unittest.TestCase):
         self.assertEqual(route[0], 200)
         self.assertEqual(route[1], {"route": "vless", "status": "ok"})
         self.assertEqual(self.request("GET", "/health/arbitrary")[0], 404)
+
+    def test_slow_external_search_does_not_block_notification_polling(self) -> None:
+        adapter = BlockingReadAdapter()
+        self.server.adapter = adapter
+        release_done = threading.Event()
+        notification_done = threading.Event()
+        failures: list[BaseException] = []
+
+        def release_search() -> None:
+            try:
+                self.rpc(
+                    "tools/call",
+                    {"name": "release_search", "arguments": {"queries": ["Кроткая"]}},
+                )
+            except BaseException as error:
+                failures.append(error)
+            finally:
+                release_done.set()
+
+        def notification_list() -> None:
+            try:
+                self.rpc(
+                    "tools/call",
+                    {"name": "notification_list", "arguments": {}},
+                )
+            except BaseException as error:
+                failures.append(error)
+            finally:
+                notification_done.set()
+
+        release_thread = threading.Thread(target=release_search, daemon=True)
+        notification_thread = threading.Thread(target=notification_list, daemon=True)
+        release_thread.start()
+        self.assertTrue(adapter.release_started.wait(timeout=1))
+        notification_thread.start()
+        try:
+            self.assertTrue(
+                notification_done.wait(timeout=0.5),
+                "notification polling was serialized behind external search",
+            )
+        finally:
+            adapter.release_continue.set()
+            release_thread.join(timeout=2)
+            notification_thread.join(timeout=2)
+
+        self.assertTrue(release_done.is_set())
+        self.assertEqual(failures, [])
 
 
 if __name__ == "__main__":

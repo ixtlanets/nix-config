@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import nullcontext
 import hmac
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,6 +15,16 @@ from audiobook_ops.interface import OperationError
 MAX_REQUEST_BYTES = 1024 * 1024
 HEALTH_COMPONENTS = frozenset(
     {"core", "catalog", "external-search", "acquisition", "backup", "vless-route"}
+)
+INDEPENDENT_READ_TOOLS = frozenset(
+    {
+        "library_audit",
+        "library_item_get",
+        "library_search",
+        "release_inspect",
+        "release_search",
+        "system_status",
+    }
 )
 
 
@@ -235,7 +246,12 @@ class AudiobookRequestHandler(BaseHTTPRequestHandler):
             if not isinstance(annotations, dict):
                 raise OperationError("tool annotations are invalid")
             try:
-                with self.server.operation_lock:
+                operation_context = (
+                    nullcontext()
+                    if name in INDEPENDENT_READ_TOOLS
+                    else self.server.operation_lock
+                )
+                with operation_context:
                     output = self.server.adapter.call(
                         name,
                         arguments,
