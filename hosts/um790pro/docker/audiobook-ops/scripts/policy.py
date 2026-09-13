@@ -74,8 +74,8 @@ def vless_healthy(config: dict[str, object]) -> bool:
             "--show-error",
             "--max-time",
             "15",
-            "--interface",
-            interface,
+            "--proxy",
+            "http://127.0.0.1:2080",
             probe_url,
         ],
     )

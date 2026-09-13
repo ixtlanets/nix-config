@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from audiobook_ops.interface import OperationError
 
@@ -16,6 +17,16 @@ BUNDLE = Path(__file__).resolve().parents[1]
 def load_worker():
     spec = importlib.util.spec_from_file_location(
         "audiobook_ops_worker", BUNDLE / "scripts/worker.py"
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_policy():
+    spec = importlib.util.spec_from_file_location(
+        "audiobook_ops_policy", BUNDLE / "scripts/policy.py"
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -89,6 +100,34 @@ class WorkerPolicyTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(OperationError, "stale or degraded"):
             self.worker.require_vless_evidence(config)
+
+    def test_vless_probe_uses_the_live_loopback_proxy_without_tun_reentry(self) -> None:
+        policy = load_policy()
+        commands: list[list[str]] = []
+
+        def succeed(command: list[str], **_kwargs: object):
+            commands.append(command)
+            return policy.subprocess.CompletedProcess(command, 0)
+
+        with patch.object(policy.subprocess, "run", side_effect=succeed):
+            self.assertTrue(policy.vless_healthy({}))
+
+        self.assertEqual(commands[0][-3:], ["is-active", "--quiet", "vless-sing-box.service"])
+        self.assertEqual(commands[1][-4:], ["link", "show", "dev", "nekoray-tun"])
+        self.assertEqual(
+            commands[2],
+            [
+                "/usr/bin/curl",
+                "--fail",
+                "--silent",
+                "--show-error",
+                "--max-time",
+                "15",
+                "--proxy",
+                "http://127.0.0.1:2080",
+                "https://www.cloudflare.com/cdn-cgi/trace",
+            ],
+        )
 
 
 if __name__ == "__main__":

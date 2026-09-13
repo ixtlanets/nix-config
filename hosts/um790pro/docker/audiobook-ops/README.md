@@ -70,6 +70,11 @@ endpoint is wired by the production bundle and must return
 `{"status":"ok","route":"vless"}`. Any missing, redirected, oversized, or
 negative response fails closed.
 
+The host policy probe separately requires the sing-box unit and TUN interface,
+then fetches its HTTPS probe through sing-box's loopback mixed proxy. Binding
+the probe socket to the auto-routed TUN interface would re-enter the TUN instead
+of exercising its outbound and therefore fails closed as a timeout.
+
 Dedicated Transmission jobs use task-derived labels for restart-safe
 reconciliation. Completed releases are stream-probed with `ffprobe`, checked by
 two stable sorted SHA-256 manifests, and copied byte-for-byte into task staging.
