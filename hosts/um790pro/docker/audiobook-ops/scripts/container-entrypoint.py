@@ -68,8 +68,8 @@ def atomic_runtime_file(path: Path, value: bytes) -> None:
             written = os.write(descriptor, view)
             view = view[written:]
         os.fsync(descriptor)
-        os.fchown(descriptor, RUNTIME_UID, RUNTIME_GID)
         os.fchmod(descriptor, 0o400)
+        os.fchown(descriptor, RUNTIME_UID, RUNTIME_GID)
         os.close(descriptor)
         descriptor = -1
         os.replace(temporary, path)

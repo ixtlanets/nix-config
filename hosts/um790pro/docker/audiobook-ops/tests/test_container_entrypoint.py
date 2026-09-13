@@ -58,6 +58,27 @@ class ContainerEntrypointTests(unittest.TestCase):
             self.assertEqual(metadata.st_gid, os.getgid())
             self.assertEqual(list(target.parent.glob(".*.tmp")), [])
 
+    def test_runtime_copy_sets_mode_before_transferring_ownership(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "runtime-secret"
+            calls: list[str] = []
+            real_fchmod = os.fchmod
+
+            def record_fchmod(descriptor: int, mode: int) -> None:
+                calls.append("fchmod")
+                real_fchmod(descriptor, mode)
+
+            def record_fchown(descriptor: int, uid: int, gid: int) -> None:
+                calls.append("fchown")
+
+            with (
+                mock.patch.object(entrypoint.os, "fchmod", side_effect=record_fchmod),
+                mock.patch.object(entrypoint.os, "fchown", side_effect=record_fchown),
+            ):
+                entrypoint.atomic_runtime_file(target, b"sentinel")
+
+            self.assertEqual(calls, ["fchmod", "fchown"])
+
 
 if __name__ == "__main__":
     unittest.main()
