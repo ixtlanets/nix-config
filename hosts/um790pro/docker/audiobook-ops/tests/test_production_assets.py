@@ -82,6 +82,15 @@ class ProductionAssetTests(unittest.TestCase):
         lock = "/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock"
         for name in serialized:
             self.assertIn(lock, (systemd / name).read_text(), name)
+        for name in (
+            "audiobook-ops-worker.service",
+            "audiobook-ops-cleanup.service",
+        ):
+            self.assertIn(
+                "/usr/bin/docker exec --user 1000:1000 audiobook-ops",
+                (systemd / name).read_text(),
+                name,
+            )
         tmpfiles = (BUNDLE / "tmpfiles/audiobook-ops.conf").read_text()
         self.assertIn("/run/audiobook-ops/operations.lock 0660 nik nik", tmpfiles)
         checklist = BUNDLE / "scripts/verify-startup.sh"
