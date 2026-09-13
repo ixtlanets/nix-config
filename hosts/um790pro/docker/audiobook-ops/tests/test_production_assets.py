@@ -65,6 +65,9 @@ class ProductionAssetTests(unittest.TestCase):
         compose = (systemd / "audiobook-ops-compose.service").read_text()
         self.assertIn("After=docker.service network-online.target tailscaled.service", compose)
         self.assertIn("Restart=on-failure", compose)
+        self.assertIn(
+            "RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK", compose
+        )
         serialized = {
             "audiobook-ops-backup.service",
             "audiobook-ops-cleanup.service",
