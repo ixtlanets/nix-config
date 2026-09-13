@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 import hashlib
 import json
 from pathlib import Path
+import re
 import sqlite3
 from typing import Any, Protocol
 from uuid import uuid4
@@ -161,7 +162,16 @@ ACTIVE_STATES = {
     "applying_metadata",
 }
 RETRY_DELAYS_SECONDS = (60, 300, 900)
-SCHEMA_VERSION = 3
+PUBLICATION_PHASES = (
+    "claimed",
+    "validated",
+    "prepared",
+    "transferred",
+    "remote_verified",
+    "promoted",
+    "acknowledged",
+)
+SCHEMA_VERSION = 4
 METADATA_FIELDS = frozenset(
     {
         "abridged",
@@ -266,8 +276,8 @@ class AudiobookOperations:
             catalog_adapter=catalog_adapter or UnavailableCatalogAdapter(),
         )
 
-    @staticmethod
-    def _migrate(connection: sqlite3.Connection) -> None:
+    @classmethod
+    def _migrate(cls, connection: sqlite3.Connection) -> None:
         has_migrations = connection.execute(
             """
             SELECT 1 FROM sqlite_master
@@ -365,7 +375,46 @@ class AudiobookOperations:
               status TEXT NOT NULL,
               attempt INTEGER NOT NULL,
               claimed_at TEXT NOT NULL,
+              last_attempt_at TEXT,
+              final_relative_path TEXT,
+              manifest_id TEXT,
+              manifest_json TEXT,
+              total_size_bytes INTEGER,
+              validated_at TEXT,
+              prepared_at TEXT,
+              transferred_at TEXT,
+              remote_manifest_id TEXT,
+              remote_verified_at TEXT,
+              promoted_at TEXT,
+              last_error TEXT,
+              updated_at TEXT,
               acknowledged_at TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS legacy_imports (
+              source_ledger_sha256 TEXT PRIMARY KEY,
+              record_count INTEGER NOT NULL,
+              imported_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS legacy_publications (
+              legacy_record_id TEXT PRIMARY KEY,
+              source_ledger_sha256 TEXT NOT NULL
+                REFERENCES legacy_imports(source_ledger_sha256),
+              status TEXT NOT NULL,
+              final_relative_path TEXT NOT NULL,
+              infohash TEXT,
+              manifest_id TEXT NOT NULL UNIQUE,
+              manifest_json TEXT NOT NULL,
+              total_size_bytes INTEGER NOT NULL,
+              file_count INTEGER NOT NULL,
+              published_at_epoch INTEGER NOT NULL,
+              abs_confirmed_at_epoch INTEGER,
+              abs_library_id TEXT,
+              abs_item_id TEXT UNIQUE,
+              abs_media_id TEXT UNIQUE,
+              legacy_json TEXT NOT NULL,
+              imported_at TEXT NOT NULL
             );
 
             CREATE TABLE IF NOT EXISTS external_actions (
@@ -449,6 +498,54 @@ class AudiobookOperations:
             COMMIT;
             """
         )
+        cls._migrate_publications_v4(connection)
+
+    @staticmethod
+    def _migrate_publications_v4(connection: sqlite3.Connection) -> None:
+        existing = {
+            str(row["name"])
+            for row in connection.execute("PRAGMA table_info(publications)")
+        }
+        additions = {
+            "last_attempt_at": "TEXT",
+            "final_relative_path": "TEXT",
+            "manifest_id": "TEXT",
+            "manifest_json": "TEXT",
+            "total_size_bytes": "INTEGER",
+            "validated_at": "TEXT",
+            "prepared_at": "TEXT",
+            "transferred_at": "TEXT",
+            "remote_manifest_id": "TEXT",
+            "remote_verified_at": "TEXT",
+            "promoted_at": "TEXT",
+            "last_error": "TEXT",
+            "updated_at": "TEXT",
+        }
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            for column, data_type in additions.items():
+                if column not in existing:
+                    connection.execute(
+                        f"ALTER TABLE publications ADD COLUMN {column} {data_type}"
+                    )
+            connection.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS publications_final_relative_path
+                  ON publications(final_relative_path)
+                  WHERE final_relative_path IS NOT NULL
+                """
+            )
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO schema_migrations(version, applied_at)
+                VALUES (4, '2026-09-13T21:00:00+00:00')
+                """
+            )
+            connection.execute("COMMIT")
+        except Exception:
+            if connection.in_transaction:
+                connection.execute("ROLLBACK")
+            raise
 
     def close(self) -> None:
         self._connection.close()
@@ -786,13 +883,147 @@ class AudiobookOperations:
         ).fetchone()
         if row is None:
             raise OperationError("task has no validated acquisition artifact")
+        manifest = json.loads(row["manifest_json"])
         return {
             "task_id": row["task_id"],
             "torrent_hash": row["torrent_hash"],
             "staging_id": row["staging_id"],
-            "manifest": json.loads(row["manifest_json"]),
+            "manifest": manifest,
+            "manifest_id": hashlib.sha256(
+                json.dumps(manifest, separators=(",", ":"), sort_keys=True).encode()
+            ).hexdigest(),
+            "total_size_bytes": sum(
+                int(entry["size_bytes"])
+                for entry in manifest
+                if isinstance(entry, dict)
+            ),
             "created_at": row["created_at"],
         }
+
+    def import_legacy_publications(
+        self, source_ledger_sha256: str, records: list[dict[str, object]]
+    ) -> dict[str, int]:
+        if not re.fullmatch(r"[0-9a-f]{64}", source_ledger_sha256):
+            raise OperationError("legacy ledger checksum is invalid")
+        if not isinstance(records, list) or not records or len(records) > 1000:
+            raise OperationError("legacy publication records are invalid")
+        required = {
+            "legacy_record_id",
+            "status",
+            "final_relative_path",
+            "infohash",
+            "manifest_id",
+            "manifest",
+            "total_size_bytes",
+            "file_count",
+            "published_at_epoch",
+            "abs_confirmed_at_epoch",
+            "abs_library_id",
+            "abs_item_id",
+            "abs_media_id",
+            "legacy",
+        }
+        if any(not isinstance(record, dict) or set(record) != required for record in records):
+            raise OperationError("legacy publication record shape is invalid")
+        imported = 0
+        unchanged = 0
+        now = _timestamp(self._clock.now())
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            existing_import = self._connection.execute(
+                "SELECT record_count FROM legacy_imports WHERE source_ledger_sha256 = ?",
+                (source_ledger_sha256,),
+            ).fetchone()
+            if existing_import is not None and existing_import["record_count"] != len(records):
+                raise OperationError("legacy ledger import record count changed")
+            self._connection.execute(
+                """
+                INSERT OR IGNORE INTO legacy_imports(
+                  source_ledger_sha256, record_count, imported_at
+                ) VALUES (?, ?, ?)
+                """,
+                (source_ledger_sha256, len(records), now),
+            )
+            for record in records:
+                values = (
+                    str(record["legacy_record_id"]),
+                    source_ledger_sha256,
+                    str(record["status"]),
+                    str(record["final_relative_path"]),
+                    record["infohash"],
+                    str(record["manifest_id"]),
+                    _canonical(record["manifest"]),
+                    int(record["total_size_bytes"]),
+                    int(record["file_count"]),
+                    int(record["published_at_epoch"]),
+                    record["abs_confirmed_at_epoch"],
+                    record["abs_library_id"],
+                    record["abs_item_id"],
+                    record["abs_media_id"],
+                    _canonical(record["legacy"]),
+                    now,
+                )
+                existing = self._connection.execute(
+                    """
+                    SELECT legacy_record_id, source_ledger_sha256, status,
+                           final_relative_path, infohash, manifest_id,
+                           manifest_json, total_size_bytes, file_count,
+                           published_at_epoch, abs_confirmed_at_epoch,
+                           abs_library_id, abs_item_id, abs_media_id, legacy_json
+                      FROM legacy_publications WHERE legacy_record_id = ?
+                    """,
+                    (record["legacy_record_id"],),
+                ).fetchone()
+                if existing is not None:
+                    comparable = tuple(existing)
+                    if comparable != values[:15]:
+                        raise OperationError("legacy publication record changed")
+                    unchanged += 1
+                    continue
+                self._connection.execute(
+                    """
+                    INSERT INTO legacy_publications(
+                      legacy_record_id, source_ledger_sha256, status,
+                      final_relative_path, infohash, manifest_id, manifest_json,
+                      total_size_bytes, file_count, published_at_epoch,
+                      abs_confirmed_at_epoch, abs_library_id, abs_item_id,
+                      abs_media_id, legacy_json, imported_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    values,
+                )
+                imported += 1
+            self._connection.execute("COMMIT")
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+        return {"imported": imported, "unchanged": unchanged, "total": len(records)}
+
+    def legacy_publications(self) -> list[dict[str, object]]:
+        rows = self._connection.execute(
+            "SELECT * FROM legacy_publications ORDER BY legacy_record_id"
+        ).fetchall()
+        return [
+            {
+                "legacy_record_id": row["legacy_record_id"],
+                "source_ledger_sha256": row["source_ledger_sha256"],
+                "status": row["status"],
+                "final_relative_path": row["final_relative_path"],
+                "infohash": row["infohash"],
+                "manifest_id": row["manifest_id"],
+                "manifest": json.loads(row["manifest_json"]),
+                "total_size_bytes": row["total_size_bytes"],
+                "file_count": row["file_count"],
+                "published_at_epoch": row["published_at_epoch"],
+                "abs_confirmed_at_epoch": row["abs_confirmed_at_epoch"],
+                "abs_library_id": row["abs_library_id"],
+                "abs_item_id": row["abs_item_id"],
+                "abs_media_id": row["abs_media_id"],
+                "imported_at": row["imported_at"],
+            }
+            for row in rows
+        ]
 
     def cleanup_pending_tasks(self) -> list[dict[str, object]]:
         rows = self._connection.execute(
@@ -1540,6 +1771,33 @@ class AudiobookOperations:
             raise OperationError("publisher ID is required")
         try:
             self._connection.execute("BEGIN IMMEDIATE")
+            existing = self._connection.execute(
+                """
+                SELECT publications.publication_id, publications.worker_id
+                  FROM publications
+                  JOIN acquisition_tasks
+                    ON acquisition_tasks.task_id = publications.task_id
+                 WHERE publications.status != 'acknowledged'
+                   AND acquisition_tasks.state = 'publishing'
+                 ORDER BY claimed_at, publication_id LIMIT 1
+                """
+            ).fetchone()
+            if existing is not None:
+                if existing["worker_id"] != worker_id:
+                    self._connection.execute("COMMIT")
+                    return None
+                now = _timestamp(self._clock.now())
+                self._connection.execute(
+                    """
+                    UPDATE publications
+                       SET worker_id = ?, attempt = attempt + 1,
+                           last_attempt_at = ?, updated_at = ?
+                     WHERE publication_id = ?
+                    """,
+                    (worker_id, now, now, existing["publication_id"]),
+                )
+                self._connection.execute("COMMIT")
+                return self._publication_context(str(existing["publication_id"]))
             row = self._connection.execute(
                 """
                 SELECT task_id, revision FROM acquisition_tasks
@@ -1555,30 +1813,221 @@ class AudiobookOperations:
             self._connection.execute(
                 """
                 INSERT INTO publications(
-                  publication_id, task_id, worker_id, status, attempt, claimed_at
-                ) VALUES (?, ?, ?, 'claimed', 1, ?)
+                  publication_id, task_id, worker_id, status, attempt,
+                  claimed_at, last_attempt_at, updated_at
+                ) VALUES (?, ?, ?, 'claimed', 1, ?, ?, ?)
                 """,
-                (publication_id, row["task_id"], worker_id, now),
+                (publication_id, row["task_id"], worker_id, now, now, now),
             )
-            task = self._transition_locked(
+            self._transition_locked(
                 row["task_id"], row["revision"], "publishing", None
             )
             self._connection.execute("COMMIT")
-            return {
-                "publication": {
-                    "publication_id": publication_id,
-                    "task_id": row["task_id"],
-                    "worker_id": worker_id,
-                    "status": "claimed",
-                    "attempt": 1,
-                    "claimed_at": now,
-                },
-                "task": task,
-            }
+            return self._publication_context(publication_id)
         except Exception:
             if self._connection.in_transaction:
                 self._connection.execute("ROLLBACK")
             raise
+
+    def outstanding_publication(self) -> dict[str, object] | None:
+        row = self._connection.execute(
+            """
+            SELECT publication_id FROM publications
+             WHERE status != 'acknowledged'
+             ORDER BY claimed_at, publication_id LIMIT 1
+            """
+        ).fetchone()
+        if row is None:
+            return None
+        return self._publication_context(str(row["publication_id"]))
+
+    def advance_publication(
+        self,
+        publication_id: str,
+        expected_status: str,
+        new_status: str,
+        evidence: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        if (
+            expected_status not in PUBLICATION_PHASES
+            or new_status not in PUBLICATION_PHASES
+            or PUBLICATION_PHASES.index(new_status)
+            != PUBLICATION_PHASES.index(expected_status) + 1
+        ):
+            raise OperationError("invalid publication transition")
+        evidence = evidence or {}
+        if not isinstance(evidence, dict):
+            raise OperationError("invalid publication evidence")
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            row = self._connection.execute(
+                "SELECT * FROM publications WHERE publication_id = ?",
+                (publication_id,),
+            ).fetchone()
+            if row is None:
+                raise OperationError("unknown publication")
+            if row["status"] != expected_status:
+                raise OperationError("stale publication status")
+            updates: dict[str, object] = {
+                "status": new_status,
+                "last_error": None,
+                "updated_at": _timestamp(self._clock.now()),
+            }
+            timestamp_column = {
+                "validated": "validated_at",
+                "prepared": "prepared_at",
+                "transferred": "transferred_at",
+                "remote_verified": "remote_verified_at",
+                "promoted": "promoted_at",
+                "acknowledged": "acknowledged_at",
+            }.get(new_status)
+            if timestamp_column:
+                updates[timestamp_column] = updates["updated_at"]
+            if new_status == "validated":
+                required = {
+                    "final_relative_path",
+                    "manifest_id",
+                    "manifest",
+                    "total_size_bytes",
+                }
+                if set(evidence) != required:
+                    raise OperationError("publication validation evidence is incomplete")
+                if (
+                    not _non_empty_string(evidence["final_relative_path"])
+                    or not isinstance(evidence["manifest"], list)
+                    or not evidence["manifest"]
+                    or not isinstance(evidence["total_size_bytes"], int)
+                    or int(evidence["total_size_bytes"]) < 0
+                    or not isinstance(evidence["manifest_id"], str)
+                    or not re.fullmatch(r"[0-9a-f]{64}", str(evidence["manifest_id"]))
+                ):
+                    raise OperationError("publication validation evidence is invalid")
+                updates.update(
+                    {
+                        "final_relative_path": str(evidence["final_relative_path"]),
+                        "manifest_id": str(evidence["manifest_id"]),
+                        "manifest_json": _canonical(evidence["manifest"]),
+                        "total_size_bytes": int(evidence["total_size_bytes"]),
+                    }
+                )
+            elif new_status == "remote_verified":
+                if set(evidence) != {"remote_manifest_id"} or not re.fullmatch(
+                    r"[0-9a-f]{64}", str(evidence.get("remote_manifest_id", ""))
+                ):
+                    raise OperationError("remote manifest evidence is invalid")
+                if evidence["remote_manifest_id"] != row["manifest_id"]:
+                    raise OperationError("remote manifest changed")
+                updates["remote_manifest_id"] = str(evidence["remote_manifest_id"])
+            elif evidence:
+                raise OperationError("unexpected publication evidence")
+            assignments = ", ".join(f"{column} = ?" for column in updates)
+            self._connection.execute(
+                f"UPDATE publications SET {assignments} WHERE publication_id = ?",
+                (*updates.values(), publication_id),
+            )
+            if new_status == "acknowledged":
+                task = self._connection.execute(
+                    "SELECT state, revision FROM acquisition_tasks WHERE task_id = ?",
+                    (row["task_id"],),
+                ).fetchone()
+                if task is None or task["state"] != "publishing":
+                    raise OperationError("publication task is not publishing")
+                self._transition_locked(
+                    str(row["task_id"]), int(task["revision"]), "awaiting_abs", None
+                )
+            self._connection.execute("COMMIT")
+            return self._publication_context(publication_id)
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+
+    def record_publication_error(self, publication_id: str, reason: str) -> None:
+        if not _non_empty_string(reason):
+            raise OperationError("publication error reason is required")
+        result = self._connection.execute(
+            """
+            UPDATE publications SET last_error = ?, updated_at = ?
+             WHERE publication_id = ? AND status != 'acknowledged'
+            """,
+            (reason[:1000], _timestamp(self._clock.now()), publication_id),
+        )
+        if result.rowcount != 1:
+            raise OperationError("unknown or acknowledged publication")
+
+    def _publication_context(self, publication_id: str) -> dict[str, object]:
+        row = self._connection.execute(
+            """
+            SELECT publication.*, plan.payload_json, artifact.torrent_hash,
+                   artifact.staging_id, artifact.manifest_json AS artifact_manifest_json,
+                   artifact.created_at AS artifact_created_at
+              FROM publications AS publication
+              JOIN acquisition_tasks AS task ON task.task_id = publication.task_id
+              JOIN acquisition_plans AS plan ON plan.plan_id = task.plan_id
+              LEFT JOIN acquisition_artifacts AS artifact
+                ON artifact.task_id = publication.task_id
+             WHERE publication.publication_id = ?
+            """,
+            (publication_id,),
+        ).fetchone()
+        if row is None:
+            raise OperationError("unknown publication")
+        payload = json.loads(row["payload_json"])
+        artifact = None
+        if row["artifact_manifest_json"] is not None:
+            artifact_manifest = json.loads(row["artifact_manifest_json"])
+            artifact = {
+                "task_id": row["task_id"],
+                "torrent_hash": row["torrent_hash"],
+                "staging_id": row["staging_id"],
+                "manifest": artifact_manifest,
+                "manifest_id": hashlib.sha256(
+                    json.dumps(
+                        artifact_manifest, separators=(",", ":"), sort_keys=True
+                    ).encode()
+                ).hexdigest(),
+                "total_size_bytes": sum(
+                    int(entry["size_bytes"])
+                    for entry in artifact_manifest
+                    if isinstance(entry, dict)
+                ),
+                "created_at": row["artifact_created_at"],
+            }
+        publication = {
+            key: row[key]
+            for key in (
+                "publication_id",
+                "task_id",
+                "worker_id",
+                "status",
+                "attempt",
+                "claimed_at",
+                "last_attempt_at",
+                "final_relative_path",
+                "manifest_id",
+                "total_size_bytes",
+                "validated_at",
+                "prepared_at",
+                "transferred_at",
+                "remote_manifest_id",
+                "remote_verified_at",
+                "promoted_at",
+                "acknowledged_at",
+                "last_error",
+            )
+        }
+        publication["manifest"] = (
+            json.loads(row["manifest_json"])
+            if row["manifest_json"] is not None
+            else None
+        )
+        return {
+            "publication": publication,
+            "task": self._task_view(str(row["task_id"])),
+            "artifact": artifact,
+            "work": deepcopy(payload.get("work")),
+            "audio_edition": deepcopy(payload.get("audio_edition")),
+        }
 
     def transition_task(
         self,

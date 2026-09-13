@@ -1,10 +1,11 @@
 # Audiobook Ops on UM790Pro
 
 > Target-state operator documentation. The non-production bundle, domain core,
-> acquisition, and Audiobookshelf 2.36.0 adapters are implemented, but the
-> publisher and Streamable HTTP transport are not yet complete and nothing here
-> has been deployed. Until service
-> cutover, use the current production documentation under `../readmeabook/`.
+> acquisition, publisher, legacy-history importer, and Audiobookshelf 2.36.0
+> adapters are implemented, but the Streamable HTTP transport and production
+> service integration are not yet complete. Nothing here has been deployed.
+> Until service cutover, use the current production documentation under
+> `../readmeabook/`.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
 audiobook workflow. It reads and updates Audiobookshelf, searches RuTracker via
@@ -81,6 +82,24 @@ reserved, and multicast addresses, then the TLS connection is pinned to the
 validated address to prevent DNS rebinding. Bodies, redirects, dimensions, and
 decoded pixels are capped; `ffprobe` plus a full `ffmpeg` decode validates
 JPEG/PNG/WebP content.
+
+The publisher atomically claims one `ready_to_publish` task from the shared
+SQLite store. Its durable checkpoints are `claimed`, `validated`, `prepared`,
+`transferred`, `remote_verified`, `promoted`, and `acknowledged`; the final
+checkpoint moves the task to `awaiting_abs` in the same transaction. Every
+restart revalidates the immutable local audio manifest before replaying a
+remote action. Publication retains `ffprobe`, two-pass stability, SHA-256,
+local and remote free-space reserves, a dedicated SSH identity, pinned known
+hosts, a hidden incoming directory, exact remote verification, and atomic
+rename. It never transcodes or rewrites audio bytes and exposes no delete or
+unpublish operation.
+
+The Moscow forced command accepts only `capacity`, `prepare`, receive-only
+`rsync-receive`, `verify`, and `promote`. It confines writes to the retained
+`/media/disk1/media/.readmeabook-incoming` and
+`/media/disk1/media/ReadMeABook` roots, rejects traversal and symlink escapes,
+and blocks an existing final path unless it is an exact replay of the same
+verified manifest.
 
 The adapter contract is version-isolated to Audiobookshelf 2.36.0. Its route and
 payload fixtures follow the upstream
@@ -232,6 +251,69 @@ a disposable destination and must reject production paths.
 All OCI images are digest-pinned. Before changing the Audiobookshelf 2.36.0 pin,
 run the adapter contract suite against an upgrade rehearsal because the upstream
 API specification does not cover every metadata/cover endpoint used here.
+
+## Legacy publication history
+
+The migration mapping pins the immutable production ledger checksum
+`a20f20e3c7df929eac479b1d9be94a59f82ffe9bae15eafe4e33fc28382f37e8`
+and maps its three active publications to their exact Audiobookshelf library,
+item, and media IDs. The fourth tombstoned record is retained without an ABS
+mapping. Import creates publication history only; it does not invent acquisition
+tasks or republish/unpublish media.
+
+Keep the source ledger as a mode `0400` artifact and run the importer only with
+an explicit execution flag:
+
+```bash
+cd hosts/um790pro/docker/audiobook-ops
+PYTHONPATH=src python scripts/import-legacy-ledger.py \
+  --database /home/nik/services/audiobook-ops/audiobook-ops.sqlite3 \
+  --ledger /home/nik/services/audiobook-ops/migration/readmeabook-ledger.json \
+  --mapping migration/readmeabook-publication-mapping.json \
+  --execute
+```
+
+The first production import must report `imported: 4`, `unchanged: 0`, and
+`total: 4`; an immediate replay must report `imported: 0`, `unchanged: 4`, and
+`total: 4`. A disposable rehearsal against an owner-read copy produced both
+exact results and retained three published plus one unpublished record without
+creating tasks.
+
+## Publisher cutover gate
+
+Do not run these commands or change the production key before owner approval in
+the cutover ticket. On `moscow`, install the reviewed wrapper as the unprivileged
+`nik` user:
+
+```bash
+install -Dm0755 remote-wrapper.py \
+  /home/nik/.local/libexec/audiobook-ops-remote-wrapper.py
+```
+
+Replace only the forced-command prefix of the existing dedicated publisher key
+with the exact line in `moscow/authorized-key-command.example`, then append the
+unchanged existing `ssh-ed25519 ...` public-key fields. Expected result: that
+key remains restricted and can reach only the two retained media roots through
+the five allowlisted operations.
+
+From `um790pro`, verify the dedicated identity and pinned known-host file:
+
+```bash
+ssh -T -i "$CREDENTIALS_DIRECTORY/publisher-ssh-key" \
+  -o BatchMode=yes -o ClearAllForwardings=yes \
+  -o StrictHostKeyChecking=yes \
+  -o UserKnownHostsFile=/home/nik/.ssh/known_hosts \
+  -o UpdateHostKeys=no nik@100.81.67.47 capacity
+
+ssh -T -i "$CREDENTIALS_DIRECTORY/publisher-ssh-key" \
+  -o BatchMode=yes -o ClearAllForwardings=yes \
+  -o StrictHostKeyChecking=yes \
+  -o UserKnownHostsFile=/home/nik/.ssh/known_hosts \
+  -o UpdateHostKeys=no nik@100.81.67.47 'sh -c id'
+```
+
+The first command must return one JSON `free_bytes` integer. The second must
+fail with `command is not allowed`; it must not execute `id`.
 
 ## Owner-only operations
 

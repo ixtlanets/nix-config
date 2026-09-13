@@ -1,0 +1,1 @@
+restrict,command="env AUDIOBOOK_OPS_INCOMING_ROOT=/media/disk1/media/.readmeabook-incoming AUDIOBOOK_OPS_FINAL_ROOT=/media/disk1/media/ReadMeABook AUDIOBOOK_OPS_MAX_RELEASE_GIB=20 AUDIOBOOK_OPS_MIN_REMOTE_FREE_GIB=200 AUDIOBOOK_OPS_RSYNC_BIN=/usr/bin/rsync /usr/bin/python3 /home/nik/.local/libexec/audiobook-ops-remote-wrapper.py"
