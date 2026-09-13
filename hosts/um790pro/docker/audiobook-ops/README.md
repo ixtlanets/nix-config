@@ -1,8 +1,9 @@
 # Audiobook Ops on UM790Pro
 
 > Target-state operator documentation. The non-production bundle, domain core,
-> and acquisition adapters are implemented, but the catalog/publisher adapters
-> and Streamable HTTP transport are not yet complete and nothing here has been deployed. Until service
+> acquisition, and Audiobookshelf 2.36.0 adapters are implemented, but the
+> publisher and Streamable HTTP transport are not yet complete and nothing here
+> has been deployed. Until service
 > cutover, use the current production documentation under `../readmeabook/`.
 
 `audiobook-ops` is the deterministic control plane behind the owner's Hermes
@@ -59,6 +60,53 @@ two stable sorted SHA-256 manifests, and copied byte-for-byte into task staging.
 Safe `.cue`, `.nfo`, and `.txt` files are ignored only within the configured
 count and byte limits. Cleanup completion is recorded in SQLite, so one old
 terminal task cannot starve later cleanup after a restart.
+
+The Audiobookshelf adapter reads every accessible book library and paginates its
+items, authors, and series without mirroring the catalog in SQLite. Search is
+Unicode-aware across titles, authors, narrators, and series; audits report
+missing authors/narrators, incomplete series, and suspected duplicates. Exact
+item reads include a path-bound revision and cover checksum.
+
+Metadata plans support the pinned ABS 2.36.0 book shape, including multiple
+authors, narrators, series memberships, and string sequences such as `4.5` and
+`1-2`. Apply sends only changed fields to `PATCH /api/items/:id/media`, uploads
+or clears only the exact item's cover, rereads the item, and compensates a
+partial failure. Durable intent makes both pre-write restart and lost database
+ack replay-safe. Successful changes retain an internal cover snapshot for
+30-day undo; snapshot bytes never enter MCP results.
+
+Cover fetches require live VLESS evidence before every request and redirect.
+DNS answers are checked for loopback, private, link-local, tailnet, metadata,
+reserved, and multicast addresses, then the TLS connection is pinned to the
+validated address to prevent DNS rebinding. Bodies, redirects, dimensions, and
+decoded pixels are capped; `ffprobe` plus a full `ffmpeg` decode validates
+JPEG/PNG/WebP content.
+
+The adapter contract is version-isolated to Audiobookshelf 2.36.0. Its route and
+payload fixtures follow the upstream
+[`ApiRouter.js`](https://github.com/advplyr/audiobookshelf/blob/v2.36.0/server/routers/ApiRouter.js),
+[`LibraryItemController.js`](https://github.com/advplyr/audiobookshelf/blob/v2.36.0/server/controllers/LibraryItemController.js),
+and [`Book.js`](https://github.com/advplyr/audiobookshelf/blob/v2.36.0/server/models/Book.js).
+Run the full contract suite before changing the pinned ABS image. The upgrade
+gate also requires `tests/rehearsal_abs_2360.py` against a disposable,
+loopback-only ABS instance that the owner has initialized. Prepare two book
+libraries with a distinct searchable item in each plus a PNG cover fixture,
+then run:
+
+```bash
+cd hosts/um790pro/docker/audiobook-ops
+ABS_REHEARSAL_URL=http://127.0.0.1:32768 \
+ABS_REHEARSAL_TOKEN_FILE=/tmp/audiobook-ops-abs-2360-owner-gate/access-token \
+ABS_REHEARSAL_COVER_FILE=/tmp/audiobook-ops-abs-2360-owner-gate/rehearsal-cover.png \
+ABS_REHEARSAL_PRIMARY_QUERY=Мастер \
+ABS_REHEARSAL_SECONDARY_QUERY=Пикник \
+PYTHONPATH=src python tests/rehearsal_abs_2360.py
+```
+
+The script refuses a non-loopback target, verifies catalog reads across the two
+libraries, exercises exact metadata/cover set and clear operations through the
+domain interface, tests idempotent replay and undo, and restores the selected
+item's starting snapshot even if an assertion fails.
 
 Render it safely with an explicit private address. This reads files only and
 does not start containers:

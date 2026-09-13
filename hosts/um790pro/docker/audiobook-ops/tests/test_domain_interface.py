@@ -8,7 +8,11 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from audiobook_ops.interface import AudiobookOperations, OperationError
+from audiobook_ops.interface import (
+    AudiobookOperations,
+    CatalogMutationError,
+    OperationError,
+)
 
 
 @dataclass
@@ -95,6 +99,8 @@ class FakeExternalActionAdapter:
 
 class FakeCatalogAdapter:
     def __init__(self) -> None:
+        self.apply_calls = 0
+        self.fail_mode: str | None = None
         self.items = {
             ("library-one", "item-one"): {
                 "library_id": "library-one",
@@ -105,6 +111,7 @@ class FakeCatalogAdapter:
                     "title": "Старое название",
                     "authors": ["Автор"],
                     "narrators": ["Чтец"],
+                    "publisher": "Старый издатель",
                 },
                 "cover": {"checksum": "old-cover-checksum"},
             }
@@ -112,6 +119,67 @@ class FakeCatalogAdapter:
 
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]:
         return dict(self.items[(library_id, item_id)])
+
+    def search(self, query: str) -> list[dict[str, object]]:
+        return [
+            dict(item)
+            for item in self.items.values()
+            if query.casefold() in str(item["metadata"]["title"]).casefold()
+        ]
+
+    def audit(self, library_ids: list[str]) -> dict[str, object]:
+        return {"library_ids": library_ids or ["library-one"], "issues": []}
+
+    def prepare_cover(self, source_url: str) -> dict[str, object]:
+        return {
+            "source_url": source_url,
+            "checksum": "new-cover-checksum",
+            "mime_type": "image/jpeg",
+            "filename": "cover.jpg",
+            "width": 1200,
+            "height": 1200,
+            "_content_b64": "bmV3IGNvdmVy",
+        }
+
+    def snapshot_exact(self, target: dict[str, object]) -> dict[str, object]:
+        item = self.items[(str(target["library_id"]), str(target["item_id"]))]
+        if item["path"] != target["path"] or item["revision"] != target["revision"]:
+            raise OperationError("catalog item identity changed")
+        return {
+            "metadata": json.loads(json.dumps(item["metadata"])),
+            "cover": (
+                {**item["cover"], "_content_b64": "b2xkIGNvdmVy"}
+                if item["cover"] is not None
+                else None
+            ),
+        }
+
+    def apply_exact(
+        self,
+        target: dict[str, object],
+        desired: dict[str, object],
+        rollback: dict[str, object],
+    ) -> dict[str, object]:
+        item = self.items[(str(target["library_id"]), str(target["item_id"]))]
+        if item["path"] != target["path"] or item["revision"] != target["revision"]:
+            raise OperationError("catalog item identity changed")
+        self.apply_calls += 1
+        if self.fail_mode == "crash_before":
+            raise SystemExit("simulated worker crash before catalog write")
+        if self.fail_mode is not None:
+            raise CatalogMutationError(
+                "simulated catalog mutation failure",
+                compensated=self.fail_mode == "compensated",
+            )
+        item["metadata"] = json.loads(json.dumps(desired["metadata"]))
+        cover = desired["cover"]
+        item["cover"] = (
+            {key: value for key, value in cover.items() if not key.startswith("_")}
+            if isinstance(cover, dict)
+            else None
+        )
+        item["revision"] = f"item-revision-{self.apply_calls + 1}"
+        return dict(item)
 
 
 class RequestLifecycleTests(unittest.TestCase):
@@ -718,8 +786,351 @@ class RequestLifecycleTests(unittest.TestCase):
                     "item_id": "item-one",
                     "item_revision": "item-revision-one",
                     "changes": {"title": {"operation": "clear"}},
+                    },
+                )
+
+    def test_library_reads_use_catalog_adapter_without_exposing_write_routes(self) -> None:
+        searched = self.operations.invoke("library_search", {"query": "старое"})
+        exact = self.operations.invoke(
+            "library_item_get", {"library_id": "library-one", "item_id": "item-one"}
+        )
+        audit = self.operations.invoke("library_audit", {"library_ids": []})
+
+        self.assertEqual([item["item_id"] for item in searched["items"]], ["item-one"])
+        self.assertEqual(exact["item_id"], "item-one")
+        self.assertEqual(audit, {"library_ids": ["library-one"], "issues": []})
+
+    def test_combined_metadata_cover_apply_and_undo_are_exact_and_idempotent(self) -> None:
+        plan = self.operations.invoke(
+            "metadata_plan",
+            {
+                "library_id": "library-one",
+                "item_id": "item-one",
+                "item_revision": "item-revision-one",
+                "changes": {
+                    "title": {
+                        "operation": "set",
+                        "value": "Новое название",
+                        "source": "rutracker:topic:6887881",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "subtitle": {
+                        "operation": "clear",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "authors": {
+                        "operation": "set",
+                        "value": ["Автор Один", "Автор Два"],
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "narrators": {
+                        "operation": "clear",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "tags": {
+                        "operation": "clear",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "series": {
+                        "operation": "set",
+                        "value": [
+                            {"name": "Цикл", "sequence": "4.5"},
+                            {"name": "Другой цикл", "sequence": "1-2"},
+                        ],
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
+                    "cover": {
+                        "operation": "set",
+                        "value": {"source_url": "https://covers.example/new.jpg"},
+                        "source": "https://covers.example/new.jpg",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    },
                 },
+            },
+        )
+        self.assertNotIn("_content_b64", json.dumps(plan))
+
+        arguments = {
+            "plan_id": plan["plan_id"],
+            "revision": plan["revision"],
+            "idempotency_key": "metadata-apply-key",
+        }
+        applied = self.operations.invoke(
+            "metadata_apply", arguments, mutation_authorized=True
+        )
+        replay = self.operations.invoke(
+            "metadata_apply", arguments, mutation_authorized=True
+        )
+
+        self.assertEqual(applied, replay)
+        self.assertEqual(self.catalog.apply_calls, 1)
+        self.assertEqual(applied["status"], "applied")
+        self.assertEqual(applied["item"]["path"], "/readmeabook/Автор/Книга")
+        self.assertEqual(applied["item"]["metadata"]["title"], "Новое название")
+        self.assertIsNone(applied["item"]["metadata"]["subtitle"])
+        self.assertEqual(applied["item"]["metadata"]["narrators"], [])
+        self.assertEqual(applied["item"]["metadata"]["tags"], [])
+        self.assertEqual(
+            applied["item"]["metadata"]["publisher"], "Старый издатель"
+        )
+        self.assertEqual(applied["undo_expires_at"], "2026-10-13T00:00:00+00:00")
+
+        undone = self.operations.invoke(
+            "metadata_undo",
+            {
+                "change_id": applied["change_id"],
+                "revision": applied["revision"],
+                "idempotency_key": "metadata-undo-key",
+            },
+            mutation_authorized=True,
+        )
+        self.assertEqual(undone["status"], "undone")
+        self.assertEqual(undone["item"]["metadata"]["title"], "Старое название")
+        self.assertEqual(undone["item"]["cover"]["checksum"], "old-cover-checksum")
+        self.assertEqual(undone["item"]["path"], "/readmeabook/Автор/Книга")
+
+    def test_metadata_apply_rejects_expiry_and_stale_path_revision_before_write(self) -> None:
+        plan = self.operations.invoke(
+            "metadata_plan",
+            {
+                "library_id": "library-one",
+                "item_id": "item-one",
+                "item_revision": "item-revision-one",
+                "changes": {
+                    "title": {
+                        "operation": "set",
+                        "value": "Новое название",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    }
+                },
+            },
+        )
+        self.catalog.items[("library-one", "item-one")]["path"] = "/changed/path"
+        with self.assertRaisesRegex(OperationError, "identity changed"):
+            self.operations.invoke(
+                "metadata_apply",
+                {
+                    "plan_id": plan["plan_id"],
+                    "revision": plan["revision"],
+                    "idempotency_key": "metadata-stale-key",
+                },
+                mutation_authorized=True,
             )
+        self.assertEqual(self.catalog.apply_calls, 0)
+
+        self.catalog.items[("library-one", "item-one")]["path"] = "/readmeabook/Автор/Книга"
+        self.clock.advance(timedelta(hours=24, microseconds=1))
+        with self.assertRaisesRegex(OperationError, "plan expired"):
+            self.operations.invoke(
+                "metadata_apply",
+                {
+                    "plan_id": plan["plan_id"],
+                    "revision": plan["revision"],
+                    "idempotency_key": "metadata-expired-key",
+                },
+                mutation_authorized=True,
+            )
+
+    def test_metadata_partial_failure_records_compensation_or_attention(self) -> None:
+        for mode, expected_status in (
+            ("compensated", "failed_compensated"),
+            ("needs_attention", "needs_attention"),
+        ):
+            with self.subTest(mode=mode):
+                plan = self.operations.invoke(
+                    "metadata_plan",
+                    {
+                        "library_id": "library-one",
+                        "item_id": "item-one",
+                        "item_revision": "item-revision-one",
+                        "changes": {
+                            "title": {
+                                "operation": "set",
+                                "value": f"Failure {mode}",
+                                "source": "owner-review",
+                                "observed_at": "2026-09-12T20:00:00+00:00",
+                                "confidence": "high",
+                            }
+                        },
+                    },
+                )
+                self.catalog.fail_mode = mode
+                with self.assertRaisesRegex(OperationError, "simulated"):
+                    self.operations.invoke(
+                        "metadata_apply",
+                        {
+                            "plan_id": plan["plan_id"],
+                            "revision": plan["revision"],
+                            "idempotency_key": f"metadata-failure-{mode}",
+                        },
+                        mutation_authorized=True,
+                    )
+                self.assertEqual(
+                    self.operations.metadata_plan_application(plan["plan_id"])["status"],
+                    expected_status,
+                )
+                self.catalog.fail_mode = None
+        self.assertEqual(self.catalog.apply_calls, 2)
+
+    def test_metadata_undo_rejects_stale_item_and_expiry_before_write(self) -> None:
+        plan = self.operations.invoke(
+            "metadata_plan",
+            {
+                "library_id": "library-one",
+                "item_id": "item-one",
+                "item_revision": "item-revision-one",
+                "changes": {
+                    "title": {
+                        "operation": "set",
+                        "value": "Новое название",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    }
+                },
+            },
+        )
+        applied = self.operations.invoke(
+            "metadata_apply",
+            {
+                "plan_id": plan["plan_id"],
+                "revision": plan["revision"],
+                "idempotency_key": "metadata-apply-for-undo",
+            },
+            mutation_authorized=True,
+        )
+        expected_revision = self.catalog.items[("library-one", "item-one")]["revision"]
+        self.catalog.items[("library-one", "item-one")]["revision"] = "external-change"
+        undo = {
+            "change_id": applied["change_id"],
+            "revision": applied["revision"],
+            "idempotency_key": "metadata-undo-stale",
+        }
+        with self.assertRaisesRegex(OperationError, "identity changed"):
+            self.operations.invoke("metadata_undo", undo, mutation_authorized=True)
+        self.assertEqual(self.catalog.apply_calls, 1)
+
+        self.catalog.items[("library-one", "item-one")]["revision"] = expected_revision
+        self.clock.advance(timedelta(days=30, microseconds=1))
+        undo["idempotency_key"] = "metadata-undo-expired"
+        with self.assertRaisesRegex(OperationError, "undo expired"):
+            self.operations.invoke("metadata_undo", undo, mutation_authorized=True)
+        self.assertEqual(self.catalog.apply_calls, 1)
+
+    def test_metadata_apply_recovers_after_external_success_before_database_ack(self) -> None:
+        plan = self.operations.invoke(
+            "metadata_plan",
+            {
+                "library_id": "library-one",
+                "item_id": "item-one",
+                "item_revision": "item-revision-one",
+                "changes": {
+                    "title": {
+                        "operation": "set",
+                        "value": "Новое название",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    }
+                },
+            },
+        )
+        arguments = {
+            "plan_id": plan["plan_id"],
+            "revision": plan["revision"],
+            "idempotency_key": "metadata-lost-ack-key",
+        }
+        self.operations._connection.executescript(
+            """
+            CREATE TRIGGER fail_metadata_ack
+            BEFORE UPDATE OF status ON metadata_changes
+            WHEN NEW.status = 'applied'
+            BEGIN
+              SELECT RAISE(ABORT, 'simulated lost ack');
+            END;
+            """
+        )
+        with self.assertRaisesRegex(Exception, "simulated lost ack"):
+            self.operations.invoke(
+                "metadata_apply", arguments, mutation_authorized=True
+            )
+        self.operations._connection.execute("DROP TRIGGER fail_metadata_ack")
+        self.operations.close()
+        self.operations = AudiobookOperations.open(
+            self.database,
+            clock=self.clock,
+            release_adapter=self.releases,
+            external_action_adapter=self.actions,
+            catalog_adapter=self.catalog,
+        )
+
+        recovered = self.operations.invoke(
+            "metadata_apply", arguments, mutation_authorized=True
+        )
+
+        self.assertEqual(recovered["status"], "applied")
+        self.assertEqual(recovered["item"]["metadata"]["title"], "Новое название")
+        self.assertEqual(self.catalog.apply_calls, 1)
+
+    def test_metadata_apply_retries_after_restart_before_external_write(self) -> None:
+        plan = self.operations.invoke(
+            "metadata_plan",
+            {
+                "library_id": "library-one",
+                "item_id": "item-one",
+                "item_revision": "item-revision-one",
+                "changes": {
+                    "title": {
+                        "operation": "set",
+                        "value": "Новое название",
+                        "source": "owner-review",
+                        "observed_at": "2026-09-12T20:00:00+00:00",
+                        "confidence": "high",
+                    }
+                },
+            },
+        )
+        arguments = {
+            "plan_id": plan["plan_id"],
+            "revision": plan["revision"],
+            "idempotency_key": "metadata-restart-before-write",
+        }
+        self.catalog.fail_mode = "crash_before"
+        with self.assertRaisesRegex(SystemExit, "simulated worker crash"):
+            self.operations.invoke(
+                "metadata_apply", arguments, mutation_authorized=True
+            )
+        self.catalog.fail_mode = None
+        self.operations.close()
+        self.operations = AudiobookOperations.open(
+            self.database,
+            clock=self.clock,
+            release_adapter=self.releases,
+            external_action_adapter=self.actions,
+            catalog_adapter=self.catalog,
+        )
+
+        recovered = self.operations.invoke(
+            "metadata_apply", arguments, mutation_authorized=True
+        )
+
+        self.assertEqual(recovered["status"], "applied")
+        self.assertEqual(recovered["item"]["metadata"]["title"], "Новое название")
+        self.assertEqual(self.catalog.apply_calls, 2)
 
     def test_managed_audiobook_binds_publication_to_one_exact_item(self) -> None:
         task = self.apply(self.request_plan(), "request-key-one")

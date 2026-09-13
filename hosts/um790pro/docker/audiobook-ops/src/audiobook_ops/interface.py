@@ -15,6 +15,12 @@ class OperationError(RuntimeError):
     """A fail-closed error safe to return through an interface adapter."""
 
 
+class CatalogMutationError(OperationError):
+    def __init__(self, message: str, *, compensated: bool) -> None:
+        super().__init__(message)
+        self.compensated = compensated
+
+
 class Clock(Protocol):
     def now(self) -> datetime: ...
 
@@ -36,7 +42,22 @@ class ExternalActionAdapter(Protocol):
 
 
 class CatalogAdapter(Protocol):
+    def search(self, query: str) -> list[dict[str, object]]: ...
+
+    def audit(self, library_ids: list[str]) -> dict[str, object]: ...
+
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]: ...
+
+    def prepare_cover(self, source_url: str) -> dict[str, object]: ...
+
+    def snapshot_exact(self, target: dict[str, object]) -> dict[str, object]: ...
+
+    def apply_exact(
+        self,
+        target: dict[str, object],
+        desired: dict[str, object],
+        rollback: dict[str, object],
+    ) -> dict[str, object]: ...
 
 
 class SystemClock:
@@ -56,8 +77,28 @@ class UnavailableReleaseAdapter:
 
 
 class UnavailableCatalogAdapter:
+    def search(self, query: str) -> list[dict[str, object]]:
+        raise OperationError("catalog adapter is unavailable")
+
+    def audit(self, library_ids: list[str]) -> dict[str, object]:
+        raise OperationError("catalog adapter is unavailable")
+
     def get_item(self, library_id: str, item_id: str) -> dict[str, object]:
         raise KeyError((library_id, item_id))
+
+    def prepare_cover(self, source_url: str) -> dict[str, object]:
+        raise OperationError("catalog adapter is unavailable")
+
+    def snapshot_exact(self, target: dict[str, object]) -> dict[str, object]:
+        raise OperationError("catalog adapter is unavailable")
+
+    def apply_exact(
+        self,
+        target: dict[str, object],
+        desired: dict[str, object],
+        rollback: dict[str, object],
+    ) -> dict[str, object]:
+        raise OperationError("catalog adapter is unavailable")
 
 
 class UnavailableExternalActionAdapter:
@@ -120,7 +161,7 @@ ACTIVE_STATES = {
     "applying_metadata",
 }
 RETRY_DELAYS_SECONDS = (60, 300, 900)
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 METADATA_FIELDS = frozenset(
     {
         "abridged",
@@ -164,6 +205,18 @@ def _non_empty_string(value: object) -> bool:
 
 def _normalized_text(value: object) -> str:
     return " ".join(str(value).casefold().replace("ё", "е").split())
+
+
+def _public_value(value: object) -> object:
+    if isinstance(value, dict):
+        return {
+            key: _public_value(item)
+            for key, item in value.items()
+            if not str(key).startswith("_")
+        }
+    if isinstance(value, list):
+        return [_public_value(item) for item in value]
+    return deepcopy(value)
 
 
 class AudiobookOperations:
@@ -243,6 +296,9 @@ class AudiobookOperations:
 
             INSERT OR IGNORE INTO schema_migrations(version, applied_at)
             VALUES (2, '2026-09-13T12:00:00+00:00');
+
+            INSERT OR IGNORE INTO schema_migrations(version, applied_at)
+            VALUES (3, '2026-09-13T18:00:00+00:00');
 
             CREATE TABLE IF NOT EXISTS acquisition_plans (
               plan_id TEXT PRIMARY KEY,
@@ -344,6 +400,26 @@ class AudiobookOperations:
               payload_json TEXT NOT NULL,
               created_at TEXT NOT NULL,
               expires_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS metadata_changes (
+              change_id TEXT PRIMARY KEY,
+              plan_id TEXT NOT NULL UNIQUE REFERENCES metadata_plans(plan_id),
+              apply_idempotency_key TEXT NOT NULL UNIQUE,
+              input_digest TEXT NOT NULL,
+              revision TEXT NOT NULL,
+              library_id TEXT NOT NULL,
+              item_id TEXT NOT NULL,
+              item_path TEXT NOT NULL,
+              before_json TEXT NOT NULL,
+              after_json TEXT NOT NULL,
+              after_item_revision TEXT,
+              result_json TEXT,
+              status TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              applied_at TEXT,
+              undo_expires_at TEXT,
+              undone_at TEXT
             );
 
             CREATE TABLE IF NOT EXISTS managed_audiobooks (
@@ -477,8 +553,18 @@ class AudiobookOperations:
             return self._task_retry(arguments)
         if tool_name == "notification_list":
             return self._notification_list(arguments)
+        if tool_name == "library_search":
+            return self._library_search(arguments)
+        if tool_name == "library_item_get":
+            return self._library_item_get(arguments)
+        if tool_name == "library_audit":
+            return self._library_audit(arguments)
         if tool_name == "metadata_plan":
             return self._metadata_plan(arguments)
+        if tool_name == "metadata_apply":
+            return self._metadata_apply(arguments)
+        if tool_name == "metadata_undo":
+            return self._metadata_undo(arguments)
         if tool_name == "release_search":
             return self._release_search(arguments)
         if tool_name == "release_inspect":
@@ -486,6 +572,42 @@ class AudiobookOperations:
                 self._inspect_candidate(str(arguments.get("candidate_id", "")))
             )
         raise OperationError(f"unknown operation: {tool_name}")
+
+    def _library_search(self, arguments: dict[str, object]) -> dict[str, object]:
+        query = arguments.get("query")
+        if not _non_empty_string(query) or len(str(query)) > 500:
+            raise OperationError("a bounded non-empty library query is required")
+        try:
+            items = self._catalog.search(str(query).strip())
+        except (KeyError, ValueError) as error:
+            raise OperationError("catalog search failed") from error
+        if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+            raise OperationError("catalog adapter returned invalid search results")
+        return {"items": deepcopy(items)}
+
+    def _library_item_get(self, arguments: dict[str, object]) -> dict[str, object]:
+        library_id = arguments.get("library_id")
+        item_id = arguments.get("item_id")
+        if not _non_empty_string(library_id) or not _non_empty_string(item_id):
+            raise OperationError("exact library and item IDs are required")
+        return deepcopy(self._catalog_item(str(library_id), str(item_id)))
+
+    def _library_audit(self, arguments: dict[str, object]) -> dict[str, object]:
+        library_ids = arguments.get("library_ids", [])
+        if (
+            not isinstance(library_ids, list)
+            or len(library_ids) > 100
+            or any(not _non_empty_string(library_id) for library_id in library_ids)
+            or len(set(library_ids)) != len(library_ids)
+        ):
+            raise OperationError("library IDs must be a bounded unique list")
+        try:
+            result = self._catalog.audit([str(value) for value in library_ids])
+        except (KeyError, ValueError) as error:
+            raise OperationError("catalog audit failed") from error
+        if not isinstance(result, dict):
+            raise OperationError("catalog adapter returned an invalid audit")
+        return deepcopy(result)
 
     def _release_search(self, arguments: dict[str, object]) -> dict[str, object]:
         queries = arguments.get("queries")
@@ -768,12 +890,33 @@ class AudiobookOperations:
             if change["operation"] == "set" and "value" not in change:
                 raise OperationError(f"invalid metadata value for {field}")
             if field == "cover":
-                after["cover"] = change.get("value") if change["operation"] == "set" else None
+                if change["operation"] == "clear":
+                    after["cover"] = None
+                else:
+                    cover_value = change.get("value")
+                    if (
+                        not isinstance(cover_value, dict)
+                        or set(cover_value) != {"source_url"}
+                        or not _non_empty_string(cover_value.get("source_url"))
+                    ):
+                        raise OperationError("invalid metadata value for cover")
+                    after["cover"] = self._catalog.prepare_cover(
+                        str(cover_value["source_url"])
+                    )
             else:
                 metadata = after["metadata"]
                 if not isinstance(metadata, dict):
                     raise OperationError("invalid catalog metadata")
-                metadata[field] = change.get("value") if change["operation"] == "set" else None
+                if change["operation"] == "set":
+                    value = change.get("value")
+                elif field in {"authors", "narrators", "series", "genres", "tags"}:
+                    value = []
+                elif field in {"explicit", "abridged"}:
+                    value = False
+                else:
+                    value = None
+                self._validate_metadata_value(field, value, clear=change["operation"] == "clear")
+                metadata[field] = value
         now = self._clock.now()
         expires_at = now + timedelta(hours=24)
         target = {
@@ -809,8 +952,358 @@ class AudiobookOperations:
             "plan_id": plan_id,
             "revision": revision,
             "expires_at": _timestamp(expires_at),
-            **payload,
+            **_public_value(payload),
         }
+
+    @staticmethod
+    def _validate_metadata_value(field: str, value: object, *, clear: bool) -> None:
+        if clear:
+            return
+        if field in {
+            "subtitle",
+            "published_year",
+            "published_date",
+            "publisher",
+            "description",
+            "language",
+            "isbn",
+            "asin",
+        }:
+            if not isinstance(value, str):
+                raise OperationError(f"invalid metadata value for {field}")
+            return
+        if field == "title":
+            if not _non_empty_string(value):
+                raise OperationError("invalid metadata value for title")
+            return
+        if field in {"explicit", "abridged"}:
+            if not isinstance(value, bool):
+                raise OperationError(f"invalid metadata value for {field}")
+            return
+        if field in {"authors", "narrators", "genres", "tags"}:
+            if (
+                not isinstance(value, list)
+                or (field == "authors" and not value)
+                or any(not _non_empty_string(item) for item in value)
+            ):
+                raise OperationError(f"invalid metadata value for {field}")
+            return
+        if field == "series":
+            if not isinstance(value, list) or any(
+                not isinstance(item, dict)
+                or set(item) != {"name", "sequence"}
+                or not _non_empty_string(item.get("name"))
+                or not _non_empty_string(item.get("sequence"))
+                for item in value
+            ):
+                raise OperationError("invalid metadata value for series")
+            return
+        raise OperationError(f"invalid metadata value for {field}")
+
+    def _metadata_apply(self, arguments: dict[str, object]) -> dict[str, object]:
+        plan_id = str(arguments.get("plan_id", ""))
+        revision = str(arguments.get("revision", ""))
+        idempotency_key = str(arguments.get("idempotency_key", ""))
+        if not plan_id or not revision or not idempotency_key:
+            raise OperationError("plan, revision, and idempotency key are required")
+        input_digest = _digest({"plan_id": plan_id, "revision": revision})
+        replay = self._idempotent_replay(
+            idempotency_key, "metadata_apply", input_digest
+        )
+        if replay is not None:
+            return replay
+        plan = self._connection.execute(
+            "SELECT * FROM metadata_plans WHERE plan_id = ?", (plan_id,)
+        ).fetchone()
+        if plan is None:
+            raise OperationError("unknown metadata plan")
+        if plan["revision"] != revision:
+            raise OperationError("stale metadata plan revision")
+        payload = json.loads(plan["payload_json"])
+        target = payload["target"]
+        existing = self._connection.execute(
+            "SELECT * FROM metadata_changes WHERE plan_id = ?", (plan_id,)
+        ).fetchone()
+        if existing is not None:
+            if (
+                existing["apply_idempotency_key"] != idempotency_key
+                or existing["input_digest"] != input_digest
+            ):
+                raise OperationError("idempotency key conflict")
+            if existing["status"] == "applied" and existing["result_json"]:
+                return json.loads(existing["result_json"])
+            if existing["status"] == "applying":
+                current = self._catalog_item(plan["library_id"], plan["item_id"])
+                if self._item_matches_snapshot(current, target, payload["after"]):
+                    return self._complete_metadata_apply(
+                        str(existing["change_id"]),
+                        current,
+                        idempotency_key,
+                        input_digest,
+                    )
+                before = json.loads(existing["before_json"])
+                if self._item_matches_snapshot(current, target, before):
+                    resumed_target = {
+                        "library_id": current["library_id"],
+                        "item_id": current["item_id"],
+                        "path": current["path"],
+                        "revision": current["revision"],
+                    }
+                    item = self._catalog.apply_exact(
+                        resumed_target, payload["after"], before
+                    )
+                    self._require_applied_snapshot(
+                        item, resumed_target, payload["after"]
+                    )
+                    return self._complete_metadata_apply(
+                        str(existing["change_id"]),
+                        item,
+                        idempotency_key,
+                        input_digest,
+                    )
+            raise OperationError("metadata plan already has an incomplete application")
+        if self._clock.now() > datetime.fromisoformat(plan["expires_at"]):
+            raise OperationError("metadata plan expired")
+
+        current = self._catalog_item(plan["library_id"], plan["item_id"])
+        self._require_exact_catalog_identity(current, target)
+        before = self._catalog.snapshot_exact(target)
+        if not isinstance(before, dict):
+            raise OperationError("catalog snapshot is invalid")
+        change_id = str(uuid4())
+        initial_revision = _digest(
+            {"change_id": change_id, "plan_id": plan_id, "plan_revision": revision}
+        )
+        now = _timestamp(self._clock.now())
+        self._connection.execute(
+            """
+            INSERT INTO metadata_changes(
+              change_id, plan_id, apply_idempotency_key, input_digest, revision,
+              library_id, item_id, item_path, before_json, after_json, status,
+              created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'applying', ?)
+            """,
+            (
+                change_id,
+                plan_id,
+                idempotency_key,
+                input_digest,
+                initial_revision,
+                plan["library_id"],
+                plan["item_id"],
+                plan["item_path"],
+                _canonical(before),
+                _canonical(payload["after"]),
+                now,
+            ),
+        )
+        try:
+            item = self._catalog.apply_exact(target, payload["after"], before)
+            self._require_applied_snapshot(item, target, payload["after"])
+        except CatalogMutationError as error:
+            self._connection.execute(
+                "UPDATE metadata_changes SET status = ? WHERE change_id = ?",
+                ("failed_compensated" if error.compensated else "needs_attention", change_id),
+            )
+            raise OperationError(str(error)) from error
+        except OperationError:
+            self._connection.execute(
+                "UPDATE metadata_changes SET status = 'needs_attention' WHERE change_id = ?",
+                (change_id,),
+            )
+            raise
+
+        return self._complete_metadata_apply(
+            change_id, item, idempotency_key, input_digest
+        )
+
+    def _complete_metadata_apply(
+        self,
+        change_id: str,
+        item: dict[str, object],
+        idempotency_key: str,
+        input_digest: str,
+    ) -> dict[str, object]:
+        applied_at = self._clock.now()
+        undo_expires_at = applied_at + timedelta(days=30)
+        result_revision = _digest(
+            {
+                "change_id": change_id,
+                "item_revision": item["revision"],
+                "applied_at": _timestamp(applied_at),
+            }
+        )
+        result = {
+            "entity_kind": "metadata_change",
+            "change_id": change_id,
+            "revision": result_revision,
+            "status": "applied",
+            "item": _public_value(item),
+            "undo_expires_at": _timestamp(undo_expires_at),
+        }
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            self._connection.execute(
+                """
+                UPDATE metadata_changes
+                   SET revision = ?, after_item_revision = ?, result_json = ?,
+                       status = 'applied', applied_at = ?, undo_expires_at = ?
+                 WHERE change_id = ? AND status = 'applying'
+                """,
+                (
+                    result_revision,
+                    item["revision"],
+                    _canonical(result),
+                    _timestamp(applied_at),
+                    _timestamp(undo_expires_at),
+                    change_id,
+                ),
+            )
+            self._store_idempotent_result(
+                idempotency_key, "metadata_apply", input_digest, result
+            )
+            self._connection.execute("COMMIT")
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+        return result
+
+    def _metadata_undo(self, arguments: dict[str, object]) -> dict[str, object]:
+        change_id = str(arguments.get("change_id", ""))
+        revision = str(arguments.get("revision", ""))
+        idempotency_key = str(arguments.get("idempotency_key", ""))
+        if not change_id or not revision or not idempotency_key:
+            raise OperationError("change, revision, and idempotency key are required")
+        input_digest = _digest({"change_id": change_id, "revision": revision})
+        replay = self._idempotent_replay(
+            idempotency_key, "metadata_undo", input_digest
+        )
+        if replay is not None:
+            return replay
+        change = self._connection.execute(
+            "SELECT * FROM metadata_changes WHERE change_id = ?", (change_id,)
+        ).fetchone()
+        if change is None:
+            raise OperationError("unknown metadata change")
+        if change["revision"] != revision:
+            raise OperationError("stale metadata change revision")
+        if change["status"] != "applied":
+            raise OperationError("metadata change cannot be undone")
+        if self._clock.now() > datetime.fromisoformat(change["undo_expires_at"]):
+            raise OperationError("metadata undo expired")
+        target = {
+            "library_id": change["library_id"],
+            "item_id": change["item_id"],
+            "path": change["item_path"],
+            "revision": change["after_item_revision"],
+        }
+        current = self._catalog_item(change["library_id"], change["item_id"])
+        self._require_exact_catalog_identity(current, target)
+        current_snapshot = self._catalog.snapshot_exact(target)
+        before = json.loads(change["before_json"])
+        try:
+            item = self._catalog.apply_exact(target, before, current_snapshot)
+        except CatalogMutationError as error:
+            if not error.compensated:
+                self._connection.execute(
+                    "UPDATE metadata_changes SET status = 'needs_attention' WHERE change_id = ?",
+                    (change_id,),
+                )
+            raise OperationError(str(error)) from error
+        self._require_applied_snapshot(item, target, before)
+        undone_at = self._clock.now()
+        result_revision = _digest(
+            {
+                "change_id": change_id,
+                "item_revision": item["revision"],
+                "undone_at": _timestamp(undone_at),
+            }
+        )
+        result = {
+            "entity_kind": "metadata_change",
+            "change_id": change_id,
+            "revision": result_revision,
+            "status": "undone",
+            "item": _public_value(item),
+        }
+        try:
+            self._connection.execute("BEGIN IMMEDIATE")
+            self._connection.execute(
+                """
+                UPDATE metadata_changes
+                   SET revision = ?, result_json = ?, status = 'undone', undone_at = ?
+                 WHERE change_id = ? AND status = 'applied'
+                """,
+                (result_revision, _canonical(result), _timestamp(undone_at), change_id),
+            )
+            self._store_idempotent_result(
+                idempotency_key, "metadata_undo", input_digest, result
+            )
+            self._connection.execute("COMMIT")
+        except Exception:
+            if self._connection.in_transaction:
+                self._connection.execute("ROLLBACK")
+            raise
+        return result
+
+    def metadata_plan_application(self, plan_id: str) -> dict[str, object]:
+        row = self._connection.execute(
+            """
+            SELECT change_id, plan_id, revision, status, created_at, applied_at,
+                   undo_expires_at, undone_at
+              FROM metadata_changes WHERE plan_id = ?
+            """,
+            (plan_id,),
+        ).fetchone()
+        if row is None:
+            raise OperationError("metadata plan has not been applied")
+        return dict(row)
+
+    @staticmethod
+    def _require_exact_catalog_identity(
+        item: dict[str, object], target: dict[str, object]
+    ) -> None:
+        if any(
+            item.get(key) != target.get(key)
+            for key in ("library_id", "item_id", "path", "revision")
+        ):
+            raise OperationError("catalog item identity changed")
+
+    @staticmethod
+    def _require_applied_snapshot(
+        item: dict[str, object],
+        target: dict[str, object],
+        snapshot: dict[str, object],
+    ) -> None:
+        if any(item.get(key) != target.get(key) for key in ("library_id", "item_id", "path")):
+            raise OperationError("catalog item identity changed after update")
+        if item.get("metadata") != _public_value(snapshot.get("metadata")):
+            raise OperationError("catalog metadata verification failed")
+        expected_cover = snapshot.get("cover")
+        observed_cover = item.get("cover")
+        if expected_cover is None:
+            if observed_cover is not None:
+                raise OperationError("catalog cover verification failed")
+        elif (
+            not isinstance(expected_cover, dict)
+            or not isinstance(observed_cover, dict)
+            or expected_cover.get("checksum") != observed_cover.get("checksum")
+        ):
+            raise OperationError("catalog cover verification failed")
+
+    @classmethod
+    def _item_matches_snapshot(
+        cls,
+        item: dict[str, object],
+        target: dict[str, object],
+        snapshot: dict[str, object],
+    ) -> bool:
+        try:
+            cls._require_applied_snapshot(item, target, snapshot)
+        except OperationError:
+            return False
+        return True
 
     def record_transient_failure(
         self,
@@ -1536,6 +2029,28 @@ class AudiobookOperations:
         if row["operation"] != operation or row["input_digest"] != input_digest:
             raise OperationError("idempotency key conflict")
         return json.loads(row["result_json"])
+
+    def _store_idempotent_result(
+        self,
+        key: str,
+        operation: str,
+        input_digest: str,
+        result: dict[str, object],
+    ) -> None:
+        self._connection.execute(
+            """
+            INSERT INTO idempotency_results(
+              idempotency_key, operation, input_digest, result_json, created_at
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                key,
+                operation,
+                input_digest,
+                _canonical(result),
+                _timestamp(self._clock.now()),
+            ),
+        )
 
     def _notification_list(self, arguments: dict[str, object]) -> dict[str, object]:
         after_event_id = arguments.get("after_event_id", 0)
