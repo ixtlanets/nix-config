@@ -59,6 +59,25 @@ CHANGE = _object(
     },
     ("operation", "source", "observed_at", "confidence"),
 )
+COVER_CHANGE = _object(
+    {
+        "operation": {"type": "string", "enum": ["set", "clear"]},
+        "value": _object(
+            {
+                "source_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^https://",
+                }
+            },
+            ("source_url",),
+        ),
+        "source": {"type": "string"},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+    },
+    ("operation", "source", "observed_at", "confidence"),
+)
 METADATA_FIELDS = (
     "title",
     "subtitle",
@@ -207,7 +226,12 @@ _TOOLS = (
                 "library_id": STRING,
                 "item_id": STRING,
                 "item_revision": REVISION,
-                "changes": _object({field: CHANGE for field in METADATA_FIELDS}),
+                "changes": _object(
+                    {
+                        field: COVER_CHANGE if field == "cover" else CHANGE
+                        for field in METADATA_FIELDS
+                    }
+                ),
             },
             ("library_id", "item_id", "item_revision", "changes"),
         ),

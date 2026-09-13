@@ -104,6 +104,21 @@ class MCPContractTests(unittest.TestCase):
                 {"operation", "source", "observed_at", "confidence"},
             )
 
+    def test_cover_change_schema_exposes_the_exact_https_source_shape(self) -> None:
+        metadata = {
+            tool["name"]: tool for tool in tool_contracts()
+        }["metadata_plan"]["inputSchema"]["properties"]["changes"]
+
+        value = metadata["properties"]["cover"]["properties"]["value"]
+
+        self.assertEqual(value["type"], "object")
+        self.assertFalse(value["additionalProperties"])
+        self.assertEqual(value["required"], ["source_url"])
+        self.assertEqual(
+            value["properties"]["source_url"],
+            {"type": "string", "format": "uri", "pattern": "^https://"},
+        )
+
     def test_mcp_adapter_calls_the_domain_interface_and_preserves_write_gate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             operations = AudiobookOperations.open(
