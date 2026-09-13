@@ -76,6 +76,8 @@ class ProwlarrHTTP(Protocol):
 
     def topic(self, internal_url: str) -> str: ...
 
+    def download_redirect(self, download_path: str) -> str: ...
+
 
 class ProwlarrHTTPClient:
     """Bounded HTTP implementation for the pinned Prowlarr contract."""
@@ -129,6 +131,31 @@ class ProwlarrHTTPClient:
             "windows-1251", errors="replace"
         )
 
+    def download_redirect(self, download_path: str) -> str:
+        if _safe_download_path(download_path) != download_path:
+            raise OperationError("invalid Prowlarr download route")
+        request = Request(
+            f"{self._base_url}{download_path}",
+            headers={
+                "Accept": "application/x-bittorrent",
+                "X-Api-Key": self._api_key,
+            },
+        )
+        opener = build_opener(_RejectRedirects())
+        try:
+            with opener.open(request, timeout=30):
+                raise OperationError("Prowlarr did not return a magnet redirect")
+        except HTTPError as error:
+            try:
+                location = error.headers.get("Location")
+                if error.code not in {301, 302, 303, 307, 308} or not location:
+                    raise OperationError("upstream request failed") from error
+                return location
+            finally:
+                error.close()
+        except (URLError, TimeoutError, ValueError) as error:
+            raise OperationError("upstream request failed") from error
+
     @staticmethod
     def _read(request: Request, maximum: int) -> bytes:
         try:
@@ -172,6 +199,119 @@ def _topic_id(value: object) -> str | None:
     if len(matches) != 1 or not matches[0].isdigit():
         return None
     return matches[0]
+
+
+def _safe_download_path(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    parsed = urlparse(value)
+    if (
+        parsed.scheme
+        or parsed.netloc
+        or parsed.params
+        or parsed.fragment
+        or not re.fullmatch(r"/[1-9][0-9]*/download", parsed.path)
+    ):
+        return None
+    try:
+        query = parse_qs(
+            parsed.query,
+            keep_blank_values=True,
+            strict_parsing=True,
+            max_num_fields=2,
+        )
+    except ValueError:
+        return None
+    if set(query) != {"link", "file"}:
+        return None
+    link = query["link"]
+    filename = query["file"]
+    if (
+        len(link) != 1
+        or len(filename) != 1
+        or not link[0]
+        or not filename[0]
+        or len(link[0]) > 4096
+        or len(filename[0]) > 512
+        or not re.fullmatch(r"[A-Za-z0-9+/=_-]{8,4096}", link[0])
+    ):
+        return None
+    return f"{parsed.path}?{urlencode([('link', link[0]), ('file', filename[0])])}"
+
+
+def _credential_free_download_path(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    parsed = urlparse(value)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.params
+        or parsed.fragment
+        or not re.fullmatch(r"/[1-9][0-9]*/download", parsed.path)
+    ):
+        return None
+    try:
+        query = parse_qs(
+            parsed.query,
+            keep_blank_values=True,
+            strict_parsing=True,
+            max_num_fields=3,
+        )
+    except ValueError:
+        return None
+    if set(query) != {"apikey", "link", "file"} or any(
+        len(values) != 1 for values in query.values()
+    ):
+        return None
+    return _safe_download_path(
+        f"{parsed.path}?{urlencode([('link', query['link'][0]), ('file', query['file'][0])])}"
+    )
+
+
+def _credential_free_magnet(value: object) -> tuple[str, str] | None:
+    if not isinstance(value, str) or len(value) > 8192:
+        return None
+    parsed = urlparse(value)
+    if (
+        parsed.scheme != "magnet"
+        or parsed.netloc
+        or parsed.path
+        or parsed.params
+        or parsed.fragment
+    ):
+        return None
+    try:
+        query = parse_qs(parsed.query, keep_blank_values=True, max_num_fields=32)
+    except ValueError:
+        return None
+    xt = query.get("xt", [])
+    if len(xt) != 1 or not re.fullmatch(r"urn:btih:[0-9a-fA-F]{40}", xt[0]):
+        return None
+    infohash = xt[0].removeprefix("urn:btih:").lower()
+    trackers: list[str] = []
+    for tracker in query.get("tr", []):
+        tracker_url = urlparse(tracker)
+        if (
+            tracker_url.scheme in {"http", "https"}
+            and tracker_url.hostname is not None
+            and re.fullmatch(r"bt(?:[2-4])?\.t-ru\.org", tracker_url.hostname)
+            and tracker_url.netloc == tracker_url.hostname
+            and tracker_url.path == "/ann"
+            and tracker_url.params == ""
+            and tracker_url.query == "magnet"
+            and tracker_url.fragment == ""
+        ):
+            canonical = (
+                f"{tracker_url.scheme}://{tracker_url.hostname}/ann?magnet"
+            )
+            if canonical not in trackers:
+                trackers.append(canonical)
+    components = [f"xt=urn:btih:{infohash}"]
+    components.extend(f"tr={tracker}" for tracker in trackers)
+    return infohash, "magnet:?" + "&".join(components)
 
 
 def _bounded_topic_evidence(document: str) -> tuple[str | None, str]:
@@ -293,14 +433,21 @@ class ProwlarrReleaseAdapter:
         candidate = self._candidate(candidate_id)
         private = candidate["_private"]
         infohash = private.get("infohash")
-        magnet = private.get("magnet_uri")
-        if not isinstance(infohash, str) or not isinstance(magnet, str):
+        resolved = _credential_free_magnet(private.get("magnet_uri"))
+        if resolved is None:
+            download_path = private.get("download_path")
+            if not isinstance(download_path, str):
+                raise OperationError("candidate has no credential-free magnet resolution")
+            self._route_guard.require()
+            resolved = _credential_free_magnet(
+                self._http.download_redirect(download_path)
+            )
+        if resolved is None:
             raise OperationError("candidate has no credential-free magnet resolution")
-        parsed = urlparse(magnet)
-        xt = parse_qs(parsed.query).get("xt", [])
-        if parsed.scheme != "magnet" or xt != [f"urn:btih:{infohash}"]:
+        resolved_infohash, magnet = resolved
+        if isinstance(infohash, str) and resolved_infohash != infohash:
             raise OperationError("candidate magnet identity changed")
-        return {"infohash": infohash, "magnet_uri": magnet}
+        return {"infohash": resolved_infohash, "magnet_uri": magnet}
 
     def _candidate(self, candidate_id: str) -> dict[str, object]:
         try:
@@ -368,7 +515,7 @@ class ProwlarrReleaseAdapter:
             "size_bytes": public["size_bytes"],
         }
         private = {
-            "download_url": raw.get("downloadUrl"),
+            "download_path": _credential_free_download_path(raw.get("downloadUrl")),
             "info_url": raw.get("infoUrl"),
             "infohash": infohash,
             "magnet_uri": raw.get("magnetUrl"),

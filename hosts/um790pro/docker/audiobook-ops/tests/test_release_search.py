@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+import tempfile
 import threading
 import unittest
 from urllib.parse import parse_qs, urlparse
@@ -11,7 +14,14 @@ from audiobook_ops.acquisition import (
     ProwlarrHTTPClient,
     ProwlarrReleaseAdapter,
 )
-from audiobook_ops.interface import OperationError
+from audiobook_ops.interface import AudiobookOperations, OperationError
+from audiobook_ops.mcp_adapter import MCPAdapter
+
+from test_domain_interface import (
+    FakeCatalogAdapter,
+    FakeClock,
+    FakeExternalActionAdapter,
+)
 
 
 class FakeRouteGuard:
@@ -29,8 +39,10 @@ class FakeProwlarrHTTP:
     def __init__(self) -> None:
         self.queries: list[str] = []
         self.topic_requests: list[str] = []
+        self.download_requests: list[str] = []
         self.responses: dict[str, list[dict[str, object]]] = {}
         self.topic_html = "<html><title>Кроткая — аудиокнига</title><body>Читает Иван</body></html>"
+        self.download_location = "magnet:?xt=urn:btih:" + "c" * 40
 
     def search(self, query: str) -> list[dict[str, object]]:
         self.queries.append(query)
@@ -39,6 +51,10 @@ class FakeProwlarrHTTP:
     def topic(self, internal_url: str) -> str:
         self.topic_requests.append(internal_url)
         return self.topic_html
+
+    def download_redirect(self, download_path: str) -> str:
+        self.download_requests.append(download_path)
+        return self.download_location
 
 
 class ProwlarrReleaseAdapterTests(unittest.TestCase):
@@ -115,6 +131,113 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
         resolution = self.adapter.resolve(result[0]["candidate_id"])
         self.assertEqual(set(resolution), {"infohash", "magnet_uri"})
         self.assertNotIn("supersecret", json.dumps(resolution))
+
+    def test_resolve_uses_credential_free_prowlarr_redirect_when_search_has_no_magnet(self) -> None:
+        query = "Антон Чехов Палата № 6"
+        infohash = "079cd115f98b5c45eec300e425fb7670e9edaf97"
+        self.http.download_location = (
+            f"magnet:?xt=urn:btih:{infohash.upper()}"
+            "&tr=http%3A%2F%2Fbt3.t-ru.org%2Fann%3Fmagnet"
+            "&dn=Chekhov&ws=https%3A%2F%2Fattacker.invalid%2Fsecret-passkey"
+        )
+        release = self.release(
+            title="Чехов Антон — Палата №6 [Андрей Одинцов, MP3]",
+            topic_id="6888193",
+            infohash="a" * 40,
+            seeders=12,
+        )
+        release["infoHash"] = None
+        release["magnetUrl"] = ""
+        release["downloadUrl"] = (
+            "http://prowlarr:9696/1/download?apikey=supersecret"
+            "&link=YWJjZA%3D%3D"
+            "&file=Chekhov.torrent"
+        )
+        self.http.responses = {query: [release]}
+
+        candidate = self.adapter.search([query])[0]
+        resolution = self.adapter.resolve(candidate["candidate_id"])
+
+        self.assertEqual(
+            self.http.download_requests,
+            [
+                "/1/download?"
+                "link=YWJjZA%3D%3D"
+                "&file=Chekhov.torrent"
+            ],
+        )
+        self.assertEqual(
+            resolution,
+            {
+                "infohash": infohash,
+                "magnet_uri": (
+                    f"magnet:?xt=urn:btih:{infohash}"
+                    "&tr=http://bt3.t-ru.org/ann?magnet"
+                ),
+            },
+        )
+        self.assertEqual(self.guard.calls, 2)
+        self.assertNotIn("supersecret", json.dumps(candidate))
+        self.assertNotIn("supersecret", json.dumps(resolution))
+        self.assertNotIn("secret-passkey", json.dumps(resolution))
+
+    def test_fallback_request_plan_keeps_resolution_material_out_of_mcp_results(self) -> None:
+        query = "Антон Чехов Палата № 6"
+        release = self.release(
+            title="Чехов Антон — Палата №6 [Андрей Одинцов, MP3]",
+            topic_id="6888193",
+            infohash="a" * 40,
+            seeders=12,
+        )
+        release["infoHash"] = None
+        release["magnetUrl"] = None
+        release["downloadUrl"] = (
+            "http://prowlarr:9696/1/download?apikey=supersecret"
+            "&link=YWJjZA%3D%3D&file=Chekhov.torrent"
+        )
+        self.http.responses = {query: [release]}
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            operations = AudiobookOperations.open(
+                Path(temporary_directory) / "state.sqlite3",
+                clock=FakeClock(datetime(2026, 9, 13, tzinfo=UTC)),
+                release_adapter=self.adapter,
+                external_action_adapter=FakeExternalActionAdapter(),
+                catalog_adapter=FakeCatalogAdapter(),
+            )
+            try:
+                mcp = MCPAdapter(operations)
+                searched = mcp.call("release_search", {"queries": [query]})
+                candidate = searched["candidates"][0]
+                planned = mcp.call(
+                    "request_plan",
+                    {
+                        "candidate_id": candidate["candidate_id"],
+                        "candidate_revision": candidate["revision"],
+                        "work": {
+                            "title": "Палата № 6",
+                            "authors": ["Антон Чехов"],
+                            "series": [],
+                        },
+                        "audio_edition": {
+                            "narrators": ["Андрей Одинцов"],
+                            "abridged": False,
+                        },
+                        "origin_conversation_id": "telegram:135617",
+                    },
+                )
+            finally:
+                operations.close()
+
+        encoded = json.dumps({"searched": searched, "planned": planned})
+        for forbidden in (
+            "supersecret",
+            "download",
+            "magnet:",
+            "infohash",
+            "YWJjZA",
+        ):
+            self.assertNotIn(forbidden, encoded)
+        self.assertEqual(planned["status"], "awaiting_approval")
 
     def test_inspect_uses_only_the_selected_internal_topic_and_returns_bounded_evidence(self) -> None:
         query = "Достоевский Кроткая"
@@ -250,6 +373,63 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
         self.assertEqual(requests[0]["query"]["query"], ["Фёдор Кроткая"])
         self.assertEqual(requests[0]["api_key"], "test-api-key")
         self.assertIsNone(requests[1]["api_key"])
+
+    def test_http_client_resolves_only_a_credential_free_internal_download_route(self) -> None:
+        requests: list[dict[str, object]] = []
+        infohash = "079CD115F98B5C45EEC300E425FB7670E9EDAF97"
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                parsed = urlparse(self.path)
+                requests.append(
+                    {
+                        "path": parsed.path,
+                        "query": parse_qs(parsed.query),
+                        "api_key": self.headers.get("X-Api-Key"),
+                    }
+                )
+                self.send_response(301)
+                self.send_header("Location", f"magnet:?xt=urn:btih:{infohash}")
+                self.end_headers()
+
+            def log_message(self, _format: str, *_args: object) -> None:
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        host, port = server.server_address
+        try:
+            client = ProwlarrHTTPClient(f"http://{host}:{port}", "test-api-key")
+            location = client.download_redirect(
+                "/1/download?"
+                "link=YWJjZA%3D%3D"
+                "&file=Chekhov.torrent"
+            )
+            with self.assertRaisesRegex(OperationError, "invalid Prowlarr download route"):
+                client.download_redirect("https://attacker.invalid/1/download?link=x&file=y")
+            with self.assertRaisesRegex(OperationError, "invalid Prowlarr download route"):
+                client.download_redirect(
+                    "/1/download?link=https%3A%2F%2Fattacker.invalid&file=x.torrent"
+                )
+        finally:
+            server.shutdown()
+            server.server_close()
+
+        self.assertEqual(location, f"magnet:?xt=urn:btih:{infohash}")
+        self.assertEqual(
+            requests,
+            [
+                {
+                    "path": "/1/download",
+                    "query": {
+                        "link": ["YWJjZA=="],
+                        "file": ["Chekhov.torrent"],
+                    },
+                    "api_key": "test-api-key",
+                }
+            ],
+        )
 
     def test_prowlarr_health_rejects_reported_health_problems(self) -> None:
         class Handler(BaseHTTPRequestHandler):
