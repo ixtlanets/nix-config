@@ -15,6 +15,7 @@ from audiobook_ops.interface import OperationError
 TRANSMISSION_ACTIVE = frozenset({3, 4})
 TRANSMISSION_CHECKING = frozenset({1, 2})
 TRANSMISSION_COMPLETE = frozenset({5, 6})
+TRANSMISSION_LOCAL_ERROR = 3
 
 
 class TransmissionRPC(Protocol):
@@ -130,12 +131,16 @@ class TransmissionAdapter:
             raise OperationError("Transmission acquisition identity is missing or ambiguous")
         torrent = matches[0]
         status_code = torrent.get("status")
-        if int(torrent.get("error", 0) or 0) != 0:
-            status = "error"
-        elif torrent.get("isFinished") is True or float(
+        error_code = int(torrent.get("error", 0) or 0)
+        is_complete = torrent.get("isFinished") is True or float(
             torrent.get("percentDone", 0.0) or 0.0
-        ) >= 1.0:
+        ) >= 1.0
+        if error_code == TRANSMISSION_LOCAL_ERROR:
+            status = "error"
+        elif is_complete:
             status = "complete"
+        elif error_code != 0:
+            status = "error"
         elif status_code in TRANSMISSION_ACTIVE:
             status = "downloading"
         elif status_code in TRANSMISSION_CHECKING:

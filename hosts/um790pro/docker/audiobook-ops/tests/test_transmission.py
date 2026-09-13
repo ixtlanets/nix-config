@@ -80,6 +80,33 @@ class TransmissionAdapterTests(unittest.TestCase):
             removal[1], {"delete-local-data": True, "ids": ["a" * 40]}
         )
 
+    def test_observe_treats_completed_torrent_with_tracker_error_as_complete(
+        self,
+    ) -> None:
+        self.rpc.torrents.append(
+            {
+                "hashString": "a" * 40,
+                "id": 7,
+                "labels": ["audiobook-ops:task-key-one"],
+                "status": 6,
+                "percentDone": 1.0,
+                "leftUntilDone": 0,
+                "rateDownload": 0,
+                "activityDate": 100,
+                "downloadDir": "/downloads/complete",
+                "name": "Под куполом",
+                "error": 2,
+                "errorString": "Tracker HTTP response 0 (No Response)",
+                "isFinished": True,
+            }
+        )
+
+        observed = self.adapter.observe("a" * 40)
+
+        self.assertEqual(observed["status"], "complete")
+        self.assertIsNone(observed["error"])
+        self.assertEqual(observed["download_root"], "/downloads/complete/Под куполом")
+
     def test_arbitrary_source_and_hash_values_fail_closed(self) -> None:
         with self.assertRaisesRegex(OperationError, "unsafe release resolution"):
             self.adapter.submit({"download_url": "https://evil.example/payload"}, "key")
