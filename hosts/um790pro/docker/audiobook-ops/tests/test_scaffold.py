@@ -151,7 +151,9 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
         )
 
         dockerfile = (BUNDLE / "Dockerfile").read_text()
-        self.assertIn("COPY --chmod=0755 scripts/container-entrypoint.py", dockerfile)
+        self.assertNotIn("COPY --chmod", dockerfile)
+        self.assertIn("COPY scripts/container-entrypoint.py", dockerfile)
+        self.assertIn("RUN chmod 0755 /usr/local/bin/audiobook-ops-entrypoint", dockerfile)
         self.assertIn('ENTRYPOINT ["/usr/local/bin/audiobook-ops-entrypoint"]', dockerfile)
 
         entrypoint = (BUNDLE / "scripts/container-entrypoint.py").read_text()

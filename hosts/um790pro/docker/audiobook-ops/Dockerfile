@@ -14,7 +14,8 @@ COPY pyproject.toml ./
 COPY src ./src
 COPY scripts/worker.py ./scripts/worker.py
 COPY bin/audiobookctl /usr/local/bin/audiobookctl
-COPY --chmod=0755 scripts/container-entrypoint.py /usr/local/bin/audiobook-ops-entrypoint
+COPY scripts/container-entrypoint.py /usr/local/bin/audiobook-ops-entrypoint
+RUN chmod 0755 /usr/local/bin/audiobook-ops-entrypoint
 
 USER 0:0
 
