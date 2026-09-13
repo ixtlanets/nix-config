@@ -86,9 +86,15 @@ class ProductionAssetTests(unittest.TestCase):
             "audiobook-ops-worker.service",
             "audiobook-ops-cleanup.service",
         ):
+            body = (systemd / name).read_text()
             self.assertIn(
                 "/usr/bin/docker exec --user 1000:1000 audiobook-ops",
-                (systemd / name).read_text(),
+                body,
+                name,
+            )
+            self.assertIn(
+                "--config /run/audiobook-ops-runtime/config.json",
+                body,
                 name,
             )
         tmpfiles = (BUNDLE / "tmpfiles/audiobook-ops.conf").read_text()
