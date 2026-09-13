@@ -49,7 +49,7 @@ sudo install -d -o root -g root -m 0755 /usr/local/lib/audiobook-ops
 sudo rsync --archive --delete \
   --exclude '__pycache__/' --exclude '.pytest_cache/' \
   --chown=root:root ./ /usr/local/lib/audiobook-ops/
-sudo install -d -o root -g root -m 0750 /etc/audiobook-ops/config
+sudo install -d -o root -g nik -m 0750 /etc/audiobook-ops/config
 sudo install -d -o root -g root -m 0700 /etc/audiobook-ops/secrets
 sudo install -d -o nik -g nik -m 0750 /home/nik/services/audiobook-ops
 sudo install -d -o nik -g nik -m 0750 /home/nik/services/audiobook-ops/staging
@@ -57,11 +57,12 @@ sudo install -d -o nik -g nik -m 0750 /home/nik/services/audiobook-ops/migration
 sudo install -d -o root -g root -m 0700 /var/backups/audiobook-ops
 ```
 
-Expected result: executable bits are preserved; the installed bundle is not
-writable by `nik`; control/staging are writable by UID 1000; backups and secrets
-are root-only. Create the six config files from the reviewed examples, replace
-only environment-specific values, and set the exact reviewed image ID in
-`compose.env`:
+Expected result: executable bits are preserved; the installed bundle and
+operator config remain root-owned and are not writable by `nik`; the config
+directory is group-readable by the `nik` service group; control/staging are
+writable by UID 1000; backups and secrets are root-only. Create the six config
+files from the reviewed examples, replace only environment-specific values, and
+set the exact reviewed image ID in `compose.env`:
 
 ```text
 /etc/audiobook-ops/config/audiobook-ops.json
@@ -121,7 +122,7 @@ commands only after confirming no active download/publication. The cutover is:
 sudo systemctl stop readmeabook-publisher.timer \
   readmeabook-torrent-policy.timer readmeabook-cleanup.timer \
   readmeabook-healthcheck.timer readmeabook-backup.timer
-cd /home/nik/nix-config/hosts/um790pro/docker/readmeabook
+cd /home/nik/.local/share/nix-config-services/readmeabook
 sudo docker compose down
 sudo systemctl enable --now audiobook-ops-compose.service
 sudo systemctl enable --now audiobook-ops-policy.timer \

@@ -60,6 +60,18 @@ check_root_immutable_file() {
   fi
 }
 
+check_operator_config_directory() {
+  local path=$1 mode uid gid
+  mode=$(stat -c %a -- "$path" 2>/dev/null || true)
+  uid=$(stat -c %u -- "$path" 2>/dev/null || true)
+  gid=$(stat -c %g -- "$path" 2>/dev/null || true)
+  if [[ -d $path && ! -L $path && $uid == 0 && $gid == 1000 && $mode == 750 ]]; then
+    pass "operator config readable by service group: $path"
+  else
+    fail "operator config readable by service group: $path"
+  fi
+}
+
 check_nik_directory() {
   local path=$1 mode uid
   if [[ ! -d $path || -L $path ]]; then
@@ -118,6 +130,7 @@ if [[ $host == um790pro ]]; then
   else
     fail "installed bundle root-owned and immutable"
   fi
+  check_operator_config_directory "$config_root"
   for name in audiobook-ops.json backup.json compose.env health.json policy.json publisher.json; do
     check_root_immutable_file "$config_root/$name" "operator config root-owned and immutable"
   done

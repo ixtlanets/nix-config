@@ -68,6 +68,10 @@ class ProductionAssetTests(unittest.TestCase):
         self.assertIn(
             "RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK", compose
         )
+        policy = (systemd / "audiobook-ops-policy.service").read_text()
+        self.assertIn(
+            "RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK", policy
+        )
         serialized = {
             "audiobook-ops-backup.service",
             "audiobook-ops-cleanup.service",
@@ -170,6 +174,18 @@ class ProductionAssetTests(unittest.TestCase):
         preflight = (BUNDLE / "scripts/preflight.sh").read_text()
         self.assertIn("(( (8#$mode & 8#022) == 0 ))", preflight)
         self.assertIn("(( (8#$mode & 8#200) != 0 ))", preflight)
+        self.assertIn("operator config readable by service group", preflight)
+
+    def test_runbook_makes_operator_config_readable_by_service_group(self) -> None:
+        runbook = (BUNDLE / "PRODUCTION-RUNBOOK.md").read_text()
+        self.assertIn(
+            "install -d -o root -g nik -m 0750 /etc/audiobook-ops/config",
+            runbook,
+        )
+        self.assertIn(
+            "cd /home/nik/.local/share/nix-config-services/readmeabook",
+            runbook,
+        )
 
     def test_runtime_secret_values_do_not_enter_sqlite_or_tool_results(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
