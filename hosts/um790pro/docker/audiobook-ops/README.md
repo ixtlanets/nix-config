@@ -2,8 +2,9 @@
 
 > Target-state operator documentation. The bundle, domain core, acquisition,
 > publisher, legacy-history importer, Audiobookshelf 2.36.0 adapter, Streamable
-> HTTP transport, health, policy, backup, restore, and host service assets are
-> implemented and tested. Nothing here has been deployed.
+> HTTP transport, Hermes skills/notifications, health, policy, backup, restore,
+> and host service assets are implemented and tested. Nothing here has been
+> deployed.
 > Until service cutover, use the current production documentation under
 > `../readmeabook/`.
 
@@ -43,6 +44,8 @@ The bundle provides:
   the same domain seam;
 - `src/audiobook_ops/http_server.py`, the bearer-authenticated Streamable HTTP
   MCP endpoint at `/mcp` with a serialized tool execution boundary;
+- `hermes/`, the exact untrusted MCP allowlist, normal/admin skills, durable
+  event poller, profile install/rollback runbook, and installed-Hermes rehearsal;
 - `config/audiobook-ops.example.json`, containing policy and endpoint examples
   but no credential values;
 - neutral Compose/systemd policy, worker, publisher, cleanup, health, backup,

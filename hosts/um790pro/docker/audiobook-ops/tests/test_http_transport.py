@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from contextlib import redirect_stderr
 from http.client import HTTPConnection
+import io
 import json
 import threading
 import unittest
 
-from audiobook_ops.http_server import create_server
+from audiobook_ops.http_server import AudiobookRequestHandler, create_server
 from audiobook_ops.interface import OperationError
 
 
@@ -158,6 +160,26 @@ class HTTPTransportTests(unittest.TestCase):
         self.assertEqual(called["result"]["structuredContent"]["name"], "task_list")
         self.assertFalse(called["result"]["isError"])
         self.assertEqual(self.adapter.calls[-1][2], False)
+
+    def test_tools_list_accepts_sdk_metadata_but_no_other_parameters(self) -> None:
+        listed = self.rpc("tools/list", {"_meta": {"progressToken": "probe"}})
+        rejected = self.rpc("tools/list", {"arbitrary": True})
+
+        self.assertEqual(len(listed["result"]["tools"]), 2)
+        self.assertEqual(rejected["error"]["code"], -32602)
+
+    def test_head_preflight_and_incomplete_request_logging_are_bounded(self) -> None:
+        status, payload, _headers = self.request("HEAD", "/mcp")
+        incomplete = object.__new__(AudiobookRequestHandler)
+        stderr = io.StringIO()
+
+        with redirect_stderr(stderr):
+            incomplete.log_message("ignored")
+
+        self.assertEqual((status, payload), (405, None))
+        event = json.loads(stderr.getvalue())
+        self.assertEqual(event["method"], None)
+        self.assertEqual(event["path"], None)
 
     def test_write_call_marks_the_domain_execution_gate_as_authorized(self) -> None:
         called = self.rpc("tools/call", {"name": "task_retry", "arguments": {}})

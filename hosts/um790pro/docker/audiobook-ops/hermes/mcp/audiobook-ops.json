@@ -1,0 +1,33 @@
+{
+  "mcp_servers": {
+    "audiobook-ops": {
+      "url": "http://100.95.213.117:8300/mcp",
+      "enabled": true,
+      "trust": "untrusted",
+      "strict_redirect_headers": true,
+      "headers": {
+        "Authorization": "Bearer ${MCP_AUDIOBOOK_OPS_API_KEY}"
+      },
+      "tools": {
+        "include": [
+          "library_search",
+          "library_item_get",
+          "library_audit",
+          "release_search",
+          "release_inspect",
+          "request_plan",
+          "request_apply",
+          "task_get",
+          "task_list",
+          "task_cancel",
+          "task_retry",
+          "metadata_plan",
+          "metadata_apply",
+          "metadata_undo",
+          "system_status",
+          "notification_list"
+        ]
+      }
+    }
+  }
+}

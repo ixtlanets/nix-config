@@ -123,6 +123,14 @@ class AudiobookRequestHandler(BaseHTTPRequestHandler):
     server_version = "AudiobookOps"
     sys_version = ""
 
+    def do_HEAD(self) -> None:
+        status = HTTPStatus.METHOD_NOT_ALLOWED if self.path == "/mcp" else HTTPStatus.NOT_FOUND
+        self._response_status = int(status)
+        self.send_response(status)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+
     def do_GET(self) -> None:
         if self.path.startswith("/health/"):
             self._health()
@@ -207,8 +215,10 @@ class AudiobookRequestHandler(BaseHTTPRequestHandler):
         if method == "ping":
             return {}
         if method == "tools/list":
-            if params:
-                raise OperationError("tools/list accepts no parameters")
+            if any(name != "_meta" for name in params):
+                raise OperationError("tools/list accepts only MCP metadata")
+            if "_meta" in params and not isinstance(params["_meta"], dict):
+                raise OperationError("tools/list metadata must be an object")
             return {"tools": self.server.adapter.list_tools()}
         if method == "tools/call":
             name = params.get("name")
@@ -303,8 +313,8 @@ class AudiobookRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, _format: str, *_arguments: object) -> None:
         event = {
             "event": "http_request",
-            "method": self.command,
-            "path": self.path,
+            "method": getattr(self, "command", None),
+            "path": getattr(self, "path", None),
             "status": getattr(self, "_response_status", None),
         }
         print(json.dumps(event, separators=(",", ":")), file=sys.stderr)
