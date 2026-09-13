@@ -99,12 +99,14 @@ class RuntimeStatus:
             if name == "core":
                 return self._core()
             if name == "catalog":
-                libraries = self._abs.json("GET", "/api/libraries")
-                if not isinstance(libraries, list):
+                payload = self._abs.json("GET", "/api/libraries")
+                if not isinstance(payload, dict) or not isinstance(
+                    payload.get("libraries"), list
+                ):
                     raise OperationError("catalog health response is invalid")
                 books = sum(
                     1
-                    for library in libraries
+                    for library in payload["libraries"]
                     if isinstance(library, dict)
                     and library.get("mediaType") == "book"
                 )

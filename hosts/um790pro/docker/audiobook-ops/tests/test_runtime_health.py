@@ -14,10 +14,12 @@ from audiobook_ops.runtime import RuntimeStatus
 class FakeABSHTTP:
     def json(self, method: str, path: str) -> object:
         assert method == "GET" and path == "/api/libraries"
-        return [
-            {"id": "books", "mediaType": "book"},
-            {"id": "podcasts", "mediaType": "podcast"},
-        ]
+        return {
+            "libraries": [
+                {"id": "books", "mediaType": "book"},
+                {"id": "podcasts", "mediaType": "podcast"},
+            ]
+        }
 
 
 class FakeProwlarrHTTP:
