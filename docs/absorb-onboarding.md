@@ -2,10 +2,6 @@
 
 Публичный сервер: `https://books.nikcode.xyz`.
 
-Для сетей, которые устанавливают TLS, но блокируют длинные ответы от London на
-TCP `443`, используется тот же сервер через альтернативный HTTPS-порт:
-`https://books.nikcode.xyz:8443`.
-
 ## Самая короткая инструкция для пользователя
 
 Для Absorb `1.9.3+220` или новее:
@@ -32,9 +28,7 @@ prerelease-версию: Android — GitHub prerelease или alpha track, iOS �
 2. Войти в Absorb под Audiobookshelf-аккаунтом типа `admin` или `root`.
 3. Открыть **Settings → Admin Controls → Admin → Users → пользователь**.
 4. Нажать кнопку с иконкой **Share** / **Share sign-in**.
-5. Проверить адрес: обычно `https://books.nikcode.xyz`; в сети с подтверждённой
-   деградацией TCP `443` — `https://books.nikcode.xyz:8443`. Дополнительного пути
-   в адресе быть не должно.
+5. Проверить адрес: `https://books.nikcode.xyz` без порта и дополнительного пути.
 6. Нажать **Create link** и приватно отправить ссылку либо показать QR-код.
 
 Absorb создаёт для пользователя отдельный Audiobookshelf API key с именем вида
@@ -48,8 +42,7 @@ Absorb создаёт для пользователя отдельный Audiobo
 1. Администратор входит в Absorb под account типа `admin` или `root`, открывает
    **Settings → Admin Controls → Admin → Users → пользователь**, нажимает Share
    и выбирает **Create setup file**.
-2. Проверяет основной `https://books.nikcode.xyz` либо требуемый для сети
-   `https://books.nikcode.xyz:8443` и сохраняет файл
+2. Проверяет `https://books.nikcode.xyz` и сохраняет файл
    `absorb_setup_<username>.absorb`.
 3. Передаёт файл пользователю приватно.
 4. Пользователь на экране входа Absorb нажимает **Import**, выбирает файл и

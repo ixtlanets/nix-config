@@ -6,7 +6,6 @@ caddyfile="$repo_root/hosts/london/ubuntu/vaultwarden/Caddyfile"
 compose_file="$repo_root/hosts/london/ubuntu/vaultwarden/docker-compose.yml"
 
 grep -Fq '"10.0.0.72:443:443"' "$compose_file"
-grep -Fq '"10.0.0.72:8443:443"' "$compose_file"
 
 if grep -Eq '443:443(/udp)?"' "$compose_file" &&
   ! grep -Fq 'protocols h1 h2' "$caddyfile"; then

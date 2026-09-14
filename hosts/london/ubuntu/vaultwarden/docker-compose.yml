@@ -30,7 +30,6 @@ services:
     ports:
       - "10.0.0.72:80:80"
       - "10.0.0.72:443:443"
-      - "10.0.0.72:8443:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy-config:/config

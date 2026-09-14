@@ -31,11 +31,7 @@ Prerequisites:
 - `books.nikcode.xyz` is a Cloudflare-managed DNS-only A record pointing at the
   same public IP. Keep the record unproxied: Audiobookshelf's primary traffic is
   large audio files, which must not traverse Cloudflare's self-service CDN.
-- Oracle Cloud ingress allows TCP `443` and `8443` to the instance. Port `8443`
-  maps to the same Caddy TLS listener and is the alternate client ingress for
-  networks that selectively degrade the Oracle address on TCP `443`. TCP `80`
-  is recommended for plain-HTTP redirects and HTTP-01 ACME validation, but
-  Caddy can still issue certificates via TLS-ALPN-01 on `443`.
+- Oracle Cloud ingress allows TCP `443` to the instance. TCP `80` is recommended for plain-HTTP redirects and HTTP-01 ACME validation, but Caddy can still issue certificates via TLS-ALPN-01 on `443`.
 - `ubuntu@london` has sudo access.
 - Docker and Docker Compose are installed on `london`.
 - the local checkout is unlocked with `git-crypt unlock`; `deploy.sh` refuses to
@@ -78,17 +74,12 @@ WebSocket upgrades and HTTP range requests through its standard `reverse_proxy`.
 Cloudflare serves DNS only; changing the record to proxied would put audiobook
 delivery behind Cloudflare's large-file/CDN restrictions.
 
-The Compose ingress does not publish UDP `443`, so Caddy is explicitly limited
-to HTTP/1.1 and HTTP/2. Do not enable HTTP/3 unless UDP `443` is also published and
+The Compose ingress publishes TCP `443` only, so Caddy is explicitly limited to
+HTTP/1.1 and HTTP/2. Do not enable HTTP/3 unless UDP `443` is also published and
 allowed through both the host and Oracle Cloud firewalls; otherwise Caddy's
 `Alt-Svc` advertisement can make mobile media requests stall before falling back.
 Responses send `Alt-Svc: clear` so clients discard previously cached HTTP/3
 alternatives.
-
-The same Caddy TLS listener is also published on TCP `8443`. This is an explicit
-fallback for access networks that establish TLS to the London Oracle address on
-`443` but stall larger response bodies. Certificate issuance and monitoring stay
-on the standard `443` ingress; `8443` must never replace it.
 
 Moscow currently runs EOL Ubuntu 21.10. The accepted interim risk is bounded by
 keeping the Raspberry Pi off the public network and allowing public requests to
@@ -112,7 +103,6 @@ Canary checks after deployment:
 
 ```sh
 curl -fsS https://books.nikcode.xyz/status | jq
-curl -fsS https://books.nikcode.xyz:8443/status | jq
 curl -fsSI -H 'Range: bytes=0-1023' '<authenticated-audio-url>'
 ```
 
@@ -121,8 +111,7 @@ reconnect, playback, forward/backward seek, progress sync, and an offline downlo
 Use a non-admin Audiobookshelf account for routine remote access.
 
 Enter the mobile-client server address as exactly
-`https://books.nikcode.xyz`, without a port or path. On a network where larger
-responses stall on TCP `443`, use `https://books.nikcode.xyz:8443` instead. A saved
+`https://books.nikcode.xyz`, without a port or path. A saved
 `http://books.nikcode.xyz` address will fail when public TCP `80` is unavailable;
 the application must connect directly over HTTPS on the default port `443`.
 
