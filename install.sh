@@ -409,7 +409,7 @@ fi
 
 # Mise-managed development tools
 if command -v mise >/dev/null 2>&1; then
-  eval "$(mise activate zsh)"
+  eval "$(mise activate zsh --shims)"
 fi
 
 # Prompt
@@ -479,6 +479,7 @@ write_starship_config() {
   log "writing ${starship_dir}/starship.toml"
   cat <<'EOF' >"${starship_dir}/starship.toml"
 add_newline = false
+scan_timeout = 500
 format = "$nix_shell$username$hostname$directory$container$git_branch $git_status$python$nodejs$lua$rust$java$c$golang$status$character"
 right_format = "$battery$time"
 
