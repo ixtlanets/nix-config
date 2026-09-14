@@ -41,6 +41,7 @@ sync_bundle() {
 
   "$SSH_BIN" "$REMOTE" "install -d -m 0755 '$REMOTE_BUNDLE_DIR'"
   "$SCP_BIN" \
+    "$BUNDLE_DIR/Caddyfile" \
     "$BUNDLE_DIR/docker-compose.yml" \
     "$BUNDLE_DIR/docker-compose.rehearsal.yml" \
     "$REMOTE:$REMOTE_BUNDLE_DIR/"

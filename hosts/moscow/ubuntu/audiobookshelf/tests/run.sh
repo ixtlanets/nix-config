@@ -108,6 +108,26 @@ production_compose_preserves_current_topology() {
     [[ $rendered == *"read_only: true"* ]]
 }
 
+production_compose_defines_tls_home_ingress() {
+  local caddyfile rendered
+
+  caddyfile=$BUNDLE_DIR/Caddyfile
+  rendered=$(docker compose -f "$BUNDLE_DIR/docker-compose.yml" config 2>/dev/null) || return 1
+
+  [[ $rendered == *"image: caddy:2.11.4"* ]] &&
+    [[ $rendered == *"container_name: audiobookshelf-caddy"* ]] &&
+    [[ $rendered == *'published: "443"'* ]] &&
+    [[ $rendered == *"protocol: tcp"* ]] &&
+    [[ $rendered == *"target: /etc/caddy/Caddyfile"* ]] &&
+    [[ $rendered == *"target: /data"* ]] &&
+    [[ $rendered == *"target: /config"* ]] &&
+    grep -Fq 'books.nikcode.xyz' "$caddyfile" &&
+    grep -Fq 'protocols h1 h2' "$caddyfile" &&
+    grep -Fq 'Alt-Svc "clear"' "$caddyfile" &&
+    grep -Fq 'reverse_proxy audiobookshelf:80' "$caddyfile" &&
+    grep -Fq '"$BUNDLE_DIR/Caddyfile"' "$SCRIPTS_DIR/lib.sh"
+}
+
 rehearsal_compose_is_private_and_media_read_only() {
   local rendered
 
@@ -207,6 +227,7 @@ run_test cleanup_requires_cutover_snapshot_id
 run_test preflight_propagates_remote_fingerprint_failure
 run_test preflight_rejects_changed_image_id
 run_test production_compose_preserves_current_topology
+run_test production_compose_defines_tls_home_ingress
 run_test rehearsal_compose_is_private_and_media_read_only
 run_test prepare_image_falls_back_to_arm64_transfer
 run_test snapshot_restarts_production_when_copy_fails

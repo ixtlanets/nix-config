@@ -26,12 +26,13 @@
 | Target ARM64 manifest | `sha256:14a6492c743f2acfa00bcd96ec2a5c0c95e311f567718d29cb3c7f3772dc773f` |
 | Target ARM64 image ID | `sha256:28b665b047a1e02474fad2bc703bd2a7489e4e72295f67e431c17f07c63320b3` |
 | Production URL | `http://100.81.67.47:13378` through Tailscale |
-| Public URL | `https://books.nikcode.xyz` through London Caddy and Tailscale |
+| Public URL | `https://books.nikcode.xyz`; direct-home Caddy is the prepared fallback |
 | Rehearsal URL | `http://100.81.67.47:13379` through Tailscale |
 
 ## Layout
 
-- `docker-compose.yml` preserves the original production mounts, port and restart policy and adds the publisher-owned `/readmeabook` tree read-only.
+- `docker-compose.yml` preserves the original production mounts, port and restart policy, adds the publisher-owned `/readmeabook` tree read-only, and defines the direct-home Caddy ingress.
+- `Caddyfile` terminates TLS for `books.nikcode.xyz`, limits the TCP-only listener to HTTP/1.1 and HTTP/2, and proxies to Audiobookshelf on the private Compose network.
 - `docker-compose.rehearsal.yml` binds only to Tailscale, uses cloned state and mounts both media trees read-only.
 - `scripts/lib.sh` contains the recorded fingerprints and path defaults.
 - `scripts/preflight.sh` validates the unchanged source container and host prerequisites.
@@ -50,16 +51,26 @@ Remote defaults:
 - rehearsals: `/home/nik/.local/state/audiobookshelf/rehearsals`;
 - production state: `/media/disk1/media/meta`;
 - media: `/media/disk1/media/Audiobooks`.
+- Caddy state: `/home/nik/.local/state/audiobookshelf-caddy/{data,config}`.
 - ReadMeABook published media: `/media/disk1/media/ReadMeABook`, mounted at
   `/readmeabook` read-only.
 
 State directories are created with mode `0700`. They contain the Audiobookshelf database, including password hashes and auth state, and must never be copied into the repository.
 
-The public endpoint does not require a home-router port forward. Cloudflare is
-authoritative for `nikcode.xyz`, but the `books.nikcode.xyz` record is deliberately
-DNS-only. TLS terminates at the managed Caddy instance on `london`, which reaches
-this production endpoint through Tailscale. The reproducible ingress and its
-rollback procedure live in `hosts/london/ubuntu/vaultwarden/README.md`.
+The currently deployed public endpoint uses London and does not require a
+home-router port forward. Cloudflare is authoritative for `nikcode.xyz`, but the
+`books.nikcode.xyz` record is deliberately DNS-only. Because the London Oracle
+path is selectively degraded by Rostelecom, this bundle also prepares a direct
+home ingress. Its safe topology is Cloudflare DNS-only -> Keenetic TCP `443` ->
+this Caddy service -> Audiobookshelf on the private Compose network. Never
+forward raw port `13378` from the router.
+
+Direct-home deployment is owner-gated. Before starting Caddy or changing DNS,
+the operator must verify that Keenetic's WAN IPv4 is the expected static public
+address, add only the TCP `443` forward to the Moscow host, and retain a tested
+rollback to London. The host is still on EOL Ubuntu 21.10, so this is an accepted
+temporary exposure until migration to a supported OS; only Caddy should be
+reachable through the router.
 
 For user provisioning in Absorb, prefer its per-user setup link/QR flow. It
 passes `https://books.nikcode.xyz` and a dedicated revocable API key without

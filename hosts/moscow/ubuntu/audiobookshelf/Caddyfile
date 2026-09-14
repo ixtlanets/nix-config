@@ -1,0 +1,18 @@
+{
+	# The router forwards TCP/443 only. Do not advertise an unreachable
+	# HTTP/3 endpoint to mobile clients.
+	servers :443 {
+		protocols h1 h2
+	}
+}
+
+books.nikcode.xyz {
+	header {
+		Alt-Svc "clear"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+
+	reverse_proxy audiobookshelf:80
+}
