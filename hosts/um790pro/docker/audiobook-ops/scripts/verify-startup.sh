@@ -26,6 +26,15 @@ for unit in "${units[@]}"; do
   else
     fail "active after boot: $unit"
   fi
+  if [[ $unit == *.timer ]]; then
+    next_realtime=$(systemctl show "$unit" --property=NextElapseUSecRealtime --value 2>/dev/null || true)
+    next_monotonic=$(systemctl show "$unit" --property=NextElapseUSecMonotonic --value 2>/dev/null || true)
+    if [[ ( -n $next_realtime && $next_realtime != infinity ) || ( -n $next_monotonic && $next_monotonic != infinity ) ]]; then
+      pass "next trigger after boot: $unit"
+    else
+      fail "next trigger after boot: $unit"
+    fi
+  fi
 done
 
 for container in \
@@ -41,13 +50,6 @@ for container in \
     fail "container after boot: $container"
   fi
 done
-
-if systemctl list-timers --all --no-legend \
-  'audiobook-ops-*.timer' 2>/dev/null | grep -q audiobook-ops-backup.timer; then
-  pass "timers scheduled"
-else
-  fail "timers scheduled"
-fi
 
 if ((failures)); then
   echo "Startup verification failed: $failures check(s)"

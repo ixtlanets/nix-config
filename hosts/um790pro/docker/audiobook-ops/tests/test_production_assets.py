@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 import unittest
 
@@ -13,6 +15,58 @@ BUNDLE = Path(__file__).resolve().parents[1]
 
 
 class ProductionAssetTests(unittest.TestCase):
+    def test_startup_verification_rejects_active_timer_without_next_trigger(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            commands = Path(directory)
+            systemctl = commands / "systemctl"
+            systemctl.write_text(
+                """#!/usr/bin/env bash
+set -eu
+case "$1" in
+  is-enabled|is-active)
+    exit 0
+    ;;
+  show)
+    if [[ "$2" == audiobook-ops-publisher.timer ]]; then
+      printf 'infinity\\n'
+    else
+      printf '1h 2min 3s\\n'
+    fi
+    ;;
+  list-timers)
+    printf 'n/a n/a n/a n/a audiobook-ops-backup.timer audiobook-ops-backup.service\\n'
+    ;;
+esac
+"""
+            )
+            systemctl.chmod(0o755)
+            docker = commands / "docker"
+            docker.write_text("#!/usr/bin/env bash\nprintf 'true|healthy\\n'\n")
+            docker.chmod(0o755)
+
+            result = subprocess.run(
+                [BUNDLE / "scripts/verify-startup.sh"],
+                check=False,
+                capture_output=True,
+                text=True,
+                env={**os.environ, "PATH": f"{commands}:{os.environ['PATH']}"},
+            )
+
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn(
+            "FAIL  next trigger after boot: audiobook-ops-publisher.timer",
+            result.stdout,
+        )
+
+    def test_publisher_timer_schedules_after_a_late_manual_start(self) -> None:
+        timer = (
+            BUNDLE / "systemd/audiobook-ops-publisher.timer"
+        ).read_text()
+
+        self.assertIn("OnActiveSec=1min", timer)
+
     def test_compose_requires_an_immutable_app_image_and_separate_secret_files(self) -> None:
         compose = (BUNDLE / "docker-compose.yml").read_text()
 
