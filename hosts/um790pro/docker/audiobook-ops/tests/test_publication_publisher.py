@@ -18,8 +18,11 @@ from test_domain_interface import (
 
 
 class FakeProbe:
+    def __init__(self, duration: float = 42.5) -> None:
+        self._duration = duration
+
     def duration(self, _path: Path) -> float:
-        return 42.5
+        return self._duration
 
 
 class FakeRemote:
@@ -144,12 +147,13 @@ class PublicationPublisherTests(unittest.TestCase):
         self,
         remote: FakeRemote,
         checkpoint_hook=lambda _status: None,
+        probe: FakeProbe | None = None,
     ) -> PublicationCoordinator:
         return PublicationCoordinator(
             self.operations,
             PublicationValidator(
                 staging_root=self.staging,
-                probe=FakeProbe(),
+                probe=probe or FakeProbe(),
                 local_free_bytes=lambda: 300 * 1024**3,
                 stability_hook=lambda: None,
             ),
@@ -245,6 +249,20 @@ class PublicationPublisherTests(unittest.TestCase):
         self.assertEqual(remote.calls, [])
         publication = self.operations.outstanding_publication()
         self.assertEqual(publication["publication"]["status"], "claimed")
+
+    def test_probe_version_duration_difference_does_not_block_publication(self) -> None:
+        ready, _content = self.ready_task(".mp3")
+        remote = FakeRemote()
+
+        result = self.coordinator(remote, probe=FakeProbe(42.45)).reconcile_once()
+
+        self.assertEqual(result["task"]["state"], "awaiting_abs")
+        artifact = self.operations.validated_artifact(str(ready["task_id"]))
+        self.assertEqual(result["publication"]["manifest"], artifact["manifest"])
+        self.assertEqual(
+            result["publication"]["manifest_id"], artifact["manifest_id"]
+        )
+        self.assertTrue(remote.promoted)
 
 
 if __name__ == "__main__":

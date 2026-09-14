@@ -35,6 +35,15 @@ def _manifest_id(manifest: list[dict[str, object]]) -> str:
     ).hexdigest()
 
 
+def _content_identity(
+    manifest: list[dict[str, object]],
+) -> list[tuple[object, object, object]]:
+    return [
+        (entry.get("relative_path"), entry.get("size_bytes"), entry.get("sha256"))
+        for entry in manifest
+    ]
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -117,14 +126,18 @@ class PublicationValidator:
         self._stability_hook()
         second = self._build_manifest(source)
         stored = artifact.get("manifest")
-        if first != second or first != stored:
+        if (
+            not isinstance(stored, list)
+            or first != second
+            or _content_identity(first) != _content_identity(stored)
+        ):
             raise OperationError("publication manifest changed after validation")
-        total_size = sum(int(entry["size_bytes"]) for entry in first)
+        total_size = sum(int(entry["size_bytes"]) for entry in stored)
         if total_size > self._max_release_bytes:
             raise OperationError("publication exceeds the release size limit")
         if self._local_free_bytes() < self._min_local_free_bytes:
             raise OperationError("local free-space reserve would be violated")
-        manifest_id = _manifest_id(first)
+        manifest_id = _manifest_id(stored)
         if artifact.get("manifest_id") != manifest_id:
             raise OperationError("validated manifest identity changed")
         relative_path = final_relative_path(context.get("work"))
@@ -132,15 +145,15 @@ class PublicationValidator:
             "task_id": artifact["task_id"],
             "final_relative_path": relative_path,
             "manifest_id": manifest_id,
-            "audio_files": len(first),
+            "audio_files": len(stored),
             "total_size_bytes": total_size,
-            "files": first,
+            "files": stored,
         }
         return {
             "source": source,
             "final_relative_path": relative_path,
             "manifest_id": manifest_id,
-            "manifest": first,
+            "manifest": stored,
             "total_size_bytes": total_size,
             "remote_manifest": remote_manifest,
         }
