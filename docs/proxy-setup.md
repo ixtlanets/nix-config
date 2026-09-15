@@ -507,6 +507,18 @@ The actual SOCKS password is stored in the per-host client configs under
 `secrets/vless/<host>.json` and in the live unit on the London host at
 `/etc/systemd/system/microsocks.service`.
 
+**Host resource baseline**: `hosts/london/ubuntu/host-baseline/` manages a persistent 2 GiB
+`/swapfile` and masks `fwupd-refresh.timer`. Apply it after provisioning or replacing the VPS;
+it does not restart or modify microsocks, Tailscale, Docker, Caddy, or Vaultwarden.
+
+**Incident note (2026-09-15)**: London stopped servicing SSH, Tailscale, and SOCKS traffic at
+06:49 UTC while TCP handshakes still completed. The journal ended immediately after
+`fwupd-refresh.service` started an LVFS metadata update, with no clean shutdown, OOM record, or
+kernel panic. The 954 MiB VM had no swap and showed high Oracle hypervisor CPU steal under load
+after reboot. Recovery required an Oracle Console reboot. The host baseline now reduces recurrence
+risk by disabling the unnecessary firmware refresh timer and providing swap; the available evidence
+does not distinguish a guest resource deadlock from Oracle host contention.
+
 **Encrypted disaster-recovery bundle**: `secrets/proxy/london/`
 - Store the current `microsocks.service` unit here.
 - Store any firewall/security-list notes that are required for rebuild in `notes.md`.
@@ -553,6 +565,12 @@ sudo systemctl enable --now microsocks
 # Verify
 systemctl status microsocks
 ss -tlnp | grep 1080
+```
+
+From the repository checkout on an administration client, apply the host resource safeguards:
+
+```bash
+hosts/london/ubuntu/host-baseline/apply.sh
 ```
 
 Also install Tailscale and join the tailnet (see Tailscale section below).
