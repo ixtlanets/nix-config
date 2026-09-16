@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily encrypted vault backup to um790pro/moscow/london
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=30m
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Encrypted vault backup pushed to um790pro, moscow, london
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/vault-backup-push
+TimeoutStartSec=4h
+Nice=10
+IOSchedulingClass=idle

@@ -1082,6 +1082,22 @@ install_kbd_backlight_script() {
   install -Dm755 "$helper_src" "$helper_path"
 }
 
+install_vault_backup() {
+  local helper_src="${SCRIPT_DIR}/dotfiles/omarchy/bin/vault-backup-push"
+  local helper_path="${HOME}/.local/bin/vault-backup-push"
+  local unit_dir="${HOME}/.config/systemd/user"
+  local unit_src="${SCRIPT_DIR}/dotfiles/omarchy/system/systemd/user"
+
+  log "installing ${helper_path}"
+  install -Dm755 "$helper_src" "$helper_path"
+
+  log "installing vault-backup-push user units"
+  install -Dm644 "${unit_src}/vault-backup-push.service" "${unit_dir}/vault-backup-push.service"
+  install -Dm644 "${unit_src}/vault-backup-push.timer" "${unit_dir}/vault-backup-push.timer"
+  systemctl --user daemon-reload
+  systemctl --user enable --now vault-backup-push.timer
+}
+
 install_yt_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1728,6 +1744,7 @@ main() {
   install_kbd_backlight_script
   install_yp_script
   install_yt_script
+  install_vault_backup
   configure_kde_shortcuts
   configure_kde_cursor
   configure_kde_input
