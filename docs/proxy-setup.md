@@ -1,7 +1,7 @@
 # Proxy Setup
 
 Transparent proxy for bypassing geo-restrictions, using VLESS+Reality for most traffic and a
-London SOCKS5 relay for traffic that needs a UK exit IP (`google.com`, `elevenlabs.io`). Linux
+London SOCKS5 relay for Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe traffic. Linux
 hosts also have a separate WireGuard host overlay for private host-to-host access. Windows uses
 the same client-side routing shape as macOS: no local London/Tailscale outbound, with that routing
 handled by Frankfurt instead.
@@ -14,8 +14,8 @@ handled by Frankfurt instead.
   │ (zenbook/x1carbon/um790pro)         │   │                                     │
   │ sing-box (TUN mode, auto_route)     │   │ sing-box GUI (TUN mode, auto_route) │
   │   ├─ private / Russian IPs ► direct │   │   ├─ UDP 443 ────────────► block    │
-  │   ├─ google.com / elevenlabs.io ─► london │   │   ├─ private / Russian IPs ► direct │
-  │   └─ everything else ─────► proxy   │   │   └─ everything else ──► proxy      │
+  │   ├─ google.com ──────────► london │   │   ├─ private / Russian IPs ► direct │
+  │   └─ everything else ─────► proxy  │   │   └─ everything else ──► proxy      │
   └──────────┬──────────────┬───────────┘   └──────────────────┬──────────────────┘
              │ VLESS+Reality │ SOCKS5 over                      │ VLESS+Reality
              │ port 443      │ Tailscale                        │ port 443
@@ -24,10 +24,9 @@ handled by Frankfurt instead.
    ┌────────────────────────────────────────────────────────────────────────────┐
    │ Frankfurt: wire.nikcode.xyz / 31.58.85.163                                 │
    │ sing-box in Docker (reality-ezpz) + WireGuard wg0 hub :51820                │
-   │   ├─ geosite-google UDP 443 ───────────────► block                          │
-   │   ├─ geosite-google TCP ───────────────────► london                         │
-   │   ├─ elevenlabs.io UDP 443 ────────────────► block                          │
-   │   ├─ elevenlabs.io TCP ────────────────────► london                         │
+   │   ├─ selected services UDP 443 ────────────► block                          │
+   │   ├─ selected services IPv4 TCP ───────────► london                         │
+   │   │  (Google/YouTube, ElevenLabs, OpenAI/ChatGPT, Stripe)                    │
    │   └─ everything else ──────────────────────► direct                         │
    └───────────────────────────────┬──────────────────────────────┬──────────────┘
                                    │                              │ SOCKS5 port 1080
@@ -59,7 +58,7 @@ overlay is intentionally separate from the VLESS/London proxy path.
 | WireGuard overlay (`198.18.77.0/24`) | kernel route | `wg-hosts` → Frankfurt WG hub → peer |
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
 | `*.google.com` / `google.com` | `london` | Tailscale → London microsocks → internet |
-| `*.elevenlabs.io` / `elevenlabs.io` | `london` | Tailscale → London microsocks → internet |
+| Google services outside `google.com` (including YouTube), ElevenLabs, OpenAI/ChatGPT, Stripe | `proxy` | VLESS+Reality → Frankfurt → London microsocks → internet |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
 
 ### macOS and Windows GUI clients
@@ -71,15 +70,16 @@ overlay is intentionally separate from the VLESS/London proxy path.
 | Russian IPs (`geoip-ru`) | `direct` | Local ISP |
 | Everything else | `proxy` | VLESS+Reality → Frankfurt → internet |
 
-Google and ElevenLabs traffic are routed to London at the Frankfurt level (see Frankfurt section).
+Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe traffic are routed to London at the
+Frankfurt level (see Frankfurt section).
 
 ### Frankfurt sing-box (applies to all clients)
 
 | Traffic | Outbound | Path |
 |---------|----------|------|
-| `geosite-google` UDP 443 | `block-quic` | Dropped |
-| `geosite-google` IPv6 TCP | `internet` | Direct from Frankfurt; London SOCKS has no public IPv6 |
-| `geosite-google` TCP | `london` | London microsocks → internet |
+| `geosite-google`, `geosite-openai`, or `geosite-stripe` UDP 443 | `block-quic` | Dropped |
+| `geosite-google`, `geosite-openai`, or `geosite-stripe` IPv6 TCP | `internet` | Direct from Frankfurt; London SOCKS has no public IPv6 |
+| `geosite-google`, `geosite-openai`, or `geosite-stripe` TCP | `london` | London microsocks → internet |
 | `*.elevenlabs.io` / `elevenlabs.io` UDP 443 | `block-quic` | Dropped |
 | `*.elevenlabs.io` / `elevenlabs.io` IPv6 TCP | `internet` | Direct from Frankfurt; London SOCKS has no public IPv6 |
 | `*.elevenlabs.io` / `elevenlabs.io` TCP | `london` | London microsocks → internet |
@@ -205,7 +205,8 @@ To configure only this overlay without running the full installer:
 Each Mac uses a separate Frankfurt VLESS user/UUID. Do not copy another Mac's UUID into a new GUI config; add a new Frankfurt client with `/opt/reality-ezpz/reality-user add <host>` and use the generated UUID in `secrets/vless/<host>-gui.json`.
 
 **Key differences from NixOS clients**:
-- Google and ElevenLabs routing are handled at Frankfurt, not on the client — the Mac config has no `london` outbound
+- Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe routing are handled at Frankfurt, not on
+  the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
 - No Tailscale dependency — London is reached via Frankfurt over the public internet
 - No WireGuard host overlay — keep Macs on the baseline sing-box GUI/VLESS config for now
@@ -251,8 +252,8 @@ python3 scripts/throne-windows-route.py
 ```
 
 **Key differences from NixOS clients**:
-- Google and ElevenLabs routing are handled at Frankfurt, not on the Windows client — the Throne
-  config has no `london` outbound and does not require Tailscale.
+- Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe routing are handled at Frankfurt, not on
+  the Windows client — the Throne config has no `london` outbound and does not require Tailscale.
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP fallback, matching the macOS GUI
   behavior and helping Frankfurt sniff domains before applying London routing.
 - The TUN inbound uses `interface_name = "throne-tun"` and omits `auto_redirect`; sing-box
@@ -325,13 +326,15 @@ config. If the config is fully migrated to modern sing-box syntax later, remove 
 **Manually added to `engine.conf`** (beyond what reality-ezpz generates):
 - Outbound `london`: SOCKS5 to `132.145.52.74:1080` with auth
 - Outbound `block-quic`: block type
-- Rule set `geosite-google` from SagerNet/sing-geosite
+- Rule sets `geosite-google`, `geosite-openai`, and `geosite-stripe` from SagerNet/sing-geosite
 - Rule: `action: sniff` before domain/rule-set routing, replacing the removed legacy inbound `sniff` field
-- Rule: `geosite-google` + UDP 443 → `block-quic`
-- Rule: `geosite-google` + TCP + IPv6 → `block` (London SOCKS rejects IPv6 targets; this forces client IPv4 fallback)
-- Rule: `geosite-google` → `london`
+- Rule: `geosite-google` / `geosite-openai` / `geosite-stripe` + UDP 443 → `block-quic`
+- Rule: `geosite-google` / `geosite-openai` / `geosite-stripe` + TCP + IPv6 → `internet`
+  (London SOCKS has no public IPv6)
+- Rule: `geosite-google` / `geosite-openai` / `geosite-stripe` → `london`
 - Rule: `domain_suffix: elevenlabs.io` + UDP 443 → `block-quic`
-- Rule: `domain_suffix: elevenlabs.io` + TCP + IPv6 → `block` (same IPv4 fallback reason)
+- Rule: `domain_suffix: elevenlabs.io` + TCP + IPv6 → `internet`
+  (London SOCKS has no public IPv6)
 - Rule: `domain_suffix: elevenlabs.io` → `london`
 
 To apply config-only changes: `docker restart reality-ezpz-engine-1`
@@ -347,7 +350,10 @@ Backups:
 - before 1.13.5 migration: `/opt/reality-ezpz/engine.conf.pre-1.13-fix-<timestamp>`
 - before compose edits: `/opt/reality-ezpz/docker-compose.yml.bak-<timestamp>`
 
-**Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` / `block-quic` / `geosite-google` / `elevenlabs.io` sections before restarting the container.
+**Operational warning**: adding users with `./realityez -m` preserves the VLESS user list but
+regenerates `/opt/reality-ezpz/engine.conf`. After running it, re-apply the manual `london` /
+`block-quic` / `geosite-google` / `geosite-openai` / `geosite-stripe` / `elevenlabs.io` sections
+before restarting the container.
 
 **Preferred user-management workflow**: do **not** use `./realityez -m` for this host anymore. Use the repo-managed helper script instead, which edits `engine.conf` in place and keeps `/opt/reality-ezpz/users` synced without touching the custom London routing.
 
@@ -627,16 +633,18 @@ system traffic through London. This conflicted with sing-box's TUN transparent p
 - Additionally, `tailscale set` is persistent — the exit node is re-activated on every boot,
   breaking the setup even before sing-box starts
 
-### Why not chain through Frankfurt for NixOS clients (zenbook → VLESS → Frankfurt → London)?
+### Why does `google.com` use direct Tailscale on NixOS clients?
 
 Frankfurt's sing-box runs inside Docker, which does not share the host's Tailscale network
-namespace. The container cannot reach `london.tailf108.ts.net` (London's MagicDNS name). NixOS clients
-therefore connect to London directly over Tailscale.
+namespace. The container cannot reach `london.tailf108.ts.net` (London's MagicDNS name), so NixOS
+clients route `google.com` directly to London over Tailscale. Other selected services, including
+YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe, go through VLESS to Frankfurt and then use London's
+public SOCKS endpoint.
 
-For the macOS client, this constraint is handled differently: London's public port 1080 was
-opened (Oracle Cloud security list + host iptables), allowing Frankfurt's Docker container to
-reach London via its public IP. The macOS client routes all traffic through VLESS to Frankfurt,
-where `geosite-google` and `elevenlabs.io` traffic are forwarded to London over the public internet.
+For macOS and Windows clients, London's public port 1080 allows Frankfurt's Docker container to
+reach London via its public IP. These clients route all proxied traffic through VLESS to Frankfurt,
+where Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe traffic are forwarded to London over
+the public internet.
 
 ### Why `bind_interface: tailscale0`?
 
