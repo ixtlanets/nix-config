@@ -1,0 +1,12 @@
+[Unit]
+Description=Prefer the connected home LAN before Tailscale subnet routes
+Before=tailscaled.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/libexec/zenbook-lan-first-routing ensure
+ExecStop=/usr/local/libexec/zenbook-lan-first-routing remove
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

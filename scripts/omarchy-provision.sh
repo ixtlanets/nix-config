@@ -267,7 +267,11 @@ if ! $skip_tailscale; then
     $install_packages || die "Tailscale is not connected; rerun with --install-packages or --skip-tailscale"
     run_privileged_remote "omarchy install service tailscale"
   fi
-  run_privileged_remote "sudo tailscale set --accept-dns=true"
+  tailscale_route_flag=""
+  if [[ "$remote_host" == zenbook ]]; then
+    tailscale_route_flag=" --accept-routes=true"
+  fi
+  run_privileged_remote "sudo tailscale set --accept-dns=true${tailscale_route_flag}"
 fi
 
 if $import_vless && ! $skip_tailscale; then

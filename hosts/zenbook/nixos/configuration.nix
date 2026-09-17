@@ -10,6 +10,16 @@
   ...
 }:
 let
+  lanFirstRouting = pkgs.writeShellApplication {
+    name = "zenbook-lan-first-routing";
+    runtimeInputs = [
+      pkgs.gnugrep
+      pkgs.iproute2
+    ];
+    text = lib.removePrefix "#!/usr/bin/env bash\n" (
+      builtins.readFile ../../../dotfiles/omarchy/system/libexec/zenbook-lan-first-routing
+    );
+  };
   steamScale = toString (dpi / 96.0);
 in
 {
@@ -39,6 +49,18 @@ in
   services.tailscale = {
     extraSetFlags = [ "--accept-routes=true" ];
     useRoutingFeatures = "client";
+  };
+
+  systemd.services.zenbook-lan-first-routing = {
+    description = "Prefer the connected home LAN before Tailscale subnet routes";
+    before = [ "tailscaled.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${lanFirstRouting}/bin/zenbook-lan-first-routing ensure";
+      ExecStop = "${lanFirstRouting}/bin/zenbook-lan-first-routing remove";
+      RemainAfterExit = true;
+    };
   };
 
   networking.wireguard.interfaces.wg-hosts = {

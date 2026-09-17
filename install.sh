@@ -1211,6 +1211,38 @@ configure_tailscale_dns() {
   sudo tailscale set --accept-dns=true
 }
 
+configure_zenbook_lan_first_routing() {
+  if [[ "$HOSTNAME_SHORT" != zenbook ]]; then
+    return
+  fi
+
+  local helper_source="$SCRIPT_DIR/dotfiles/omarchy/system/libexec/zenbook-lan-first-routing"
+  local unit_source="$SCRIPT_DIR/dotfiles/omarchy/system/systemd/system/zenbook-lan-first-routing.service"
+  [[ -x "$helper_source" ]] || {
+    log "LAN-first routing helper is missing: ${helper_source}"
+    return 1
+  }
+  [[ -f "$unit_source" ]] || {
+    log "LAN-first routing service is missing: ${unit_source}"
+    return 1
+  }
+
+  log "installing Zenbook LAN-first routing policy"
+  sudo install -Dm0755 "$helper_source" /usr/local/libexec/zenbook-lan-first-routing
+  sudo install -Dm0644 "$unit_source" /etc/systemd/system/zenbook-lan-first-routing.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable zenbook-lan-first-routing.service
+  sudo systemctl restart zenbook-lan-first-routing.service
+
+  local backend_state=""
+  if backend_state="$(tailscale_backend_state)" && [[ "$backend_state" == Running ]]; then
+    log "enabling Tailscale subnet routes on Zenbook"
+    sudo tailscale set --accept-routes=true
+  else
+    log "tailscale is not authenticated; rerun install.sh after login to enable subnet routes"
+  fi
+}
+
 configure_tailscale_subnet_router() {
   local mode="${1:-best-effort}"
   if [[ "$HOSTNAME_SHORT" != "um790pro" ]]; then
@@ -1754,6 +1786,7 @@ main() {
   write_vpn_script
   enable_tailscale_service
   configure_tailscale_dns
+  configure_zenbook_lan_first_routing
   configure_tailscale_subnet_router best-effort
   configure_wireguard_overlay
   write_vless_script
