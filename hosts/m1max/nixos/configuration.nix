@@ -153,39 +153,6 @@ in
     };
   };
 
-  launchd.user.agents.llama-server = {
-    path = [ "/opt/homebrew/bin" ];
-    serviceConfig = {
-      Label = "ai.llama.server";
-      KeepAlive = true;
-      ProcessType = "Background";
-      ProgramArguments = [
-        "/opt/homebrew/bin/llama-server"
-        "-hf"
-        "unsloth/Qwen3.6-35B-A3B-MTP-GGUF:UD-Q4_K_M"
-        "--host"
-        "0.0.0.0"
-        "--port"
-        "8080"
-        "--flash-attn"
-        "on"
-        "--metrics"
-        "--spec-type"
-        "draft-mtp"
-        "--spec-draft-n-max"
-        "3"
-        "--reasoning"
-        "off"
-        "--chat-template-kwargs"
-        ''{"enable_thinking": false}''
-      ];
-      RunAtLoad = true;
-      StandardErrorPath = "/Users/nik/Library/Logs/llama-server.log";
-      StandardOutPath = "/Users/nik/Library/Logs/llama-server.log";
-      WorkingDirectory = "/Users/nik";
-    };
-  };
-
   # Nix 2.31.5 includes the upstream fix for the aarch64-darwin nix-shell
   # shebang regression that required pinning 2.30.
   nix.package = pkgs.nixVersions.nix_2_31;
