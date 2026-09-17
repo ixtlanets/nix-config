@@ -139,3 +139,9 @@ Zenbook provisioning also installs the USB hub wake rule required for input
 devices behind the MateView and applies its reduced-blanking 3840x2560@60
 modeline. The managed `nik.lock` clone replaces the built-in lock service and
 adds initial keyboard focus to its password field.
+
+The Zenbook also ignores lid-close events for headless operation. UPower keeps a
+final power-off action at 2% as protection against battery exhaustion. The
+experimental 30% suspend guard remains disabled because neither USB-C power nor
+the tested RTC/systemd timers reliably wake this model from `s2idle`; see
+`docs/zenbook-headless-power.md`.

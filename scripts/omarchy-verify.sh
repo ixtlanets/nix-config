@@ -54,6 +54,14 @@ if [[ "$expected_host" == zenbook ]]; then
   cmp -s \
     "$source_root/dotfiles/omarchy/system/udev/80-usb-hub-wakeup.rules" \
     /etc/udev/rules.d/80-usb-hub-wakeup.rules || fail "USB hub wake rule mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/logind.conf.d/90-headless-lid.conf" \
+    /etc/systemd/logind.conf.d/90-headless-lid.conf || fail "headless lid configuration mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/UPower.conf.d/90-headless-battery.conf" \
+    /etc/UPower/UPower.conf.d/90-headless-battery.conf || fail "headless battery configuration mismatch"
+  ! systemctl is-enabled --quiet zenbook-battery-guard.service ||
+    fail "experimental battery guard must remain disabled"
 fi
 python -c 'import curl_cffi, secretstorage' >/dev/null 2>&1 ||
   fail "yt-dlp Python dependencies could not be imported"
