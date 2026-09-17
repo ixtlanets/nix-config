@@ -1,0 +1,19 @@
+{
+  "containers": [
+    "audiobook-ops",
+    "audiobook-ops-flaresolverr",
+    "audiobook-ops-rutracker-gateway",
+    "audiobook-ops-prowlarr",
+    "audiobook-ops-transmission"
+  ],
+  "control_url": "http://100.95.213.117:8300",
+  "docker_bin": "/usr/bin/docker",
+  "publisher_status_command": [
+    "/usr/bin/python3",
+    "/usr/local/lib/audiobook-ops/scripts/publisher.py",
+    "--config",
+    "/etc/audiobook-ops/config/publisher.json",
+    "status",
+    "--json"
+  ]
+}

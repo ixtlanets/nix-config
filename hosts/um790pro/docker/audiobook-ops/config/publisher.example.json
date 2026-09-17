@@ -1,0 +1,16 @@
+{
+  "database_path": "/home/nik/services/audiobook-ops/audiobook-ops.sqlite3",
+  "ffprobe_bin": "/usr/bin/ffprobe",
+  "known_hosts_file": "/home/nik/.ssh/known_hosts",
+  "lock_path": "/home/nik/services/audiobook-ops/publisher.lock",
+  "max_release_gib": 20,
+  "min_local_free_gib": 100,
+  "min_remote_free_gib": 200,
+  "publisher_id": "um790pro-publisher",
+  "publisher_identity_file": "${CREDENTIALS_DIRECTORY}/publisher-ssh-key",
+  "remote_host": "nik@100.81.67.47",
+  "rsync_bin": "/usr/bin/rsync",
+  "ssh_bin": "/usr/bin/ssh",
+  "stability_seconds": 30,
+  "staging_root": "/home/nik/services/audiobook-ops/staging"
+}

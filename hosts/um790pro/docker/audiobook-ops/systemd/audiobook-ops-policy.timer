@@ -1,0 +1,12 @@
+[Unit]
+Description=Refresh audiobook policy evidence
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+RandomizedDelaySec=15s
+Unit=audiobook-ops-policy.service
+
+[Install]
+WantedBy=timers.target

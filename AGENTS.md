@@ -2,7 +2,8 @@
 
 ## Important Notes
 - Do not run `sudo nixos-rebuild build --flake .#zenbook` or similar commands yourself. Always ask the user to execute them.
-- Keep `install.sh` in sync with changes to helper scripts (vpn, vless, tat, etc.) from the Nix configs; replicate behavior updates there for CachyOS/Arch installs.
+- Keep `install.sh` in sync with changes to helper scripts (vpn, vless, tat, vault-backup-push, etc.) from the Nix configs; replicate behavior updates there for CachyOS/Arch installs.
+- Vault backup scheme (no GitHub, no remote, no git-crypt in `~/vault`): documented in `docs/vault-backup.md`. Daily encrypted archive goes to um790pro/moscow/london; commits in `~/vault` are local-only, never push.
 - Voice typing words are shared in `dotfiles/voice-typing/words.json` and loaded by `modules/home-manager/voice-typing-words.nix`. When updating `voxtypeReplacements`, keep `handyCustomWords` in sync; every replacement value must be present in Handy custom words, and the Nix assertion should remain strict with no exceptions.
 - `london` is an Ubuntu VPS, not a NixOS host. Keep reproducible Ubuntu-managed service bundles under `hosts/london/ubuntu/<service>/`. Do not add `london` to `nixosConfigurations` unless explicitly requested.
 - For Vaultwarden on `london`, keep Docker/Caddy/systemd/deploy assets under `hosts/london/ubuntu/vaultwarden/` and secrets under `secrets/vaultwarden/london/`.

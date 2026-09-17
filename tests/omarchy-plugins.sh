@@ -130,8 +130,10 @@ trap - EXIT
 [[ -f "$system_apply" ]]
 [[ -f "$usb_wake_rule" ]]
 grep -Fq '80-usb-hub-wakeup.rules' "$system_apply"
+grep -Fq 'disable --now zenbook-battery-guard.service' "$system_apply"
 grep -Fq 'scripts/omarchy-apply-system.sh' "$repo_root/scripts/omarchy-provision.sh"
 grep -Fq 'USB hub wake rule mismatch' "$repo_root/scripts/omarchy-verify.sh"
+grep -Fq 'experimental battery guard must remain disabled' "$repo_root/scripts/omarchy-verify.sh"
 
 [[ "${#declared_plugins[@]}" -eq 4 ]] || {
   printf 'Expected four shared third-party Omarchy plugins, found %s\n' \

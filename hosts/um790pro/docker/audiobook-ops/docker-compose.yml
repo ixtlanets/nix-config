@@ -1,0 +1,181 @@
+name: audiobook-ops
+
+x-common-environment: &common-environment
+  PUID: "1000"
+  PGID: "1000"
+  TZ: Europe/Moscow
+  UMASK: "002"
+
+x-common-logging: &common-logging
+  driver: local
+  options:
+    max-size: 50m
+    max-file: "3"
+
+services:
+  audiobook-ops:
+    image: ${AUDIOBOOK_OPS_IMAGE:?set AUDIOBOOK_OPS_IMAGE to the reviewed local sha256 image ID}
+    platform: linux/amd64
+    container_name: audiobook-ops
+    restart: unless-stopped
+    depends_on:
+      prowlarr:
+        condition: service_healthy
+      transmission:
+        condition: service_started
+    command: ["serve", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      AUDIOBOOK_OPS_CONFIG: /etc/audiobook-ops/config.json
+    user: "0:0"
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ${AUDIOBOOK_OPS_CONFIG_FILE:-/etc/audiobook-ops/config/audiobook-ops.json}:/etc/audiobook-ops/config.json:ro
+      - ${AUDIOBOOK_OPS_STATE_ROOT:-/home/nik/services/audiobook-ops}:/var/lib/audiobook-ops
+      - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/downloads:/downloads
+      - ${AUDIOBOOK_OPS_STATE_ROOT:-/home/nik/services/audiobook-ops}/staging:/staging
+    secrets:
+      - source: abs_api_token
+        target: abs-api-token
+      - source: mcp_bearer
+        target: mcp-bearer
+      - source: prowlarr_api_key
+        target: prowlarr-api-key
+      - source: transmission_password
+        target: transmission-password
+    ports:
+      - "${AUDIOBOOK_OPS_TAILSCALE_IP:?set AUDIOBOOK_OPS_TAILSCALE_IP to the UM790Pro Tailscale address}:8300:8000"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/audiobook-ops-entrypoint", "health", "core"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    tmpfs:
+      - /tmp:mode=1777
+      - /run/audiobook-ops-runtime:mode=0711,uid=0,gid=0
+    logging: *common-logging
+    networks:
+      - backend
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr@sha256:258523d25e4e07028c3a206f0e03ae807b26a50a201dd320f09a18464ecf86fa
+    platform: linux/amd64
+    container_name: audiobook-ops-flaresolverr
+    restart: unless-stopped
+    environment:
+      LOG_LEVEL: warning
+      LOG_HTML: "false"
+      CAPTCHA_SOLVER: none
+      TZ: Europe/Moscow
+    volumes:
+      - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/flaresolverr:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8191/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging: *common-logging
+    networks:
+      - backend
+
+  rutracker-gateway:
+    image: ghcr.io/flaresolverr/flaresolverr@sha256:258523d25e4e07028c3a206f0e03ae807b26a50a201dd320f09a18464ecf86fa
+    platform: linux/amd64
+    container_name: audiobook-ops-rutracker-gateway
+    restart: unless-stopped
+    depends_on:
+      flaresolverr:
+        condition: service_healthy
+    entrypoint: ["/usr/bin/dumb-init", "--"]
+    command: ["/usr/local/bin/python3", "-u", "/gateway/rutracker_gateway.py"]
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      RUTRACKER_GATEWAY_FLARESOLVERR_URL: http://flaresolverr:8191/v1
+      RUTRACKER_GATEWAY_LISTEN_HOST: 0.0.0.0
+      RUTRACKER_GATEWAY_LISTEN_PORT: "8080"
+    user: "1000:1000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./scripts/rutracker_gateway.py:/gateway/rutracker_gateway.py:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    logging: *common-logging
+    networks:
+      backend:
+        aliases:
+          - readmeabook-rutracker-gateway
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr@sha256:c7502a75b021d964481c129c84590b9cbc40f83aadd4e553f173871bc0deaa3c
+    platform: linux/amd64
+    container_name: audiobook-ops-prowlarr
+    restart: unless-stopped
+    depends_on:
+      rutracker-gateway:
+        condition: service_healthy
+    environment: *common-environment
+    volumes:
+      - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/prowlarr:/config
+    ports:
+      - 127.0.0.1:9696:9696
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9696/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging: *common-logging
+    networks:
+      - backend
+
+  transmission:
+    image: lscr.io/linuxserver/transmission@sha256:fc3b07f2f571c0392edd4dd386067138a0fe157d2158a976769409a292e43936
+    platform: linux/amd64
+    container_name: audiobook-ops-transmission
+    restart: unless-stopped
+    entrypoint: /audiobook-ops/transmission-entrypoint.sh
+    environment:
+      <<: *common-environment
+      USER: audiobook-ops
+      HOST_WHITELIST: transmission
+    secrets:
+      - transmission_password
+    volumes:
+      - ./scripts/transmission-entrypoint.sh:/audiobook-ops/transmission-entrypoint.sh:ro
+      - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/transmission:/config
+      - ${AUDIOBOOK_OPS_RETAINED_STATE_ROOT:-/home/nik/services/readmeabook}/downloads:/downloads
+    logging: *common-logging
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: audiobook-ops-backend
+    driver: bridge
+
+secrets:
+  abs_api_token:
+    file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/abs-api-token
+  mcp_bearer:
+    file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/mcp-bearer
+  prowlarr_api_key:
+    file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/prowlarr-api-key
+  transmission_password:
+    file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/transmission-password

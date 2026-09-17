@@ -1,0 +1,13 @@
+[Unit]
+Description=Poll for one ready audiobook publication
+
+[Timer]
+OnActiveSec=1min
+OnBootSec=3min
+OnUnitActiveSec=1min
+Persistent=true
+RandomizedDelaySec=15s
+Unit=audiobook-ops-publisher.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Clean terminal audiobook acquisition data daily
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15min
+Unit=audiobook-ops-cleanup.service
+
+[Install]
+WantedBy=timers.target

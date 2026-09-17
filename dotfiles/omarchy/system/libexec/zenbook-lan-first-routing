@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ip_bin="${IP_BIN:-ip}"
+priority=5260
+destination=192.168.1.0/24
+suppress_prefixlength=23
+rule_pattern='^5260:[[:space:]]+from all to 192\.168\.1\.0/24 lookup main suppress_prefixlength 23[[:space:]]*$'
+
+rules="$("$ip_bin" -4 rule show)"
+
+has_managed_rule() {
+  grep -Eq "$rule_pattern" <<< "$rules"
+}
+
+has_priority_collision() {
+  grep -Eq "^${priority}:[[:space:]]" <<< "$rules"
+}
+
+case "${1:-ensure}" in
+  ensure)
+    has_managed_rule && exit 0
+    if has_priority_collision; then
+      printf 'Priority %s is already used by another policy rule\n' "$priority" >&2
+      exit 1
+    fi
+    "$ip_bin" -4 rule add \
+      priority "$priority" \
+      to "$destination" \
+      lookup main \
+      suppress_prefixlength "$suppress_prefixlength"
+    ;;
+  remove)
+    has_managed_rule || exit 0
+    "$ip_bin" -4 rule delete \
+      priority "$priority" \
+      to "$destination" \
+      lookup main \
+      suppress_prefixlength "$suppress_prefixlength"
+    ;;
+  *)
+    printf 'Usage: %s {ensure|remove}\n' "$0" >&2
+    exit 2
+    ;;
+esac

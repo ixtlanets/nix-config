@@ -1,0 +1,24 @@
+{
+  "capacity_evidence_file": "/home/nik/services/audiobook-ops/capacity.json",
+  "curl_bin": "/usr/bin/curl",
+  "downloads_root": "/home/nik/services/readmeabook/downloads",
+  "ip_bin": "/usr/bin/ip",
+  "limits": {
+    "max_working_set_gib": 50,
+    "min_local_free_gib": 100,
+    "min_remote_free_gib": 200
+  },
+  "publisher": {
+    "known_hosts_file": "/home/nik/.ssh/known_hosts",
+    "publisher_identity_file": "${CREDENTIALS_DIRECTORY}/publisher-ssh-key",
+    "remote_host": "nik@100.81.67.47",
+    "rsync_bin": "/usr/bin/rsync",
+    "ssh_bin": "/usr/bin/ssh"
+  },
+  "staging_root": "/home/nik/services/audiobook-ops/staging",
+  "systemctl_bin": "/usr/bin/systemctl",
+  "vless_evidence_file": "/home/nik/services/audiobook-ops/vless-route.json",
+  "vless_interface": "nekoray-tun",
+  "vless_probe_url": "https://www.cloudflare.com/cdn-cgi/trace",
+  "vless_unit": "vless-sing-box.service"
+}

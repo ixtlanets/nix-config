@@ -1,0 +1,33 @@
+{
+  "abs_url": "http://100.81.67.47:13378",
+  "abs_api_token_file": "/run/secrets/abs-api-token",
+  "backup_evidence_file": "/var/lib/audiobook-ops/backup-health.json",
+  "capacity_evidence_file": "/var/lib/audiobook-ops/capacity.json",
+  "database_path": "/var/lib/audiobook-ops/audiobook-ops.sqlite3",
+  "downloads_root": "/downloads",
+  "ffmpeg_bin": "/usr/bin/ffmpeg",
+  "ffprobe_bin": "/usr/bin/ffprobe",
+  "health": {
+    "catalog_component": "catalog",
+    "external_search_component": "external-search"
+  },
+  "limits": {
+    "max_release_gib": 20,
+    "max_working_set_gib": 50,
+    "max_ancillary_files": 20,
+    "max_ancillary_mib": 10,
+    "min_local_free_gib": 100,
+    "min_remote_free_gib": 200
+  },
+  "mcp_bearer_file": "/run/secrets/mcp-bearer",
+  "prowlarr_url": "http://prowlarr:9696",
+  "prowlarr_api_key_file": "/run/secrets/prowlarr-api-key",
+  "stability_seconds": 30,
+  "staging_root": "/staging",
+  "transmission_download_dir": "/downloads/complete",
+  "transmission_password_file": "/run/secrets/transmission-password",
+  "transmission_username": "audiobook-ops",
+  "transmission_url": "http://transmission:9091/transmission/rpc",
+  "vless_evidence_file": "/var/lib/audiobook-ops/vless-route.json",
+  "vless_route_health_url": "http://audiobook-ops:8000/vless-route/health"
+}

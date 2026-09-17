@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Daily encrypted backup of ~/vault pushed to three hosts over tailscale.
+# Stream: tar -> zstd -> gpg; plaintext never touches disk.
+# The archive includes .git so the full git history travels with it.
+
+vault_dir="${HOME}/vault"
+local_dir="${HOME}/backups/vault"
+gpg_key="539459F1879941F7"
+date_tag="$(date +%F)"
+archive_name="vault-${date_tag}.tar.zst.gpg"
+# destination:retention-days (london has a small disk)
+destinations=(
+  "nik@um790pro:7"
+  "nik@moscow:7"
+  "ubuntu@london:3"
+)
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=15)
+
+log() {
+  printf '[vault-backup] %s\n' "$*"
+}
+
+[[ -d "$vault_dir" ]] || {
+  log "vault directory ${vault_dir} not found"
+  exit 1
+}
+
+mkdir -p "$local_dir"
+incoming="${local_dir}/.incoming-${archive_name}"
+
+# tar | zstd | gpg in a single stream. The vault is live: file-changed
+# warnings are expected and must not fail the backup.
+tar --create \
+  --directory="$vault_dir" \
+  --warning=no-file-changed \
+  --ignore-failed-read \
+  . \
+  | zstd -q -3 -T0 \
+  | gpg --batch --yes --quiet --trust-model always \
+    --encrypt --recipient "$gpg_key" \
+    --output "$incoming"
+
+size_kb="$(stat -c %s "$incoming")"
+size_kb=$((size_kb / 1024))
+need_kb=$((size_kb + 1024 * 1024)) # archive + 1 GiB headroom
+
+remote_free_kb() {
+  ssh "${ssh_opts[@]}" "$1" 'df -Pk "$HOME/backups/vault" | awk "NR==2 {print \$4}"'
+}
+
+remote_drop_oldest() {
+  ssh "${ssh_opts[@]}" "$1" 'cd "$HOME/backups/vault" && ls -1tr vault-*.tar.zst.gpg 2>/dev/null | head -n 1 | xargs -r rm --'
+}
+
+remote_retention_cleanup() {
+  ssh "${ssh_opts[@]}" "$1" "find \$HOME/backups/vault -maxdepth 1 -name 'vault-*.tar.zst.gpg' -mtime +$2 -delete"
+}
+
+status=0
+for entry in "${destinations[@]}"; do
+  dest="${entry%%:*}"
+  retention="${entry##*:}"
+
+  if ! ssh "${ssh_opts[@]}" "$dest" 'mkdir -p "$HOME/backups/vault"'; then
+    log "FAILED to reach ${dest}"
+    status=1
+    continue
+  fi
+
+  # Free-space guard: drop oldest archives until the new one fits.
+  for _ in 1 2 3 4; do
+    free_kb="$(remote_free_kb "$dest" || printf 0)"
+    if ((free_kb >= need_kb)); then
+      break
+    fi
+    log "${dest}: only ${free_kb} KiB free, dropping oldest archive"
+    remote_drop_oldest "$dest"
+  done
+
+  if rsync -a --partial --timeout=1800 \
+    --rsh="ssh -o BatchMode=yes -o ConnectTimeout=15" \
+    "$incoming" "${dest}:backups/vault/${archive_name}"; then
+    remote_size="$(ssh "${ssh_opts[@]}" "$dest" "stat -c %s \$HOME/backups/vault/${archive_name}" || printf 0)"
+    local_size="$(stat -c %s "$incoming")"
+    if [[ "$remote_size" == "$local_size" ]]; then
+      remote_retention_cleanup "$dest" "$retention"
+      log "delivered to ${dest} (retention ${retention}d)"
+    else
+      log "SIZE MISMATCH on ${dest}: remote ${remote_size} != local ${local_size}"
+      status=1
+    fi
+  else
+    log "FAILED to deliver to ${dest}"
+    status=1
+  fi
+done
+
+# Keep the newest artifact local for fast restore; same 7-day retention.
+mv -f -- "$incoming" "${local_dir}/${archive_name}"
+find "$local_dir" -maxdepth 1 -name 'vault-*.tar.zst.gpg' -mtime +7 -delete
+
+exit "$status"

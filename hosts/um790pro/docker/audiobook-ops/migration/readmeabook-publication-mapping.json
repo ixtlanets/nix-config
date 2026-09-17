@@ -1,0 +1,20 @@
+{
+  "source_ledger_sha256": "a20f20e3c7df929eac479b1d9be94a59f82ffe9bae15eafe4e33fc28382f37e8",
+  "active_items": {
+    "0cc1a664-29a5-4542-a483-aaebae3bf0b3": {
+      "library_id": "47e465fa-78b1-44bb-a697-98fc02bd8596",
+      "item_id": "9bff45e8-f58c-4e45-a57b-b62a0bcc3da8",
+      "media_id": "b9bfb5b6-238b-4416-b207-9ffcc728b9f3"
+    },
+    "83920e0c-1504-4882-8aba-3c25460e20dc": {
+      "library_id": "47e465fa-78b1-44bb-a697-98fc02bd8596",
+      "item_id": "81ed85d9-dd3c-438f-9ee2-68791860c3b5",
+      "media_id": "2ab86705-68eb-4a29-a28f-4782968063b5"
+    },
+    "8c229675-3f6b-43ba-a7af-e71232936f2e": {
+      "library_id": "47e465fa-78b1-44bb-a697-98fc02bd8596",
+      "item_id": "15e62639-a3e7-4690-8e7c-f7aab388946a",
+      "media_id": "55078069-e76a-40a2-a91f-adf520c9729b"
+    }
+  }
+}

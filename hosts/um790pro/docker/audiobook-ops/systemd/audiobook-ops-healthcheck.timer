@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodic Audiobook Ops health check
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+Persistent=true
+Unit=audiobook-ops-healthcheck.service
+
+[Install]
+WantedBy=timers.target

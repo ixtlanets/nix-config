@@ -1,4 +1,5 @@
 add_newline = false
+scan_timeout = 500
 format = "$nix_shell$username$hostname$directory$container$git_branch $git_status$python$nodejs$lua$rust$java$c$golang$status$character"
 palette = "catppuccin_mocha"
 right_format = "$battery$time"

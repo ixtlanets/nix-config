@@ -1,0 +1,25 @@
+name: audiobook-ops-rehearsal
+
+services:
+  audiobook-ops:
+    container_name: audiobook-ops-rehearsal-control
+    ports: !override
+      - "127.0.0.1:18300:8000"
+
+  flaresolverr:
+    container_name: audiobook-ops-rehearsal-flaresolverr
+
+  rutracker-gateway:
+    container_name: audiobook-ops-rehearsal-rutracker-gateway
+
+  prowlarr:
+    container_name: audiobook-ops-rehearsal-prowlarr
+    ports: !override
+      - "127.0.0.1:19696:9696"
+
+  transmission:
+    container_name: audiobook-ops-rehearsal-transmission
+
+networks:
+  backend:
+    name: audiobook-ops-rehearsal-backend

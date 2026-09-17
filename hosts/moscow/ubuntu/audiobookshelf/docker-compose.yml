@@ -14,3 +14,17 @@ services:
       - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/config"
       - "${SOURCE_STATE_DIR:-/media/disk1/media/meta}:/metadata"
       - "${MEDIA_DIR:-/media/disk1/media/Audiobooks}:/audiobooks"
+      - "${READMABOOK_MEDIA_DIR:-/media/disk1/media/ReadMeABook}:/readmeabook:ro"
+
+  caddy:
+    image: caddy:2.11.4
+    container_name: audiobookshelf-caddy
+    restart: unless-stopped
+    depends_on:
+      - audiobookshelf
+    ports:
+      - "0.0.0.0:443:443"
+    volumes:
+      - "./Caddyfile:/etc/caddy/Caddyfile:ro"
+      - "${CADDY_DATA_DIR:-/home/nik/.local/state/audiobookshelf-caddy/data}:/data"
+      - "${CADDY_CONFIG_DIR:-/home/nik/.local/state/audiobookshelf-caddy/config}:/config"

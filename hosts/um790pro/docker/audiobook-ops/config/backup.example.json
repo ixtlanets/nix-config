@@ -1,0 +1,34 @@
+{
+  "backup_evidence_file": "/home/nik/services/audiobook-ops/backup-health.json",
+  "backup_root": "/var/backups/audiobook-ops",
+  "database_path": "/home/nik/services/audiobook-ops/audiobook-ops.sqlite3",
+  "docker_bin": "/usr/bin/docker",
+  "legacy_ledger_path": "/home/nik/services/audiobook-ops/migration/readmeabook-ledger.json",
+  "operator_files": {
+    "audiobook-ops.json": "/etc/audiobook-ops/config/audiobook-ops.json",
+    "backup.json": "/etc/audiobook-ops/config/backup.json",
+    "compose.env": "/etc/audiobook-ops/config/compose.env",
+    "health.json": "/etc/audiobook-ops/config/health.json",
+    "policy.json": "/etc/audiobook-ops/config/policy.json",
+    "publisher.json": "/etc/audiobook-ops/config/publisher.json"
+  },
+  "pause_containers": [
+    "audiobook-ops",
+    "audiobook-ops-flaresolverr",
+    "audiobook-ops-rutracker-gateway",
+    "audiobook-ops-prowlarr",
+    "audiobook-ops-transmission"
+  ],
+  "retained_state": {
+    "flaresolverr": "/home/nik/services/readmeabook/flaresolverr",
+    "prowlarr": "/home/nik/services/readmeabook/prowlarr",
+    "transmission": "/home/nik/services/readmeabook/transmission"
+  },
+  "secret_files": {
+    "abs-api-token": "${CREDENTIALS_DIRECTORY}/abs-api-token",
+    "mcp-bearer": "${CREDENTIALS_DIRECTORY}/mcp-bearer",
+    "prowlarr-api-key": "${CREDENTIALS_DIRECTORY}/prowlarr-api-key",
+    "publisher-ssh-key": "${CREDENTIALS_DIRECTORY}/publisher-ssh-key",
+    "transmission-password": "${CREDENTIALS_DIRECTORY}/transmission-password"
+  }
+}

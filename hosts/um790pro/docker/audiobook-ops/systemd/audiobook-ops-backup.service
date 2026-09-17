@@ -1,0 +1,30 @@
+[Unit]
+Description=Back up Audiobook Ops state
+After=audiobook-ops-compose.service
+Requires=audiobook-ops-compose.service
+ConditionPathExists=/etc/audiobook-ops/config/backup.json
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+Environment=PYTHONPATH=/usr/local/lib/audiobook-ops/src
+StandardOutput=append:/var/log/audiobook-ops/backup.jsonl
+StandardError=append:/var/log/audiobook-ops/backup.jsonl
+LoadCredential=abs-api-token:/etc/audiobook-ops/secrets/abs-api-token
+LoadCredential=mcp-bearer:/etc/audiobook-ops/secrets/mcp-bearer
+LoadCredential=prowlarr-api-key:/etc/audiobook-ops/secrets/prowlarr-api-key
+LoadCredential=publisher-ssh-key:/etc/audiobook-ops/secrets/publisher-ssh-key
+LoadCredential=transmission-password:/etc/audiobook-ops/secrets/transmission-password
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/backup.py --config /etc/audiobook-ops/config/backup.json --execute
+TimeoutStartSec=2h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/backups/audiobook-ops /home/nik/services/audiobook-ops
+RestrictAddressFamilies=AF_UNIX

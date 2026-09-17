@@ -54,6 +54,29 @@ if [[ "$expected_host" == zenbook ]]; then
   cmp -s \
     "$source_root/dotfiles/omarchy/system/udev/80-usb-hub-wakeup.rules" \
     /etc/udev/rules.d/80-usb-hub-wakeup.rules || fail "USB hub wake rule mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/logind.conf.d/90-headless-lid.conf" \
+    /etc/systemd/logind.conf.d/90-headless-lid.conf || fail "headless lid configuration mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/libexec/zenbook-lan-first-routing" \
+    /usr/local/libexec/zenbook-lan-first-routing || fail "LAN-first routing helper mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/systemd/system/zenbook-lan-first-routing.service" \
+    /etc/systemd/system/zenbook-lan-first-routing.service || fail "LAN-first routing service mismatch"
+  cmp -s \
+    "$source_root/dotfiles/omarchy/system/UPower.conf.d/90-headless-battery.conf" \
+    /etc/UPower/UPower.conf.d/90-headless-battery.conf || fail "headless battery configuration mismatch"
+  [[ -x /usr/local/libexec/zenbook-lan-first-routing ]] ||
+    fail "LAN-first routing helper is not executable"
+  systemctl is-enabled --quiet zenbook-lan-first-routing.service ||
+    fail "LAN-first routing service is not enabled"
+  systemctl is-active --quiet zenbook-lan-first-routing.service ||
+    fail "LAN-first routing service is not active"
+  ip -4 rule show | grep -Eq \
+    '^5260:[[:space:]]+from all to 192\.168\.1\.0/24 lookup main suppress_prefixlength 23[[:space:]]*$' ||
+    fail "LAN-first routing rule is missing"
+  ! systemctl is-enabled --quiet zenbook-battery-guard.service ||
+    fail "experimental battery guard must remain disabled"
 fi
 python -c 'import curl_cffi, secretstorage' >/dev/null 2>&1 ||
   fail "yt-dlp Python dependencies could not be imported"
@@ -246,6 +269,15 @@ if [[ "${OMARCHY_SKIP_TAILSCALE:-false}" != true ]]; then
   tailscale_dns_status="$(tailscale dns status --json)" || fail "could not read Tailscale DNS status"
   jq -e '.TailscaleDNS == true and .CurrentTailnet.MagicDNSEnabled == true' \
     <<< "$tailscale_dns_status" >/dev/null || fail "Tailscale MagicDNS is not enabled"
+  if [[ "$expected_host" == zenbook ]]; then
+    tailscale_prefs="$(tailscale debug prefs)" || fail "could not read Tailscale preferences"
+    jq -e '.RouteAll == true' <<< "$tailscale_prefs" >/dev/null ||
+      fail "Tailscale subnet routes are not enabled"
+    for host_route in 192.168.1.174/32 192.168.1.144/32; do
+      ip -4 route show table 52 exact "$host_route" | grep -Eq '^192\.168\.1\.(174|144) dev tailscale0([[:space:]]|$)' ||
+        fail "Tailscale host route ${host_route} is missing"
+    done
+  fi
   tailscale_dns="$(jq -r '.Self.DNSName' <<< "$tailscale_status")"
   [[ "${tailscale_dns%%.*}" == "$expected_host" ]] || fail "Tailscale DNS name mismatch"
   getent ahostsv4 "$tailscale_dns" >/dev/null || fail "Tailscale DNS name does not resolve"

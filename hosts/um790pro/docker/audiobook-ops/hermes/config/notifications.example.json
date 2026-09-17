@@ -1,0 +1,11 @@
+{
+  "mcp_url": "http://100.95.213.117:8300/mcp",
+  "bearer_env": "MCP_AUDIOBOOK_OPS_API_KEY",
+  "cursor_file": "~/.hermes/state/audiobook-notifications.cursor",
+  "hermes_bin": "~/.local/bin/hermes",
+  "allowed_origins": [
+    "telegram:123456789"
+  ],
+  "timeout_seconds": 10,
+  "page_size": 50
+}

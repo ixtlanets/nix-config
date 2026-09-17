@@ -4,6 +4,7 @@
     enable = true;
     settings = {
       add_newline = false;
+      scan_timeout = 500;
       format = lib.strings.concatStrings [
         "$nix_shell"
         "$username"

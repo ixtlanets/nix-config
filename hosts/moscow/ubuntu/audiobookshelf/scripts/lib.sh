@@ -19,6 +19,7 @@ REMOTE_BUNDLE_DIR=${REMOTE_BUNDLE_DIR:-/home/nik/.local/share/nix-config-service
 REMOTE_STATE_DIR=${REMOTE_STATE_DIR:-/home/nik/.local/state/audiobookshelf}
 SOURCE_STATE_DIR=${SOURCE_STATE_DIR:-/media/disk1/media/meta}
 MEDIA_DIR=${MEDIA_DIR:-/media/disk1/media/Audiobooks}
+READMABOOK_MEDIA_DIR=${READMABOOK_MEDIA_DIR:-/media/disk1/media/ReadMeABook}
 TAILSCALE_IP=${TAILSCALE_IP:-100.81.67.47}
 
 run_remote() {
@@ -40,6 +41,7 @@ sync_bundle() {
 
   "$SSH_BIN" "$REMOTE" "install -d -m 0755 '$REMOTE_BUNDLE_DIR'"
   "$SCP_BIN" \
+    "$BUNDLE_DIR/Caddyfile" \
     "$BUNDLE_DIR/docker-compose.yml" \
     "$BUNDLE_DIR/docker-compose.rehearsal.yml" \
     "$REMOTE:$REMOTE_BUNDLE_DIR/"

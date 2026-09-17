@@ -1,0 +1,27 @@
+[Unit]
+Description=Refresh audiobook capacity and VLESS policy evidence
+After=audiobook-ops-compose.service network-online.target tailscaled.service vless-sing-box.service
+Requires=audiobook-ops-compose.service
+Wants=network-online.target
+ConditionPathExists=/etc/audiobook-ops/config/policy.json
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+Environment=PYTHONPATH=/usr/local/lib/audiobook-ops/src
+StandardOutput=append:/var/log/audiobook-ops/policy.jsonl
+StandardError=append:/var/log/audiobook-ops/policy.jsonl
+LoadCredential=publisher-ssh-key:/etc/audiobook-ops/secrets/publisher-ssh-key
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/policy.py --config /etc/audiobook-ops/config/policy.json run --execute
+TimeoutStartSec=10min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/nik/services/audiobook-ops
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK

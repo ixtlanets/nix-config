@@ -14,3 +14,4 @@ services:
       - "${REHEARSAL_STATE_DIR:?set REHEARSAL_STATE_DIR}:/config"
       - "${REHEARSAL_STATE_DIR:?set REHEARSAL_STATE_DIR}:/metadata"
       - "${MEDIA_DIR:-/media/disk1/media/Audiobooks}:/audiobooks:ro"
+      - "${READMABOOK_MEDIA_DIR:-/media/disk1/media/ReadMeABook}:/readmeabook:ro"

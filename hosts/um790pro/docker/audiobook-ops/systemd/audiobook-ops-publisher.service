@@ -1,0 +1,27 @@
+[Unit]
+Description=Publish one verified audiobook to Moscow
+After=audiobook-ops-compose.service network-online.target tailscaled.service
+Requires=audiobook-ops-compose.service
+Wants=network-online.target
+ConditionPathExists=/etc/audiobook-ops/config/publisher.json
+
+[Service]
+Type=oneshot
+User=nik
+Group=nik
+UMask=0077
+Environment=PYTHONPATH=/usr/local/lib/audiobook-ops/src
+StandardOutput=append:/var/log/audiobook-ops/publisher.jsonl
+StandardError=append:/var/log/audiobook-ops/publisher.jsonl
+LoadCredential=publisher-ssh-key:/etc/audiobook-ops/secrets/publisher-ssh-key
+ExecStart=/usr/bin/flock --exclusive --timeout 300 /run/audiobook-ops/operations.lock /usr/bin/python3 /usr/local/lib/audiobook-ops/scripts/publisher.py --config /etc/audiobook-ops/config/publisher.json run-once --execute --json
+TimeoutStartSec=4h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/nik/services/audiobook-ops
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
