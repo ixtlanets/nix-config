@@ -25,3 +25,20 @@ services:
       driver: local
       options:
         max-size: 200m
+
+  sightings:
+    build: .
+    container_name: tar1090-sightings
+    restart: unless-stopped
+    depends_on:
+      - tar1090
+    environment:
+      - TZ=Europe/Moscow
+      - AC_URL=http://tar1090/data/aircraft.json
+      - AC_DATA=/data
+    volumes:
+      - /home/nik/services/tar1090/sightings:/data
+    logging:
+      driver: local
+      options:
+        max-size: 50m
