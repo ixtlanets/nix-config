@@ -192,6 +192,11 @@ cmp -s \
   "$source_root/dotfiles/omarchy/herdr/config.toml" \
   "$herdr_config" ||
   fail "herdr config mismatch"
+ghostty_config="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
+[[ "$(grep -Fxc 'font-family = "JetBrainsMono Nerd Font"' "$ghostty_config")" == 1 ]] ||
+  fail "Ghostty font family mismatch"
+[[ "$(grep -Fxc 'font-size = 14' "$ghostty_config")" == 1 ]] ||
+  fail "Ghostty font size mismatch"
 [[ "$(HERDR_CONFIG_PATH="$herdr_config" herdr config check)" == "config: ok" ]] ||
   fail "herdr config is invalid"
 [[ -x "${XDG_CONFIG_HOME:-$HOME/.config}/tmux/plugins/tpm/tpm" ]] ||

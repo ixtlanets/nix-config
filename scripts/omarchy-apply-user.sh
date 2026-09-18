@@ -228,6 +228,46 @@ configure_foot() {
   log "configured Foot"
 }
 
+configure_ghostty() {
+  local config="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty/config"
+  local input=/dev/null
+  local temporary
+
+  mkdir -p "$(dirname "$config")"
+  [[ ! -f "$config" ]] || input="$config"
+  temporary="$(mktemp "${config}.XXXXXX")"
+  /usr/bin/awk '
+    /^[[:space:]]*font-family[[:space:]]*=/ {
+      if (!family_written) print "font-family = \"JetBrainsMono Nerd Font\""
+      family_written = 1
+      next
+    }
+    /^[[:space:]]*font-size[[:space:]]*=/ {
+      if (!size_written) print "font-size = 14"
+      size_written = 1
+      next
+    }
+    { print }
+    END {
+      if (!family_written || !size_written) {
+        print ""
+        print "# Font"
+        if (!family_written) print "font-family = \"JetBrainsMono Nerd Font\""
+        if (!size_written) print "font-size = 14"
+      }
+    }
+  ' "$input" > "$temporary"
+
+  if [[ -f "$config" ]] && cmp -s "$temporary" "$config"; then
+    rm -f "$temporary"
+    log "unchanged $config"
+    return
+  fi
+  install -m 0644 "$temporary" "$config"
+  rm -f "$temporary"
+  log "configured Ghostty"
+}
+
 configure_cursor() {
   export XCURSOR_THEME="Bibata-Original-Ice"
   export XCURSOR_SIZE="24"
@@ -313,6 +353,7 @@ install_file \
 install_herdr_config
 install_tmux_config
 configure_foot
+configure_ghostty
 configure_cursor
 configure_host_gpu
 omarchy-shell shell rescanPlugins >/dev/null
