@@ -1,0 +1,27 @@
+name: tar1090
+
+services:
+  tar1090:
+    image: ghcr.io/sdr-enthusiasts/docker-tar1090:latest
+    container_name: tar1090
+    hostname: tar1090
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Moscow
+      - LAT=55.7558
+      - LONG=37.6173
+      - READSB_DEVICE_TYPE=rtlsdr
+      - READSB_GAIN=auto
+    ports:
+      - "192.168.1.241:8080:80"
+    tmpfs:
+      - /run:exec,size=256M
+      - /var/log
+    device_cgroup_rules:
+      - "c 189:* rwm"
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb:ro
+    logging:
+      driver: local
+      options:
+        max-size: 200m
