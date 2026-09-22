@@ -4,7 +4,7 @@
 backups/
 deps/
 tts/
-blueprints/auto_generated/
+blueprints/
 home-assistant.log*
 home-assistant_v2.*
 *.pickle
@@ -12,3 +12,5 @@ home-assistant_v2.*
 *.db-shm
 *.db-wal
 secrets.yaml
+.HA_VERSION
+.ha_run.lock
