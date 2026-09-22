@@ -1,5 +1,11 @@
 name: frigate
 
+networks:
+  # Shared with the home-assistant stack (declared as external there and here):
+  # frigate publishes camera/detection state to the loopback-only mosquitto.
+  hamqtt:
+    external: true
+
 services:
   frigate:
     container_name: frigate
@@ -7,6 +13,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
     shm_size: "512mb"
+    networks: [hamqtt]
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
     environment:
