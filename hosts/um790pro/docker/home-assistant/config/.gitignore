@@ -1,0 +1,14 @@
+# HA runtime state — not tracked
+.storage/
+.cloud/
+backups/
+deps/
+tts/
+blueprints/auto_generated/
+home-assistant.log*
+home-assistant_v2.*
+*.pickle
+*.db
+*.db-shm
+*.db-wal
+secrets.yaml

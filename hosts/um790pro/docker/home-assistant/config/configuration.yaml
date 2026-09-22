@@ -1,0 +1,28 @@
+# Home Assistant configuration (tracked in git).
+# Runtime state lives next to these files but is gitignored:
+#   .storage/, *.db*, secrets.yaml, backups, deps, tts, blueprints/auto_generated
+#
+# http://um790pro:8123 (LAN / Tailscale)
+
+default_config:
+
+# Split UI-built automations/scripts/scenes into tracked, reviewable files.
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# Keep the recorder database bounded: root filesystem was 94% full.
+recorder:
+  purge_keep_days: 10
+  exclude:
+    domains:
+      - sun
+      - updater
+    entity_globs:
+      - sensor.time*
+      - binary_sensor.ups*
+
+# Local MQTT broker (mosquitto sidecar, loopback-only on the host).
+mqtt:
+  broker: 127.0.0.1
+  port: 1883

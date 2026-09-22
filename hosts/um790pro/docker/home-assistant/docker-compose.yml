@@ -1,0 +1,36 @@
+name: home-assistant
+
+networks:
+  hamqtt:
+    name: hamqtt
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+    logging:
+      driver: local
+      options:
+        max-size: 50m
+        max-file: "3"
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    networks: [hamqtt]
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./mosquitto:/mosquitto/config
+    ports:
+      - "127.0.0.1:1883:1883"
+    logging:
+      driver: local
+      options:
+        max-size: 50m
+        max-file: "3"
