@@ -6,6 +6,16 @@
 
 default_config:
 
+# Legacy general settings block: applied at startup (timezone/coords live in
+# the UI store, but declarative here keeps the host reproducible from git).
+home:
+  name: Home
+  latitude: 55.7558
+  longitude: 37.6173
+  elevation: 156
+  unit_system: metric
+  time_zone: Europe/Moscow
+
 # Split UI-built automations/scripts/scenes into tracked, reviewable files.
 automation: !include automations.yaml
 script: !include scripts.yaml
