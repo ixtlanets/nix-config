@@ -40,9 +40,15 @@
 
 ## Обновление
 
+Образ HA — плавающий `:stable`; апгрейды самой HA в git не видны. Если нужна
+ревьюимость — закрепите конкретный тег версии в `docker-compose.yml`.
+
 ```bash
-# 1. Бэкап перед обновлением: HA → Настройки → Система → Бэкапы
-#    (попадёт в config/backups/, в git не попадает), либо вручную:
+# 1. Бэкап перед обновлением: HA → Настройки → Система → Бэкапы.
+#    Штатный бэкап ложится в config/backups/ (в git не попадает);
+#    копия в ~/backups:
+#    cp ~/nix-config/hosts/um790pro/docker/home-assistant/config/backups/*.tar ~/backups/
+#    либо вручную всем конфигом:
 #    tar czf ~/backups/home-assistant-config-$(date +%F).tar.gz -C ~/nix-config/hosts/um790pro/docker/home-assistant config
 cd ~/nix-config/hosts/um790pro/docker/home-assistant
 git pull
