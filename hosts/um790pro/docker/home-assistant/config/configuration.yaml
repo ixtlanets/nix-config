@@ -22,7 +22,7 @@ recorder:
       - sensor.time*
       - binary_sensor.ups*
 
-# Local MQTT broker (mosquitto sidecar, loopback-only on the host).
-mqtt:
-  broker: 127.0.0.1
-  port: 1883
+# Local MQTT broker: mosquitto sidecar, loopback-only on the host.
+# The broker connection is configured via the UI (yaml broker config was
+# removed from HA): Settings -> Devices & Services -> Add -> MQTT,
+# broker 127.0.0.1, port 1883, no credentials.

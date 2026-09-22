@@ -10,6 +10,11 @@ services:
     image: ghcr.io/home-assistant/home-assistant:stable
     restart: unless-stopped
     network_mode: host
+    # Bluetooth management on the host adapter (AX210) needs these caps;
+    # without them habluetooth spams errors. Remove if BT is never wanted.
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./config:/config
