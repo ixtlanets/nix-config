@@ -8,6 +8,7 @@
 - `london` is an Ubuntu VPS, not a NixOS host. Keep reproducible Ubuntu-managed service bundles under `hosts/london/ubuntu/<service>/`. Do not add `london` to `nixosConfigurations` unless explicitly requested.
 - For Vaultwarden on `london`, keep Docker/Caddy/systemd/deploy assets under `hosts/london/ubuntu/vaultwarden/` and secrets under `secrets/vaultwarden/london/`.
 - Be careful with the existing London proxy setup (`microsocks`, Tailscale Serve, and related proxy docs/secrets). Do not change or restart it unless the task explicitly requires it.
+- Omarchy shell plugin clones in `~/.config/omarchy/plugins/` are host-local and NOT managed by nix-config; after an omarchy update they can break (e.g. panel that never closes, `TypeError: Cannot assign to read-only property` in `journalctl --user`). Runbook: `docs/omarchy-plugin-clone-stale-panel.md`.
 
 ## Project Structure & Module Organization
 - Root: Nix flake (`flake.nix`, `flake.lock`), overlays (`overlays/`), custom packages (`pkgs/`).
