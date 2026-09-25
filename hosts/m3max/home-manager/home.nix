@@ -116,8 +116,57 @@ in
         IdentityFile = "~/.ssh/id_rsa_1";
         IdentitiesOnly = true;
       };
+      "zenbook-frankfurt" = {
+        BatchMode = true;
+        HostName = "100.114.155.30";
+        ProxyJump = "frankfurt,um790pro-frankfurt";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
+      "zenbook" = {
+        BatchMode = true;
+        HostName = "zenbook.tailf108.ts.net";
+        HostKeyAlias = "100.114.155.30";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
+      "zenbook.tailf108.ts.net" = {
+        BatchMode = true;
+        HostKeyAlias = "100.114.155.30";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
+      # Codex Desktop still has a saved zenbook connection to this LAN IP.
+      "192.168.1.249" = {
+        BatchMode = true;
+        ProxyJump = "zenbook";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
       "m1max" = {
-        ProxyJump = lib.mkForce "frankfurt,um790pro-frankfurt";
+        HostName = lib.mkForce "m1max.nikcode.xyz";
+        HostKeyAlias = "192.168.1.174";
+        ProxyJump = lib.mkForce "none";
+      };
+      "m1max.nikcode.xyz" = {
+        BatchMode = true;
+        HostKeyAlias = "192.168.1.174";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
+      };
+      "m1max-frankfurt" = {
+        BatchMode = true;
+        HostName = "192.168.1.174";
+        HostKeyAlias = "192.168.1.174";
+        ProxyJump = "frankfurt,um790pro-frankfurt";
+        User = "nik";
+        IdentityFile = "~/.ssh/id_rsa_1";
+        IdentitiesOnly = true;
       };
     };
     alacritty = {

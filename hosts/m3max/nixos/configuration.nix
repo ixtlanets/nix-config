@@ -8,7 +8,10 @@ let
   floxPkg = inputs.flox.packages.${pkgs.stdenv.hostPlatform.system}.default;
 in
 {
-  imports = [ ../../../modules/nixos/darwin-ai-tools.nix ];
+  imports = [
+    ../../../modules/nixos/darwin-ai-tools.nix
+    ./tailscale-cli.nix
+  ];
 
   nix.settings.experimental-features = [
     "nix-command"

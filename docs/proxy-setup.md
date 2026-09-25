@@ -179,8 +179,8 @@ installs. If helper-script behavior for those installs changes, keep `install.sh
 
 Home Manager configures `ssh frankfurt` to use `~/.ssh/id_rsa_1` explicitly. `IdentitiesOnly`
 prevents unrelated agent keys from being tried, while `BatchMode` disables password fallback. On
-`m3max`, `ssh um790pro-frankfurt` jumps through `frankfurt`; `ssh m1max` uses the following full
-jump chain:
+`m3max`, `ssh um790pro-frankfurt` jumps through `frankfurt`. The explicit fallback alias
+`ssh m1max-frankfurt` uses the following full jump chain:
 
 ```text
 m3max -> frankfurt (31.58.85.163) -> um790pro (198.18.77.6) -> m1max (192.168.1.174)
@@ -196,6 +196,22 @@ To configure only this overlay without running the full installer:
 ./install.sh wireguard-overlay
 ```
 
+The primary `m3max` SSH aliases now use the CLI Tailscale route: `ssh zenbook` resolves
+`zenbook.tailf108.ts.net`; `ssh m1max` resolves `m1max.nikcode.xyz` to its home LAN IP and reaches
+it through the `/32` subnet route advertised by `um790pro`. The old Codex Desktop zenbook
+connection uses `192.168.1.249`; the SSH config forwards that destination through `ssh zenbook`.
+The separate `tailscaled-cli` launchd service and route watcher are defined in
+`hosts/m3max/nixos/tailscale-cli.nix`. This coexists with the sing-box GUI Network Extension and
+does not require the Tailscale.app VPN. `m1max` has not been changed or rebooted.
+
+On `m3max`, Indexary is available at `https://zenbook.tailf108.ts.net` through Tailscale Serve.
+Standard Screen Sharing uses `m1max.nikcode.xyz`. These paths were verified over LTE with VLESS
+enabled on 2026-09-25. The CLI Tailscale service was installed from the built nix-darwin closure
+without running a full `darwin-rebuild switch`; the next normal switch will adopt the declared
+configuration. Until then, `/Users/nik/.local/state/nix/gcroots/m3max-tailnet-system` keeps the
+running service closure from being garbage collected. The `m3max-vless-cli` node must stay
+authorized in the tailnet.
+
 ### macOS clients (m1max, m3max)
 
 **sing-box GUI app**: `io.nekohasekai.sfavt` (sing-box for Apple platforms)
@@ -208,13 +224,15 @@ Each Mac uses a separate Frankfurt VLESS user/UUID. Do not copy another Mac's UU
 - Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe routing are handled at Frankfurt, not on
   the client — the Mac config has no `london` outbound
 - UDP 443 (QUIC/HTTP3) is blocked at the client to force TCP, enabling domain sniffing at Frankfurt
-- No Tailscale dependency — London is reached via Frankfurt over the public internet
+- London is reached via Frankfurt over the public internet, independently of Tailscale
 - No WireGuard host overlay — keep Macs on the baseline sing-box GUI/VLESS config for now
 - Keep config syntax aligned with the sing-box version bundled in the GUI app; older app builds may reject newer config fields
 
-**macOS + Tailscale conflict**: macOS only allows one active VPN Network Extension at a time.
-sing-box GUI and Tailscale.app both use Network Extensions and cannot run simultaneously.
-This is why the Mac config offloads London routing to Frankfurt instead of using Tailscale directly.
+**macOS + Tailscale conflict**: sing-box GUI and Tailscale.app both use Network Extensions and
+cannot run simultaneously on these Macs. `m3max` therefore uses the open-source CLI-only
+`tailscaled --tun=utun` alongside sing-box GUI. A dedicated host route sends the zenbook Tailscale
+IP into the CLI tunnel despite sing-box's `100.64.0.0/10` exclusion. This setup has been tested on
+`m3max` only; the GUI config still offloads London routing to Frankfurt.
 
 **macOS + WireGuard status**: a sing-box GUI WireGuard canary was tested and rolled back. With
 `system: true`, sing-box GUI `1.11.4` failed to start the WireGuard outbound from the Network
@@ -592,9 +610,9 @@ Also install Tailscale and join the tailnet (see Tailscale section below).
 | X1 Carbon | `x1carbon` | NixOS client |
 | UM790 Pro | `um790pro` | CachyOS primary client |
 | UM790 Pro | `um790pro-win` | Windows 11 secondary client |
-| M1 Max | `m1max` | macOS client |
+| M1 Max | no active node | macOS; reachable from m3max through um790pro subnet route |
 | Intel MacBook | `i9mac` | macOS client |
-| M3 Max | `m3max` | macOS client |
+| M3 Max | `m3max-vless-cli` | macOS CLI-only Tailscale client alongside VLESS |
 | London VPS | `london` | SOCKS5 relay / exit node |
 | Moscow RPi | `moscow` | Exit node |
 
