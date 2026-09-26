@@ -281,6 +281,39 @@ python3 scripts/throne-windows-route.py
 - Keep this config aligned with the Throne-bundled sing-box version. As of the local Throne install
   checked on 2026-05-30, `ThroneCore.exe version` reports sing-box `v1.13.6`.
 
+### iPad — Andrey Maximov
+
+**Profile**: `secrets/vless/maximov-ipad.json`, imported manually as a local file in
+sing-box for Apple platforms. **Frankfurt user**: `Maximov-ipad`, with a separate UUID
+from `Maximov1`–`Maximov4`. The profile and Frankfurt recovery files are covered by git-crypt.
+
+On 2026-09-26, importing an older `m1.json` on iPadOS 17.3.1 failed at
+`dns.servers[0]`: sing-box 1.14 removed the legacy DNS server format. This is a config
+decoding failure before any VPN connection; changing the device credentials alone cannot
+fix it. The same error was reproduced with the repository's `m1max-gui.json` using
+sing-box 1.14.2; the exact attachment `m1.json` was not available locally.
+See the upstream [DNS migration](https://sing-box.sagernet.org/migration/#migrate-to-new-dns-server-formats).
+
+The iPad profile uses typed HTTPS DNS through VLESS, `route.default_domain_resolver`,
+and a `reject` route action for UDP 443 instead of a legacy `block` outbound. It has
+IPv4/IPv6 TUN addresses, no fixed macOS interface name or process lookup, and caches the
+Russian IP rule set downloaded through the proxy. Private and Russian IP destinations go
+direct; other traffic goes through Frankfurt, including the existing server-side London policy.
+
+Validation on 2026-09-26:
+- Official sing-box 1.14.2 release archive SHA256 verified; `sing-box check` passes without
+  deprecated-feature environment overrides.
+- Added and validated the user with `reality-user`, verified that only the VLESS user list
+  changed, restarted the Frankfurt engine, and synced the encrypted recovery bundle.
+- A temporary local SOCKS/DNS test configuration using the profile's DNS, outbounds, and
+  routing successfully reached the internet with Frankfurt exit IP, received HTTP 204 from
+  Google, downloaded the rule set, and resolved an A record through the configured DoH.
+- Import and Network Extension/TUN operation on the actual iPad remain to be tested there.
+
+Import: save `maximov-ipad.json` in Files, create a local configuration in sing-box,
+select File → Import, choose the JSON, create the profile, then connect and allow the
+iPadOS VPN permission prompt.
+
 ### Frankfurt — VLESS+Reality server
 
 **Host**: `wire.nikcode.xyz` / `31.58.85.163`
