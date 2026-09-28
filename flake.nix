@@ -494,6 +494,7 @@
           {
             home-manager = {
               useUserPackages = true;
+              backupFileExtension = "backup";
               extraSpecialArgs = { inherit inputs outputs ghostty; };
               users.nik.imports = [
                 catppuccin.homeModules.catppuccin
@@ -530,6 +531,7 @@
           {
             home-manager = {
               useUserPackages = true;
+              backupFileExtension = "backup";
               extraSpecialArgs = { inherit inputs outputs ghostty; };
               users.nik.imports = [
                 catppuccin.homeModules.catppuccin
