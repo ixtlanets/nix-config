@@ -251,6 +251,29 @@ host control path must include `enable`, `disable`, `status`, and `panic` comman
 return to the current sing-box GUI setup. Detailed design:
 `docs/superpowers/specs/2026-06-02-macos-lima-router-vm-design.md`.
 
+### iPhone client (SFI)
+
+**App**: sing-box for iOS (`io.nekohasekai.sfi`, App Store/TestFlight — SFI).
+
+**Config reference**: `secrets/vless/iphone16e-gui.json` (device: iPhone 16e, Frankfurt user
+`iphone16e`). Each iPhone gets its own Frankfurt VLESS user via `reality-user add <name>`, same as
+Macs.
+
+**Routing** mirrors the macOS GUI shape: private + `geoip-ru` + `geosite-category-ru` direct,
+everything else `proxy`, UDP 443 blocked client-side, Google/OpenAI/Stripe/ElevenLabs to London at
+the Frankfurt level. Validate client configs with the Frankfurt container
+(`gzxhwq/sing-box:1.13.5 check` + the two `ENABLE_DEPRECATED_*` env vars), not with the local
+sing-box (1.14 rejects the legacy DNS format used by all GUI configs).
+
+**iOS limitations** (from the sing-box Apple features matrix):
+- `process_name` / `process_path` matching: not supported in App Store/TestFlight SFI (jailbreak
+  `.deb` build only) — no per-app routing by process.
+- No per-app VPN include/exclude UI (Apple `NEAppRule` is not exposed); per-app behavior is only
+  achievable through domain/IP rules, same as any other platform.
+- TUN `strict_route`, `include/exclude_interface`, UID/package matching: not implemented on Apple
+  platforms; `interface_name` is managed by Darwin (omit it).
+- Distribution note (2026-09): App Store updates were blocked by review; TestFlight works.
+
 ### Windows client (Throne)
 
 **GUI app**: Throne, using the bundled `ThroneCore.exe` sing-box core.
