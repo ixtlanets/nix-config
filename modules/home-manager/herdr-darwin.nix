@@ -3,7 +3,7 @@
 # replacing the Linux zsh path with the macOS one.
 { ... }:
 let
-  linuxConfig = builtins.readFile ../../../dotfiles/omarchy/herdr/config.toml;
+  linuxConfig = builtins.readFile ../../dotfiles/omarchy/herdr/config.toml;
   darwinConfig =
     builtins.replaceStrings
       [ "/usr/bin/zsh" ]
