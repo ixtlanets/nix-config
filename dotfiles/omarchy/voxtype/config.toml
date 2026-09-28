@@ -2,8 +2,8 @@ state_file = "auto"
 engine = "parakeet"
 
 [hotkey]
-enabled = false
-key = "HOME"
+enabled = true
+key = "RIGHTALT"
 mode = "push_to_talk"
 
 [audio]
@@ -58,6 +58,7 @@ smart_auto_submit = false
 "chrome left tools" = "Chrome DevTools"
 "dev tools" = "DevTools"
 "devtulz" = "DevTools"
+"htkey" = "Omarchy"
 "voxtype" = "Voxtype"
 "арчи" = "Archie"
 "арчи гудвин" = "Archie Goodwin"
