@@ -16,6 +16,11 @@ home:
   unit_system: metric
   time_zone: Europe/Moscow
 
+
+# UI-пакеты (packages/) с текстом из git: оповещения робота-пылесоса и др.
+homeassistant:
+  packages: !include_dir_named packages
+
 # Split UI-built automations/scripts/scenes into tracked, reviewable files.
 automation: !include automations.yaml
 script: !include scripts.yaml

@@ -1,0 +1,52 @@
+# Пакет: Dreame D10s - Telegram-оповещения о застревании.
+# Секреты: telegram_sendmessage_url / telegram_chat_id в config/secrets.yaml (gitignored).
+# Доставка через REST (sendMessage Telegram API), БЕЗ polling - чтобы не
+# конфликтовать с Hermes-ботом, который сам слушает этот же токен.
+
+notify:
+  - name: telegram_vacuum
+    platform: rest
+    resource: !secret telegram_sendmessage_url
+    message_param_name: text
+    title_param_name: title
+    targets_param_name: chat_id
+
+automation:
+  # Мгновенное уведомление при переходе робота в ошибку "застрял"
+  - id: dreame_d10s_stuck_alert
+    alias: "Dreame D10s: застрял - уведомление"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.dreamebot_d10s_error
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.dreamebot_d10s_error') is search('stuck') }}"
+    action:
+      - service: notify.telegram_vacuum
+        data:
+          title: "🧹 Робот-пылесос застрял"
+          message: >-
+            {{ states('sensor.dreamebot_d10s_error') }} в «{{ states('sensor.dreamebot_d10s_current_room') }}»,
+            {{ now().strftime('%H:%M') }}. Батарея {{ states('sensor.dreamebot_d10s_battery_level') }}%.
+
+  # Повтор каждые 30 минут, пока застревание не разрешилось
+  - id: dreame_d10s_stuck_alert_repeat
+    alias: "Dreame D10s: застрял - повтор"
+    mode: single
+    trigger:
+      - platform: time_pattern
+        minutes: "/30"
+    condition:
+      - condition: template
+        value_template: "{{ states('sensor.dreamebot_d10s_error') is search('stuck') }}"
+      - condition: template
+        value_template: >-
+          {{ (now() - states.sensor.dreamebot_d10s_error.last_changed).total_seconds() > 2100 }}
+    action:
+      - service: notify.telegram_vacuum
+        data:
+          title: "🧹 Робот всё ещё застрял"
+          message: >-
+            {{ states('sensor.dreamebot_d10s_error') }} в «{{ states('sensor.dreamebot_d10s_current_room') }}»,
+            уже {{ ((now() - states.sensor.dreamebot_d10s_error.last_changed).total_seconds() / 60) | round(0) }} мин.
