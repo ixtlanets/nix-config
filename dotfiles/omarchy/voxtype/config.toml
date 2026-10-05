@@ -2,8 +2,8 @@ state_file = "auto"
 engine = "parakeet"
 
 [hotkey]
-enabled = false
-key = "HOME"
+enabled = true
+key = "RIGHTALT"
 mode = "push_to_talk"
 
 [audio]
@@ -11,6 +11,14 @@ device = "default"
 sample_rate = 16000
 max_duration_secs = 60
 pause_media = true
+duck_media = false
+duck_media_volume_percent = 34
+duck_media_fade_ms = 150
+
+[audio.feedback]
+enabled = false
+theme = "default"
+volume = 0.7
 
 [whisper]
 model = "small"
@@ -23,7 +31,7 @@ gpu_isolation = false
 eager_processing = false
 
 [output]
-mode = "type"
+mode = "paste"
 fallback_to_clipboard = true
 type_delay_ms = 1
 auto_submit = false
@@ -44,6 +52,89 @@ streaming = false
 [text]
 spoken_punctuation = false
 smart_auto_submit = false
+
+[text.replacements]
+"chrome dev tools" = "Chrome DevTools"
+"chrome left tools" = "Chrome DevTools"
+"dev tools" = "DevTools"
+"devtulz" = "DevTools"
+"htkey" = "Omarchy"
+"voxtype" = "Voxtype"
+"арчи" = "Archie"
+"арчи гудвин" = "Archie Goodwin"
+"афинити" = "Affinity"
+"випн" = "VPN"
+"вокстайп" = "Voxtype"
+"воркспейс" = "workspace"
+"вульф" = "Wolfe"
+"вульфа" = "Wolfe"
+"гермес" = "Hermes"
+"гермеса" = "Hermes"
+"гермесу" = "Hermes"
+"гитхаб" = "GitHub"
+"гитхабе" = "GitHub"
+"грок" = "Grok"
+"гугл" = "Google"
+"гугла" = "Google"
+"гугле" = "Google"
+"гудвин" = "Goodwin"
+"гудвина" = "Goodwin"
+"джемини" = "Gemini"
+"докер" = "Docker"
+"зэ тэйай" = "Z.ai"
+"зэтэйай" = "Z.ai"
+"и2и" = "e2e"
+"кими" = "Kimi"
+"клод" = "Claude"
+"клод код" = "Claude Code"
+"клоде" = "Claude"
+"клоуд" = "Claude"
+"клоуд код" = "Claude Code"
+"кодекс" = "codex"
+"комит" = "commit"
+"комита" = "commit"
+"комитом" = "commit"
+"комиту" = "commit"
+"лингден" = "LinkedIn"
+"лингдин" = "LinkedIn"
+"лингдэн" = "LinkedIn"
+"линддин" = "LinkedIn"
+"линдин" = "LinkedIn"
+"линкеден" = "LinkedIn"
+"линукс" = "Linux"
+"линукса" = "Linux"
+"линуксе" = "Linux"
+"лума" = "Luma"
+"луме" = "Luma"
+"мсипи" = "MCP"
+"никс оэс" = "NixOS"
+"нир" = "Nero"
+"нир вульф" = "Nero Wolfe"
+"ноутс" = "Notes"
+"обсидиан" = "Obsidian"
+"омарки" = "Omarchy"
+"омарче" = "Omarchy"
+"омарчи" = "Omarchy"
+"опен код" = "OpenCode"
+"пайплайн" = "pipeline"
+"пайплайна" = "pipeline"
+"реддит" = "Reddit"
+"реддите" = "Reddit"
+"рекс стаут" = "Rex Stout"
+"рекса стаута" = "Rex Stout"
+"стаут" = "Stout"
+"телеграм" = "Telegram"
+"телеграме" = "Telegram"
+"франкфут" = "Frankfurt"
+"франкфуте" = "Frankfurt"
+"хром" = "Chrome"
+"хромдев тулс" = "Chrome DevTools"
+"хромдэв тулс" = "Chrome DevTools"
+"хромиум" = "chromium"
+"чаджи пити" = "ChatGPT"
+"чат джи пити" = "ChatGPT"
+"эмсипи" = "MCP"
+"юайуикс" = "UI/UX"
 
 [meeting]
 enabled = false

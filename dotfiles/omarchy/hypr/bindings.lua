@@ -15,3 +15,6 @@ o.bind("ALT + SPACE", "Toggle keyboard backlight", "kbd-backlight toggle", { loc
 
 o.bind("SUPER + SHIFT + J", "Next window in group", hl.dsp.group.next())
 o.bind("SUPER + SHIFT + K", "Previous window in group", hl.dsp.group.prev())
+
+-- Dictation hotkey lives in voxtype itself (evdev, RIGHTALT); remove F9 default.
+hl.unbind("F9")

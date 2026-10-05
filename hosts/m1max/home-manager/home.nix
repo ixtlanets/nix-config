@@ -41,6 +41,7 @@ in
     ../../../modules/home-manager/services.nix
     ../../../modules/home-manager/emacs.nix
     ../../../modules/home-manager/nvim.nix
+    ../../../modules/home-manager/herdr-darwin.nix
     ./llama-stack.nix
     ./syncthing.nix
   ];
