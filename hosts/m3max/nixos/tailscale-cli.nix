@@ -4,6 +4,14 @@ let
   socket = "/var/run/tailscaled-cli.sock";
   state = "/var/db/tailscaled-cli.state";
   zenbookIp = "100.114.155.30";
+  # All tailnet peers that sing-box's 100.64/10 route shadows on m3max.
+  # The /etc/resolver approach handles DNS; these host routes fix reply path.
+  peerIps = [
+    zenbookIp
+    "100.80.137.100" # t14s
+    "100.95.213.117" # um790pro
+    "100.107.212.33" # x1carbon
+  ];
 
   tailscaleCli = pkgs.writeShellScriptBin "tailscale-cli" ''
     exec ${pkgs.tailscale}/bin/tailscale --socket=${socket} "$@"
@@ -16,33 +24,39 @@ let
       tailscaleCli
     ];
     text = ''
-      target=${zenbookIp}
-      route_info=$(/sbin/route -n get "$target" 2>/dev/null || true)
-      destination=$(printf '%s\n' "$route_info" | /usr/bin/awk '$1 == "destination:" { print $2; exit }')
-      current_interface=$(printf '%s\n' "$route_info" | /usr/bin/awk '$1 == "interface:" { print $2; exit }')
-
       backend=$(tailscale-cli status --json --peers=false 2>/dev/null | jq -r '.BackendState // empty' || true)
-      if [ "$backend" != Running ]; then
-        if [ "$destination" = "$target" ] && [[ "$current_interface" == utun* ]]; then
+
+      tailscale_interface=""
+      if [ "$backend" = Running ]; then
+        own_ip=$(tailscale-cli ip -4 | /usr/bin/head -n 1)
+        if [ -n "$own_ip" ]; then
+          own_route=$(/sbin/route -n get "$own_ip")
+          tailscale_interface=$(printf '%s\n' "$own_route" | /usr/bin/awk '$1 == "interface:" { print $2; exit }')
+        fi
+      fi
+
+      for target in ${toString peerIps}; do
+        route_info=$(/sbin/route -n get "$target" 2>/dev/null || true)
+        destination=$(printf '%s\n' "$route_info" | /usr/bin/awk '$1 == "destination:" { print $2; exit }')
+        current_interface=$(printf '%s\n' "$route_info" | /usr/bin/awk '$1 == "interface:" { print $2; exit }')
+
+        if [ "$backend" != Running ] || [ -z "$tailscale_interface" ] || [[ "$tailscale_interface" != utun* ]]; then
+          # Daemon down: drop stale host routes so the tailnet does not blackhole.
+          if [ "$destination" = "$target" ] && [[ "$current_interface" == utun* ]]; then
+            /sbin/route -n delete -host "$target"
+          fi
+          continue
+        fi
+
+        if [ "$destination" = "$target" ] && [ "$current_interface" = "$tailscale_interface" ]; then
+          continue
+        fi
+
+        if [ "$destination" = "$target" ]; then
           /sbin/route -n delete -host "$target"
         fi
-        exit 0
-      fi
-
-      own_ip=$(tailscale-cli ip -4 | /usr/bin/head -n 1)
-      [ -n "$own_ip" ] || exit 1
-      own_route=$(/sbin/route -n get "$own_ip")
-      tailscale_interface=$(printf '%s\n' "$own_route" | /usr/bin/awk '$1 == "interface:" { print $2; exit }')
-      [[ "$tailscale_interface" == utun* ]] || exit 1
-
-      if [ "$destination" = "$target" ] && [ "$current_interface" = "$tailscale_interface" ]; then
-        exit 0
-      fi
-
-      if [ "$destination" = "$target" ]; then
-        /sbin/route -n delete -host "$target"
-      fi
-      /sbin/route -n add -host "$target" -interface "$tailscale_interface"
+        /sbin/route -n add -host "$target" -interface "$tailscale_interface"
+      done
     '';
   };
 in
