@@ -67,3 +67,12 @@ docker exec mosquitto mosquitto_sub -t 'frigate/#' -v
 
 Перезапуск frigate после правки его конфига:
 `cd ~/nix-config/hosts/um790pro/docker/frigate && docker compose restart frigate`.
+
+## Dreame D10s (dreame_vacuum)
+
+Компонент: custom_components/dreame_vacuum (v2.0.0, Tasshack/dreame-vacuum).
+Подключение через аккаунт Dreamehome (те же учётные данные, что в приложении на телефоне).
+Google-аккаунт в HA не поддерживается - используется email+пароль Dreamehome (задать в приложении: Профиль - Управление аккаунтом - Пароль).
+
+Вручную ставить зависимости не нужно: pip-пакеты (numpy, pycryptodome, python-miio, mini-racer, paho-mqtt)
+HA ставит сам в свой пакетный каталог при загрузке компонента. docker exec pip - только ручной костыль.
