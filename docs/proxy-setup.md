@@ -212,6 +212,16 @@ configuration. Until then, `/Users/nik/.local/state/nix/gcroots/m3max-tailnet-sy
 running service closure from being garbage collected. The `m3max-vless-cli` node must stay
 authorized in the tailnet.
 
+Known pitfall (hit 2026-10-02 from `t14s` over LTE): the sing-box GUI route `100.64/10 -> en0`
+shadows every tailnet peer on m3max except the ones the route watcher pins with `/32` host
+routes (`peerIps` in `hosts/m3max/nixos/tailscale-cli.nix`). For unpinned peers `tailscale ping`
+still answers (WireGuard path is fine) while TCP connections time out because replies leave via
+the LAN gateway. Fix: add the peer's Tailscale IP to `peerIps`, rebuild, and re-bootstrap the
+`org.nixos.m3max-tailnet-routes` daemon (needs a root sudo on m3max, or the next
+`darwin-rebuild switch`). Until the new watcher version is active, `ssh <m3max>` from other
+hosts can go through zenbook: `ProxyJump zenbook` to `100.109.51.2` (the `m3max` ssh alias on
+t14s already does this).
+
 ### macOS clients (m1max, m3max)
 
 **sing-box GUI app**: `io.nekohasekai.sfavt` (sing-box for Apple platforms)
