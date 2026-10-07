@@ -103,6 +103,8 @@ services:
       RUTRACKER_GATEWAY_LISTEN_HOST: 0.0.0.0
       RUTRACKER_GATEWAY_LISTEN_PORT: "8080"
       RUTRACKER_GATEWAY_SESSION_COOKIES: /run/secrets/gateway_session_cookie
+    # The session cookie is group-readable (root:1000, mode 0640) because the
+    # gateway runs as UID/GID 1000 and compose file secrets keep their host mode.
     secrets:
       - gateway_session_cookie
     user: "1000:1000"

@@ -77,10 +77,13 @@ Install every operator config file as `root:nik` mode `0640`: host services run
 as `nik` and require read access, while only root may modify the files. Keep the
 config directory itself `root:nik` mode `0750`.
 
-Do not put credentials in those files. The six separate root-owned mode `0600`
-files are `abs-api-token`, `gateway-session-cookie`, `mcp-bearer`,
-`prowlarr-api-key`, `publisher-ssh-key`, and `transmission-password`. Their
-creation or installation is a separate owner gate.
+Do not put credentials in those files. The five root-owned mode `0600` files are
+`abs-api-token`, `mcp-bearer`, `prowlarr-api-key`, `publisher-ssh-key`, and
+`transmission-password`. Their creation or installation is a separate owner
+gate. `gateway-session-cookie` is the one exception: the routing gateway runs as
+UID/GID 1000 and compose file secrets keep their host mode, so this file is
+installed `root:nik` mode `0640` (the same group-readable posture as the operator
+config files) to stay readable by the service without being world-readable.
 
 `gateway-session-cookie` is a flat JSON object of RuTracker session cookie names
 and values. RuTracker now challenges the login form with an image captcha, which
@@ -102,8 +105,8 @@ or on a manual logout. When `external-search` reports `degraded` and Prowlarr lo
    `cap_sid`, `cap_code_*`, `login=вход`, and `redirect=index.php` in the same
    session. Success leaves a `bb_session` cookie.
 3. Write the session cookies as a flat JSON object to
-   `/etc/audiobook-ops/secrets/gateway-session-cookie` (root, mode `0600`) and
-   recreate the gateway container so it reloads the file.
+   `/etc/audiobook-ops/secrets/gateway-session-cookie` (root:nik, mode `0640`)
+   and recreate the gateway container so it reloads the file.
 
 Do not start a long-lived agent auto-login here: the captcha needs a human and the
 same-egress requirement forbids solving it from another host. Keep the raw login
