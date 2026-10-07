@@ -21,7 +21,7 @@ The execution checklist is
 |---|---|
 | `audiobook-ops` | MCP, task state, adapters, background reconciliation |
 | Prowlarr | tracker search |
-| RuTracker gateway | restricted FlareSolverr compatibility path |
+| RuTracker gateway | restricted FlareSolverr compatibility path; injects the operator-provided session |
 | FlareSolverr | Cloudflare browser session |
 | dedicated Transmission | temporary acquisition downloads |
 | publisher systemd unit | verified atomic transfer to Moscow |
@@ -269,7 +269,9 @@ without a new plan and approval.
 ## Common incident interpretation
 
 - Catalog works but release search fails: inspect VLESS, gateway, FlareSolverr,
-  and Prowlarr; do not restart Audiobookshelf.
+  and Prowlarr; do not restart Audiobookshelf. If Prowlarr logs
+  `Invalid Credentials for RuTracker`, the stored RuTracker session has expired
+  and the captcha-bound login must be refreshed (see PRODUCTION-RUNBOOK.md).
 - Task is `needs_input`: inspect its semantic conflict and create a revised plan;
   do not bypass validation through Transmission or the filesystem.
 - Task is `awaiting_abs`: verify the exact final path and ABS watcher/periodic
@@ -293,7 +295,8 @@ without a new plan and approval.
 - Fuzzy duplicates require a new explicit approval.
 - Publisher writes only through the restricted Moscow forced command.
 - Credentials, cookies, magnet URIs, and upstream bodies do not enter logs or
-  MCP results.
+  MCP results. The gateway's stored RuTracker session is a root-only secret and
+  is never echoed to clients or logs.
 
 ## Backup and upgrades
 

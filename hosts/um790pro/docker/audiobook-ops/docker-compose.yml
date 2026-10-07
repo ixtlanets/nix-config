@@ -102,6 +102,9 @@ services:
       RUTRACKER_GATEWAY_FLARESOLVERR_URL: http://flaresolverr:8191/v1
       RUTRACKER_GATEWAY_LISTEN_HOST: 0.0.0.0
       RUTRACKER_GATEWAY_LISTEN_PORT: "8080"
+      RUTRACKER_GATEWAY_SESSION_COOKIES: /run/secrets/gateway_session_cookie
+    secrets:
+      - gateway_session_cookie
     user: "1000:1000"
     read_only: true
     cap_drop:
@@ -179,3 +182,5 @@ secrets:
     file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/prowlarr-api-key
   transmission_password:
     file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/transmission-password
+  gateway_session_cookie:
+    file: ${AUDIOBOOK_OPS_SECRETS_ROOT:-/etc/audiobook-ops/secrets}/gateway-session-cookie

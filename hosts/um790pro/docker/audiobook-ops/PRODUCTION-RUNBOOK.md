@@ -77,10 +77,37 @@ Install every operator config file as `root:nik` mode `0640`: host services run
 as `nik` and require read access, while only root may modify the files. Keep the
 config directory itself `root:nik` mode `0750`.
 
-Do not put credentials in those files. The five separate root-owned mode `0600`
-files are `abs-api-token`, `mcp-bearer`, `prowlarr-api-key`,
-`publisher-ssh-key`, and `transmission-password`. Their creation or installation
-is a separate owner gate.
+Do not put credentials in those files. The six separate root-owned mode `0600`
+files are `abs-api-token`, `gateway-session-cookie`, `mcp-bearer`,
+`prowlarr-api-key`, `publisher-ssh-key`, and `transmission-password`. Their
+creation or installation is a separate owner gate.
+
+`gateway-session-cookie` is a flat JSON object of RuTracker session cookie names
+and values. RuTracker now challenges the login form with an image captcha, which
+Prowlarr cannot solve; the operator performs one interactive login through the
+gateway's own egress path and stores the resulting cookies here. The gateway
+injects them into every upstream request and answers Prowlarr's login POST with a
+minimal authenticated page, so Prowlarr adopts the session without a captcha.
+Absent or malformed, the gateway degrades to its historical pass-through mode.
+
+## RuTracker session refresh (owner gate)
+
+The stored session expires with RuTracker's `bb_session` cookie (about 30 days)
+or on a manual logout. When `external-search` reports `degraded` and Prowlarr logs
+`Invalid Credentials for RuTracker`, refresh it:
+
+1. Fetch the login page and its captcha through the gateway path so the egress
+   IP matches, keeping the returned `cap_sid` and the `cap_code_*` field name.
+2. Read the captcha image and POST `login_username`, `login_password`,
+   `cap_sid`, `cap_code_*`, `login=вход`, and `redirect=index.php` in the same
+   session. Success leaves a `bb_session` cookie.
+3. Write the session cookies as a flat JSON object to
+   `/etc/audiobook-ops/secrets/gateway-session-cookie` (root, mode `0600`) and
+   recreate the gateway container so it reloads the file.
+
+Do not start a long-lived agent auto-login here: the captcha needs a human and the
+same-egress requirement forbids solving it from another host. Keep the raw login
+POST out of logs and chat.
 
 Install but do not enable or start host assets:
 

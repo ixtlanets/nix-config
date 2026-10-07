@@ -236,7 +236,13 @@ class AudiobookOpsScaffoldTests(unittest.TestCase):
                 "mcp-bearer",
                 "prowlarr-api-key",
                 "transmission-password",
+                "gateway-session-cookie",
             },
+        )
+        gateway = rendered["services"]["rutracker-gateway"]
+        self.assertEqual(
+            {secret["source"] for secret in gateway["secrets"]},
+            {"gateway_session_cookie"},
         )
 
     def test_package_entrypoint_fails_closed_without_runtime_configuration(self) -> None:
