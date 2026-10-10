@@ -34,3 +34,11 @@ books.nikcode.xyz {
 	# DNS-only record terminates TLS here, then Caddy reaches Moscow over Tailscale.
 	reverse_proxy 100.81.67.47:13378
 }
+
+pablito.nikcode.xyz {
+	# Remote ingress for the zenbook OpenClaw Gateway. The public DNS-only record
+	# terminates TLS here; Caddy reaches the Gateway over Tailscale so mobile
+	# clients get a real wss:// endpoint (full operator access) without Tailscale
+	# on the phone. Caddy forwards WebSocket upgrades transparently.
+	reverse_proxy 100.114.155.30:18789
+}
