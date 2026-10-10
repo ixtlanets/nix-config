@@ -16,3 +16,17 @@ books.nikcode.xyz {
 
 	reverse_proxy audiobookshelf:80
 }
+
+pablito.nikcode.xyz {
+	header {
+		Alt-Svc "clear"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+
+	# Remote ingress for the zenbook OpenClaw Gateway. Moscow has a Russian
+	# public IP, so the phone reaches it directly (no VLESS tunnel needed);
+	# Caddy then proxies over Tailscale to the Gateway loopback/LAN listener.
+	reverse_proxy 100.114.155.30:18789
+}
