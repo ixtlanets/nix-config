@@ -270,11 +270,18 @@ return to the current sing-box GUI setup. Detailed design:
 Macs.
 
 **Second-phone profile**: `secrets/vless/goar4-iphone.json` (Frankfurt user `Goar4`) was added
-2026-10-13 for a second iPhone. It uses the modern typed-DNS form (single HTTPS `dns-remote`
-server plus `route.default_domain_resolver`, like `maximov-ipad.json`) instead of the legacy DNS
-block in the other GUI configs, so it passes `sing-box check` on 1.13.5 and 1.14 without the
-`ENABLE_DEPRECATED_*` overrides. Routing shape is unchanged: private + `geoip-ru` +
-`geosite-category-ru` direct, UDP 443 rejected, everything else `proxy`.
+2026-10-13 for a second iPhone. It is deliberately built in the **same shape as the known-working
+`iphone16e-gui.json`** — the legacy DNS block (`address`/`address_resolver`) plus the two rule-sets
+and the UDP 443 reject — because that is the profile shape confirmed working on the owner's own
+iPhone. It differs from `iphone16e-gui.json` only in `uuid` and `cache_id`.
+
+Do not "modernise" this file to the typed-DNS form used by `maximov-ipad.json` (`type`/`server`
+DNS servers, `route.default_domain_resolver`, no `block` outbound) without retesting on a real
+iPhone first: that variant failed to start on SFI (`initialize rule-set[0]: ... EOF`). Because it
+keeps the legacy DNS block, validation must run with the `ENABLE_DEPRECATED_*` env vars (1.13.5 on
+Frankfurt); local sing-box 1.14 rejects the file by design, as it does every GUI config. Routing
+shape: private + `geoip-ru` + `geosite-category-ru` direct, UDP 443 rejected, everything else
+`proxy`.
 
 **Rule-set bootstrap on iOS (important)**: the first profile shipped with `raw.githubusercontent.com`
 URLs and `download_detour: proxy`. On the iPhone this fails at startup —
