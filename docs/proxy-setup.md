@@ -768,3 +768,16 @@ packet is sent out through `wlo1` where there is no route to `100.64.0.0/10`.
 
 Port 1080 is now open to the public internet (required for Frankfurt's Docker container to reach
 London). Password authentication prevents the proxy from being used as an open relay.
+
+### goar-team — independent VLESS+Reality server
+
+**Host**: new Hosting-VDS Frankfurt #2 Ubuntu 24.04 VPS; IP pending provisioning.
+**Port**: TCP `443` (REALITY camouflage `www.google.com`), HTTP `80`; SSH `22`.
+**Role**: pure VLESS exit for the Goar team with an independent REALITY identity.
+No London routing and no WireGuard `wg0`; existing Frankfurt users remain in place.
+Tailscale provides administrative access after the node joins the tailnet.
+
+**Bundles**: `hosts/goar-team/ubuntu/provision/` and
+`hosts/goar-team/ubuntu/host-baseline/`; encrypted DR inventory in
+`secrets/proxy/goar-team/`. Deployment order and operator responsibilities:
+[goar-team runbook](goar-team-vless-node.md).
