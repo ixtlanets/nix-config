@@ -276,6 +276,17 @@ block in the other GUI configs, so it passes `sing-box check` on 1.13.5 and 1.14
 `ENABLE_DEPRECATED_*` overrides. Routing shape is unchanged: private + `geoip-ru` +
 `geosite-category-ru` direct, UDP 443 rejected, everything else `proxy`.
 
+**Rule-set bootstrap on iOS (important)**: the first profile shipped with `raw.githubusercontent.com`
+URLs and `download_detour: proxy`. On the iPhone this fails at startup —
+`start router: initialize rule-set[0]: ... Get "https://raw.githubusercontent.com/...": EOF` —
+because SFI resolves the rule-set host through the TUN's own DNS, which is itself routed via the
+VLESS outbound that is not up yet. Fix, matching the desktop configs: fetch both rule-sets from the
+jsDelivr mirror (`https://cdn.jsdelivr.net/gh/SagerNet/...@rule-set/...srs`) with
+`download_detour: direct`, and add an explicit `dns-bootstrap` resolver (UDP `1.1.1.1`, `detour:
+direct`) used as `domain_resolver` for the `direct` outbound and as
+`route.default_domain_resolver`. The first start then bootstraps over the plain ISP path; later
+starts load the cached copy. Any new GUI/SFI config must follow this shape.
+
 **Routing** mirrors the macOS GUI shape: private + `geoip-ru` + `geosite-category-ru` direct,
 everything else `proxy`, UDP 443 blocked client-side, Google/OpenAI/Stripe/ElevenLabs to London at
 the Frankfurt level. Validate client configs with the Frankfurt container
