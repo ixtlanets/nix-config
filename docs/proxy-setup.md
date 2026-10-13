@@ -269,28 +269,30 @@ return to the current sing-box GUI setup. Detailed design:
 `iphone16e`). Each iPhone gets its own Frankfurt VLESS user via `reality-user add <name>`, same as
 Macs.
 
-**Second-phone profile**: `secrets/vless/goar4-iphone.json` (Frankfurt user `Goar4`) was added
-2026-10-13 for a second iPhone. It is deliberately built in the **same shape as the known-working
-`iphone16e-gui.json`** — the legacy DNS block (`address`/`address_resolver`) plus the two rule-sets
-and the UDP 443 reject — because that is the profile shape confirmed working on the owner's own
-iPhone. It differs from `iphone16e-gui.json` only in `uuid` and `cache_id`.
+**Client config version split (important)**: SFI builds differ across devices, and the two shapes
+are not interchangeable. The owner's own iPhone runs an older build that accepts the **legacy DNS
+block** (`address`/`address_resolver`) used by `iphone16e-gui.json` and `goar-iphone.json`; that
+shape cannot be imported on sing-box **1.14**, which fails with `decode config: dns.servers[0]:
+legacy DNS server formats are removed in sing-box 1.14.0`. New devices (for example `Goar4` on a
+second iPhone) ship 1.14, so they need the **typed-DNS shape** of `maximov-ipad.json`
+(`type`/`server` DNS servers, `route.default_domain_resolver`, `reject` action for UDP 443, no
+`block` outbound). Always confirm the app version on the target device before choosing a shape.
 
-Do not "modernise" this file to the typed-DNS form used by `maximov-ipad.json` (`type`/`server`
-DNS servers, `route.default_domain_resolver`, no `block` outbound) without retesting on a real
-iPhone first: that variant failed to start on SFI (`initialize rule-set[0]: ... EOF`). Because it
-keeps the legacy DNS block, validation must run with the `ENABLE_DEPRECATED_*` env vars (1.13.5 on
-Frankfurt); local sing-box 1.14 rejects the file by design, as it does every GUI config. Routing
-shape: private + `geoip-ru` + `geosite-category-ru` direct, UDP 443 rejected, everything else
-`proxy`.
+**Second-phone profile**: `secrets/vless/goar4-iphone.json` (Frankfurt user `Goar4`, added
+2026-10-13) follows the 1.14 typed-DNS shape. One compatibility caveat: do **not** add a
+`domain_resolver` field on the `direct` outbound — older SFI builds reject it with `create service:
+decode config: outbounds[1].domain_resolver: json: unknown field "domain_resolver"`, and 1.14 does
+not need it. Validation: local sing-box 1.14 `check` passes (the Frankfurt 1.13.5 container needs
+the `ENABLE_DEPRECATED_*` env vars only for the legacy-shape files). Routing shape: private +
+`geoip-ru` + `geosite-category-ru` direct, UDP 443 rejected, everything else `proxy`.
 
-**Rule-set bootstrap on iOS (important)**: the first profile shipped with `raw.githubusercontent.com`
-URLs and `download_detour: proxy`. On the iPhone this fails at startup —
+**Rule-set bootstrap on iOS (important)**: profiles that use `raw.githubusercontent.com` URLs with
+`download_detour: proxy` fail at startup —
 `start router: initialize rule-set[0]: ... Get "https://raw.githubusercontent.com/...": EOF` —
 because SFI resolves the rule-set host through the TUN's own DNS, which is itself routed via the
-VLESS outbound that is not up yet. Fix, matching the desktop configs: fetch both rule-sets from the
-jsDelivr mirror (`https://cdn.jsdelivr.net/gh/SagerNet/...@rule-set/...srs`) with
-`download_detour: direct`, and add an explicit `dns-bootstrap` resolver (UDP `1.1.1.1`, `detour:
-direct`) used as `domain_resolver` for the `direct` outbound and as
+VLESS outbound that is not up yet. Fix: fetch both rule-sets from the jsDelivr mirror
+(`https://cdn.jsdelivr.net/gh/SagerNet/...@rule-set/...srs`) with `download_detour: direct`, and add
+an explicit `dns-bootstrap` resolver (UDP `1.1.1.1`, `detour: direct`) referenced as
 `route.default_domain_resolver`. The first start then bootstraps over the plain ISP path; later
 starts load the cached copy. Any new GUI/SFI config must follow this shape.
 
