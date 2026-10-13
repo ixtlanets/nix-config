@@ -1,6 +1,6 @@
 # 01 — `goar-team`: provisioning bundle, host baseline, DR-инвентарь, runbook
 
-Status: ready-for-agent
+Status: implemented (repository bundle; live deployment pending)
 Blocked by: none
 Created: 2026-10-13
 
@@ -84,18 +84,18 @@ Shell-тест в стиле `tests/vless-configs.sh`: проверяет, чт�
 
 ## Acceptance criteria
 
-- [ ] `hosts/goar-team/ubuntu/provision/provision.sh` существует, исполняем, `bash -n` проходит.
-- [ ] Скрипт идемпотентен по построению: повторная установка reality-ezpz пропускается,
+- [x] `hosts/goar-team/ubuntu/provision/provision.sh` существует, исполняем, `bash -n` проходит.
+- [x] Скрипт идемпотентен по построению: повторная установка reality-ezpz пропускается,
       если `/opt/reality-ezpz` уже есть; установка Docker пропускается, если `docker` есть.
-- [ ] `hosts/goar-team/ubuntu/host-baseline/apply.sh` существует, исполняем, `bash -n` проходит,
+- [x] `hosts/goar-team/ubuntu/host-baseline/apply.sh` существует, исполняем, `bash -n` проходит,
       повторяет гарантии London (атомарный swap, отказ от не-swap, дубли fstab).
-- [ ] `secrets/proxy/goar-team/README.md` перечисляет `config`, `engine.conf`,
+- [x] `secrets/proxy/goar-team/README.md` перечисляет `config`, `engine.conf`,
       `docker-compose.yml`, `users` и требование сохранить REALITY-идентичность.
-- [ ] `docs/goar-team-vless-node.md` существует и описывает порядок развёртывания.
-- [ ] В `docs/proxy-setup.md` добавлена секция `goar-team`, существующие секции не изменены.
-- [ ] `tests/goar-team-provision.sh` существует, исполняем, `bash -n` проходит, `bash tests/goar-team-provision.sh` зелёный.
-- [ ] `git diff --check` чистый.
-- [ ] Ни один существующий файл Frankfurt/London не изменён.
+- [x] `docs/goar-team-vless-node.md` существует и описывает порядок развёртывания.
+- [x] В `docs/proxy-setup.md` добавлена секция `goar-team`, существующие секции не изменены.
+- [x] `tests/goar-team-provision.sh` существует, исполняем, `bash -n` проходит, `bash tests/goar-team-provision.sh` зелёный.
+- [x] `git diff --check` чистый.
+- [x] Ни один существующий файл Frankfurt/London не изменён.
 
 ## Constraints
 
@@ -109,3 +109,5 @@ Shell-тест в стиле `tests/vless-configs.sh`: проверяет, чт�
 ## Comments
 
 - 2026-10-13: тикет создан, baseline `73df79c` на ветке `feature/goar-team`.
+
+- 2026-10-13: реализовано в `1185abb391c36ea949d4600cc095cc35bf58b1f7` (starting HEAD `0f669a9a78c91228ebc8cde70debd15d75b78e1d`). Все repository acceptance criteria выполнены; live deployment не выполнялся. Evidence: `.scratch/goar-team/evidence/01/starting-head.txt`, `tdd-01-{red,green}.txt`, `tdd-02-{red,green}.txt`, `gate-final-{01..06}.txt`, `ssh-payload-syntax.txt`, `review-standards.txt`, `review-spec.txt`, `report.md`. Parallel Standards/Spec review: 0/0 substantiated findings, исправления не требовались. Firewall, tailnet join, image/config compatibility и DR capture остаются шагами оператора.
