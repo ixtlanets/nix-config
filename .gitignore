@@ -12,3 +12,4 @@ result
 firebase-debug.log
 __pycache__/
 *.py[cod]
+.worktrees/
