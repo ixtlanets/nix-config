@@ -491,6 +491,34 @@ Usage on Frankfurt:
 
 `add` creates timestamped backups of `engine.conf` and `users`, validates the updated config with `sing-box check`, and aborts with rollback on validation failure. It does **not** restart the container.
 
+**MANDATORY after `reality-user add` — restart the engine:**
+```bash
+ssh -i ~/.ssh/id_rsa_1 root@wire.nikcode.xyz 'docker restart reality-ezpz-engine-1'
+```
+
+sing-box reads its config **only at process start**, so a user added to `engine.conf` on disk is
+invisible to the running container until it restarts. The new client then times out on connect on
+EVERY client and every protocol (sing-box JSON, Hiddify, `vless://` link, iOS, Android), which
+looks exactly like a broken client config or a bad client version. Verified 2026-10-13: `Goar4`
+was added at 15:30 while the container had been up since 2026-09-26, so the server rejected the
+new UUID (`curl` through the tunnel: exit 35 / empty) while `Goar2` and `Goar` (added before the
+last restart) worked. `docker restart reality-ezpz-engine-1` fixed it immediately; both the new
+and the existing users then returned the Frankfurt exit IP.
+
+Before restarting, confirm the on-disk config is valid (the helper already did this, but re-check
+if `engine.conf` was edited by hand):
+```bash
+docker run --rm -e ENABLE_DEPRECATED_LEGACY_DNS_SERVERS=true \
+  -e ENABLE_DEPRECATED_MISSING_DOMAIN_RESOLVER=true \
+  -v /opt/reality-ezpz/engine.conf:/tmp/config.json:ro \
+  gzxhwq/sing-box:1.13.5 check -c /tmp/config.json
+```
+
+Diagnose "user added but cannot connect" with a direct tunnel test from any host before touching
+the client: run a minimal sing-box config with the user's UUID and `curl -x socks5h://127.0.0.1:<port>
+https://api.ipify.org`. Exit 0 with the Frankfurt IP = the server accepts the UUID (problem is
+client-side); empty/timeout = the server does not know the UUID (restart the engine).
+
 **`/opt/reality-ezpz/config`**:
 ```
 core=sing-box
