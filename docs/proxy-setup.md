@@ -269,6 +269,13 @@ return to the current sing-box GUI setup. Detailed design:
 `iphone16e`). Each iPhone gets its own Frankfurt VLESS user via `reality-user add <name>`, same as
 Macs.
 
+**Second-phone profile**: `secrets/vless/goar4-iphone.json` (Frankfurt user `Goar4`) was added
+2026-10-13 for a second iPhone. It uses the modern typed-DNS form (single HTTPS `dns-remote`
+server plus `route.default_domain_resolver`, like `maximov-ipad.json`) instead of the legacy DNS
+block in the other GUI configs, so it passes `sing-box check` on 1.13.5 and 1.14 without the
+`ENABLE_DEPRECATED_*` overrides. Routing shape is unchanged: private + `geoip-ru` +
+`geosite-category-ru` direct, UDP 443 rejected, everything else `proxy`.
+
 **Routing** mirrors the macOS GUI shape: private + `geoip-ru` + `geosite-category-ru` direct,
 everything else `proxy`, UDP 443 blocked client-side, Google/OpenAI/Stripe/ElevenLabs to London at
 the Frankfurt level. Validate client configs with the Frankfurt container
