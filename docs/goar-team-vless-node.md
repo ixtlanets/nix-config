@@ -73,5 +73,15 @@ their existing app. Host-side sing-box runtime tests for all nine identities
 reached the new exit IP. See the encrypted DR notes for exact image
 digest and recovery details. Tailscale is joined as `goar-team`
 (`100.93.226.82`); tailnet ping and key-based root SSH from `zenbook` passed.
-Import on the target devices has not yet been verified, and the team QR codes
-have not been distributed.
+The owner tested `nik-ios` in Incy on an iPhone and confirmed working traffic.
+On the owner's Android phone, Incy imported `nik-android` and measured latency
+but did not initiate an Android VPN permission request or connect. The same
+identity connected through Hiddify; the phone's external IP was verified as
+`148.253.210.41`. Hiddify's locally cached import has auto-update disabled;
+it will need re-import after an app reinstall or server identity change.
+
+On 2026-10-15, the five named team QR codes were sent privately to the owner
+in Telegram as five separate image messages with device labels. They have not
+been sent to the individual team members by the operator, and import on their
+devices remains unverified. The five colleagues without specified devices
+still have no profiles.
