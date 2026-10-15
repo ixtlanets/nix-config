@@ -66,7 +66,8 @@ and tailnet ingress; swap and timer baseline are applied. The engine runs
 accounts cover Goar and her mother (iPhone), nanny, driver and housekeeper
 (Android); five further colleagues have unspecified devices and no accounts yet.
 Encrypted DR files and client profiles are in `secrets/proxy/goar-team/` and
-`secrets/vless/`. The owner has four full `nik-*.json` sing-box profiles; each
+`secrets/vless/`. The owner has four full `nik-*.json` sing-box profiles and
+individual VLESS link/QR imports for `nik-ios` and `nik-android`; each
 named team member has a distinct `.vless.txt` link and `.qr.png` for import into
 their existing app. Host-side sing-box runtime tests for all nine identities
 reached the new exit IP. See the encrypted DR notes for exact image

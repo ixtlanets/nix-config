@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate individual Goar team VLESS links and QR files against the DR bundle."""
+"""Validate owner and Goar team VLESS links and QR files against the DR bundle."""
 
 import json
 import subprocess
@@ -10,6 +10,8 @@ root = Path(__file__).resolve().parents[1]
 bundle = root / "secrets/proxy/goar-team"
 profiles = root / "secrets/vless"
 people = (
+    "nik-ios",
+    "nik-android",
     "goar-ios",
     "goar-mother-ios",
     "goar-nanny-android",
@@ -47,4 +49,4 @@ for name in people:
     ).stdout.strip()
     assert decoded == link, name
 
-print("PASS: five named team links and QR codes match distinct server users")
+print("PASS: two owner and five team links and QR codes match distinct server users")
