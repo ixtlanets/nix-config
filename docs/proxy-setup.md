@@ -771,11 +771,11 @@ London). Password authentication prevents the proxy from being used as an open r
 
 ### goar-team — independent VLESS+Reality server
 
-**Host**: new Hosting-VDS Frankfurt #2 Ubuntu 24.04 VPS; IP pending provisioning.
+**Host**: Hosting-VDS Frankfurt #2 Ubuntu 24.04 VPS, IPv4 `148.253.210.41`.
 **Port**: TCP `443` (REALITY camouflage `www.google.com`), HTTP `80`; SSH `22`.
 **Role**: pure VLESS exit for the Goar team with an independent REALITY identity.
 No London routing and no WireGuard `wg0`; existing Frankfurt users remain in place.
-Tailscale provides administrative access after the node joins the tailnet.
+Tailscale is installed but awaits tailnet login; SSH key administration works over the public IP.
 
 **Bundles**: `hosts/goar-team/ubuntu/provision/` and
 `hosts/goar-team/ubuntu/host-baseline/`; encrypted DR inventory in

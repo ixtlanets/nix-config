@@ -38,7 +38,8 @@ for profile in ios android; do
   config="$config_dir/goar-team-$profile.json"
   jq -e '
     .route.default_domain_resolver == "dns-bootstrap" and
-    any(.dns.servers[]; .tag == "dns-bootstrap" and .type == "udp") and
+    any(.dns.servers[]; .tag == "dns-bootstrap" and .type == "https" and
+      .server == "1.1.1.1" and (has("detour") | not)) and
     ([.route.rule_set[] | select(.tag == "geoip-ru" or .tag == "geosite-category-ru") |
       select(.type == "remote" and (.url | startswith("https://cdn.jsdelivr.net/gh/SagerNet/")) and
         .download_detour == "direct")] | length) == 2
@@ -47,7 +48,10 @@ done
 
 jq -e '
   any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun"))) and
-  any(.dns.servers[]; has("address") and has("address_resolver"))
+  any(.dns.servers[]; has("address") and has("address_resolver")) and
+  any(.route.rule_set[]; .tag == "geoip-ru" and
+    .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
+    .download_detour == "direct")
 ' "$config_dir/goar-team-macos.json" >/dev/null || {
   printf 'Invalid macOS GUI shape\n' >&2; exit 1;
 }
@@ -55,7 +59,12 @@ jq -e '
 jq -e '
   any(.inbounds[]; .type == "tun" and .interface_name == "throne-tun" and
     (has("auto_redirect") | not)) and
-  any(.outbounds[]; .tag == "block" and .type == "block")
+  any(.outbounds[]; .tag == "block" and .type == "block") and
+  any(.dns.servers[]; .tag == "dns-bootstrap" and .type == "https" and
+    .server == "1.1.1.1" and (has("detour") | not)) and
+  any(.route.rule_set[]; .tag == "geoip-ru" and
+    .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
+    .download_detour == "direct")
 ' "$config_dir/goar-team-windows.json" >/dev/null || {
   printf 'Invalid Windows Throne shape\n' >&2; exit 1;
 }

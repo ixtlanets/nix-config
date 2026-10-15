@@ -56,6 +56,14 @@ checks running state but does not restart a stopped existing stack. Reapply
 baseline, firewall and Tailscale; verify client connectivity and update the IP
 in client profiles if it changed.
 
-No deployment or production verification was performed while preparing this
-repository bundle. VM purchase, live identity capture, firewall configuration,
-tailnet join and client profiles remain operational steps.
+## Live state (2026-10-15)
+
+VM `148.253.210.41` is provisioned. Root SSH accepts the owner's `id_rsa_1`
+key and rejects password authentication. UFW allows TCP 22/80/443, UDP 41641,
+and tailnet ingress; swap and timer baseline are applied. The engine runs
+`gzxhwq/sing-box:1.13.5`, and four device-specific users were added.
+Encrypted DR files and client profiles are in `secrets/proxy/goar-team/` and
+`secrets/vless/goar-team-*.json`. Host-side sing-box runtime tests for all four
+profiles reached the new exit IP. See the encrypted DR notes for exact image
+digest and recovery details. Tailscale is installed but still awaits tailnet
+login; import on the target devices has not yet been verified.
