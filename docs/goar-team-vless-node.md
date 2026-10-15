@@ -65,5 +65,6 @@ and tailnet ingress; swap and timer baseline are applied. The engine runs
 Encrypted DR files and client profiles are in `secrets/proxy/goar-team/` and
 `secrets/vless/goar-team-*.json`. Host-side sing-box runtime tests for all four
 profiles reached the new exit IP. See the encrypted DR notes for exact image
-digest and recovery details. Tailscale is installed but still awaits tailnet
-login; import on the target devices has not yet been verified.
+digest and recovery details. Tailscale is joined as `goar-team`
+(`100.93.226.82`); tailnet ping and key-based root SSH from `zenbook` passed.
+Import on the target devices has not yet been verified.
