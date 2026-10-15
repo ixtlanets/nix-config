@@ -1,7 +1,7 @@
 # 02 — `goar-team`: клиентские конфиги команды из проверенных шаблонов
 
-Status: ready-for-human
-Blocked by: 01 (provision bundle), плюс живая VM создана и REALITY-идентичность сгенерирована
+Status: done
+Blocked by: resolved 2026-10-15 (provisioned VM and new REALITY identity)
 Created: 2026-10-13
 
 ## Goal
@@ -32,13 +32,13 @@ Created: 2026-10-13
 
 ## Acceptance criteria
 
-- [ ] Каждый из четырёх конфигов существует и валиден JSON.
-- [ ] Мобильные конфиги следуют форме `goar4-iphone.json` (jsDelivr + direct + dns-bootstrap).
-- [ ] macOS-конфиг следует форме `m1max-gui.json`.
-- [ ] Windows-конфиг следует форме `windows-throne.json`.
-- [ ] Все конфиги указывают на новый узел (свой `server`, `public_key`, `short_id`), а не на Frankfurt.
-- [ ] Тест формы зелёный.
-- [ ] `git diff --check` чистый.
+- [x] Каждый из четырёх конфигов существует и валиден JSON.
+- [x] Мобильные конфиги следуют форме `goar4-iphone.json` (jsDelivr + direct + dns-bootstrap).
+- [x] macOS-конфиг следует форме `m1max-gui.json`.
+- [x] Windows-конфиг следует форме `windows-throne.json`.
+- [x] Все конфиги указывают на новый узел (свой `server`, `public_key`, `short_id`), а не на Frankfurt.
+- [x] Тест формы зелёный.
+- [x] `git diff --check` чистый.
 
 ## Constraints
 
@@ -50,3 +50,4 @@ Created: 2026-10-13
 ## Comments
 
 - 2026-10-13: тикет создан как заблокированный; ждёт тикет 01 и живую VM.
+- 2026-10-15: новый сервер 148.253.210.41 развёрнут; четыре UUID созданы. Конфиги и DR-бандл закоммичены в `379a528`. Все четыре формы на тестовых mixed-inbound копиях дали реальный выход через новый IP. На самих устройствах импорт ещё не проверялся; Tailscale ждёт входа владельца.
