@@ -61,10 +61,16 @@ in client profiles if it changed.
 VM `148.253.210.41` is provisioned. Root SSH accepts the owner's `id_rsa_1`
 key and rejects password authentication. UFW allows TCP 22/80/443, UDP 41641,
 and tailnet ingress; swap and timer baseline are applied. The engine runs
-`gzxhwq/sing-box:1.13.5`, and four device-specific users were added.
+`gzxhwq/sing-box:1.13.5`. Four owner accounts (`nik-ios`, `nik-android`,
+`nik-macos`, `nik-windows`) retain their original UUIDs. Five named team
+accounts cover Goar and her mother (iPhone), nanny, driver and housekeeper
+(Android); five further colleagues have unspecified devices and no accounts yet.
 Encrypted DR files and client profiles are in `secrets/proxy/goar-team/` and
-`secrets/vless/goar-team-*.json`. Host-side sing-box runtime tests for all four
-profiles reached the new exit IP. See the encrypted DR notes for exact image
+`secrets/vless/`. The owner has four full `nik-*.json` sing-box profiles; each
+named team member has a distinct `.vless.txt` link and `.qr.png` for import into
+their existing app. Host-side sing-box runtime tests for all nine identities
+reached the new exit IP. See the encrypted DR notes for exact image
 digest and recovery details. Tailscale is joined as `goar-team`
 (`100.93.226.82`); tailnet ping and key-based root SSH from `zenbook` passed.
-Import on the target devices has not yet been verified.
+Import on the target devices has not yet been verified, and the team QR codes
+have not been distributed.

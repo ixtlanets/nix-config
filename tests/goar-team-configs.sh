@@ -14,7 +14,7 @@ profiles=(ios android macos windows)
 uuids=()
 
 for profile in "${profiles[@]}"; do
-  config="$config_dir/goar-team-$profile.json"
+  config="$config_dir/nik-$profile.json"
   [[ -f "$config" ]] || { printf 'Missing %s\n' "$config" >&2; exit 1; }
   jq -e --arg server "$server" --arg public_key "$public_key" --arg short_id "$short_id" '
     (.outbounds | map(select(.tag == "proxy" and .type == "vless")) | length) == 1 and
@@ -30,12 +30,12 @@ for profile in "${profiles[@]}"; do
 done
 
 if [[ "$(printf '%s\n' "${uuids[@]}" | sort -u | wc -l)" -ne 4 ]]; then
-  printf 'Goar-team device UUIDs must be distinct\n' >&2
+  printf 'Nik device UUIDs must be distinct\n' >&2
   exit 1
 fi
 
 for profile in ios android; do
-  config="$config_dir/goar-team-$profile.json"
+  config="$config_dir/nik-$profile.json"
   jq -e '
     .route.default_domain_resolver == "dns-bootstrap" and
     any(.dns.servers[]; .tag == "dns-bootstrap" and .type == "https" and
@@ -52,7 +52,7 @@ jq -e '
   any(.route.rule_set[]; .tag == "geoip-ru" and
     .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
     .download_detour == "direct")
-' "$config_dir/goar-team-macos.json" >/dev/null || {
+' "$config_dir/nik-macos.json" >/dev/null || {
   printf 'Invalid macOS GUI shape\n' >&2; exit 1;
 }
 
@@ -65,8 +65,8 @@ jq -e '
   any(.route.rule_set[]; .tag == "geoip-ru" and
     .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
     .download_detour == "direct")
-' "$config_dir/goar-team-windows.json" >/dev/null || {
+' "$config_dir/nik-windows.json" >/dev/null || {
   printf 'Invalid Windows Throne shape\n' >&2; exit 1;
 }
 
-printf 'PASS: four Goar-team profiles have distinct UUIDs and expected identity/shapes\n'
+printf 'PASS: four Nik profiles have distinct UUIDs and expected identity/shapes\n'
