@@ -85,3 +85,35 @@ in Telegram as five separate image messages with device labels. They have not
 been sent to the individual team members by the operator, and import on their
 devices remains unverified. The five colleagues without specified devices
 still have no profiles.
+
+## LTE failure on 2026-10-17: Chrome TLS fingerprint blocked on the mobile path
+
+The owner's iPhone on Megafon (`31.173.82.54`) stopped passing traffic through
+Incy: the app showed "connected", nothing loaded. Both `nik-ios` and the team
+node profile failed the same way, which pointed away from a single profile.
+
+Server-side and config-side causes were excluded by running, not by reasoning:
+the container was up, `engine.conf` matched the DR capture byte for byte, the
+REALITY public key was derived from the private key and matched, and both
+`sing-box` and `Xray 26.10.10` (the core inside Incy) reached
+`148.253.210.41` with the owner's profile.
+
+A server-side packet capture showed 20 of 25 connections delivering exactly
+1288 bytes of ClientHello and then going silent - no retransmit, no second
+segment. The three connections that completed had a **valid** REALITY
+authorization (decoded from the capture with the server private key: correct
+`short_id`, timestamp within 0.72 s). Clamping MSS to 1240 shifted the cut to
+1228 bytes and did not fix anything, so the boundary follows TCP
+segmentation and the stall is a client-side decision, not packet loss.
+
+The cause is a blocked **Chrome TLS fingerprint** on the mobile path. The
+owner's A/B test settled it: the original profile worked over Wi-Fi, and the
+same server with a **Firefox** fingerprint worked over LTE. That isolates the
+mobile carrier path as the blocker for the `chrome` uTLS fingerprint
+specifically, while the server, keys, UUID, flow, SNI and port are unchanged.
+
+`secrets/vless/nik-ios.json`, `nik-ios.vless.txt` and `nik-ios.qr.png` now use
+`fp=firefox`; the regenerated QR decodes byte for byte to the link, and a
+host-side `sing-box` run reached the exit IP with HTTP 200 from Google. Rotate
+the remaining iPhone profiles to Firefox if they show the same symptom on
+mobile data. Do not change the server for this: it is client-side only.
