@@ -811,8 +811,13 @@ over both the tailnet and the public IP.
 `secrets/proxy/goar-team/`. Deployment order and operator responsibilities:
 [goar-team runbook](goar-team-vless-node.md).
 
-**Owner client profiles**: `secrets/vless/nik-{ios,android,macos,windows}.json` and
-`secrets/vless/nik-m1max.json`. The last one is the macOS GUI shape of
-`m1max-gui.json` (TUN `utun19`, mixed `127.0.0.1:2080`, UDP 443 blocked,
-`geoip-ru` direct from the jsDelivr mirror) pointed at goar-team with its own
-UUID. Each device gets its own account; never reuse another device's UUID.
+**Owner client profiles**: `secrets/vless/nik-{ios,android,macos,windows}.json`,
+`secrets/vless/nik-m1max.json`, `secrets/vless/nik-m3max.json` and
+`secrets/vless/nik-galaxy-s22.json` (plus a `.vless.txt` link and `.qr.png` for
+the phone). The two Mac profiles follow the macOS GUI shape of
+`m1max-gui.json`/`m3max-gui.json` (TUN `utun19`, mixed `127.0.0.1:2080`, UDP 443
+blocked, `geoip-ru` direct from the jsDelivr mirror); the phone profile follows
+`nik-android.json` with the mobile DNS bootstrap. Each device has its own UUID;
+never reuse another device's UUID. The Galaxy profile uses the `firefox` uTLS
+fingerprint because the `chrome` one is blocked on Russian mobile carriers
+(see the LTE incident below).

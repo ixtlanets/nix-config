@@ -12,6 +12,7 @@ profiles = root / "secrets/vless"
 people = (
     "nik-ios",
     "nik-android",
+    "nik-galaxy-s22",
     "goar-ios",
     "goar-mother-ios",
     "goar-nanny-android",
@@ -49,4 +50,4 @@ for name in people:
     ).stdout.strip()
     assert decoded == link, name
 
-print("PASS: two owner and five team links and QR codes match distinct server users")
+print("PASS: three owner and five team links and QR codes match distinct server users")

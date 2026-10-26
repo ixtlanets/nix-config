@@ -10,7 +10,7 @@ public_key=$2
 short_id=$3
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_dir="$repo_root/secrets/vless"
-profiles=(ios android macos windows m1max)
+profiles=(ios android macos windows m1max m3max galaxy-s22)
 uuids=()
 
 for profile in "${profiles[@]}"; do
@@ -29,12 +29,12 @@ for profile in "${profiles[@]}"; do
   uuids+=("$(jq -r '.outbounds[] | select(.tag == "proxy") | .uuid' "$config")")
 done
 
-if [[ "$(printf '%s\n' "${uuids[@]}" | sort -u | wc -l)" -ne 5 ]]; then
+if [[ "$(printf '%s\n' "${uuids[@]}" | sort -u | wc -l)" -ne 7 ]]; then
   printf 'Nik device UUIDs must be distinct\n' >&2
   exit 1
 fi
 
-for profile in ios android; do
+for profile in ios android galaxy-s22; do
   config="$config_dir/nik-$profile.json"
   jq -e '
     .route.default_domain_resolver == "dns-bootstrap" and
@@ -46,7 +46,7 @@ for profile in ios android; do
   ' "$config" >/dev/null || { printf 'Invalid mobile bootstrap in %s\n' "$config" >&2; exit 1; }
 done
 
-for profile in macos m1max; do
+for profile in macos m1max m3max; do
   jq -e '
     any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun"))) and
     any(.dns.servers[]; has("address") and has("address_resolver")) and
@@ -71,4 +71,4 @@ jq -e '
   printf 'Invalid Windows Throne shape\n' >&2; exit 1;
 }
 
-printf 'PASS: five Nik profiles have distinct UUIDs and expected identity/shapes\n'
+printf 'PASS: seven Nik profiles have distinct UUIDs and expected identity/shapes\n'

@@ -95,6 +95,17 @@ reload the engine: the container was restarted to activate the user. Validation:
 host-side sing-box through the new UUID returned exit IP `148.253.210.41`,
 HTTP 204 from Google and 200 from example.com; the DR bundle was refreshed.
 
+On the same day, `nik-m3max` (`6fb6362d-4117-411a-8637-16328a89df38`) and
+`nik-galaxy-s22` (`3505144b-ad10-4dcd-ac04-eb6975bbf287`) were added.
+`secrets/vless/nik-m3max.json` mirrors `nik-m1max.json` and was copied to the
+host at `~/nix-config/secrets/vless/` (`192.168.1.144`).
+`secrets/vless/nik-galaxy-s22.json` follows the `nik-android.json` mobile shape
+with its own `cache_file.cache_id`, and the importable
+`nik-galaxy-s22.{vless.txt,qr.png}` use `fp=firefox` for the same
+mobile-carrier reason as `nik-ios`. Both UUIDs were validated from the host
+(exit IP `148.253.210.41`, HTTP 204 from Google); the QR decodes byte for byte
+to the link; the engine was restarted to activate the users.
+
 ## LTE failure on 2026-10-17: Chrome TLS fingerprint blocked on the mobile path
 
 The owner's iPhone on Megafon (`31.173.82.54`) stopped passing traffic through
