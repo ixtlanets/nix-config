@@ -86,6 +86,15 @@ been sent to the individual team members by the operator, and import on their
 devices remains unverified. The five colleagues without specified devices
 still have no profiles.
 
+On 2026-10-26 the owner account `nik-m1max` (`94a2a0af-b149-460f-979c-ad3d4981454d`)
+was added for the MacBook Pro, with `secrets/vless/nik-m1max.json` following the
+`m1max-gui.json` macOS GUI shape (legacy DNS block for the Apple GUI core, TUN
+`utun19`, mixed `127.0.0.1:2080`, UDP 443 blocked, `geoip-ru` direct from the
+jsDelivr mirror) and the node's own REALITY identity. `reality-user add` does not
+reload the engine: the container was restarted to activate the user. Validation:
+host-side sing-box through the new UUID returned exit IP `148.253.210.41`,
+HTTP 204 from Google and 200 from example.com; the DR bundle was refreshed.
+
 ## LTE failure on 2026-10-17: Chrome TLS fingerprint blocked on the mobile path
 
 The owner's iPhone on Megafon (`31.173.82.54`) stopped passing traffic through

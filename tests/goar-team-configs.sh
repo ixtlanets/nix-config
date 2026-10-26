@@ -10,7 +10,7 @@ public_key=$2
 short_id=$3
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_dir="$repo_root/secrets/vless"
-profiles=(ios android macos windows)
+profiles=(ios android macos windows m1max)
 uuids=()
 
 for profile in "${profiles[@]}"; do
@@ -29,7 +29,7 @@ for profile in "${profiles[@]}"; do
   uuids+=("$(jq -r '.outbounds[] | select(.tag == "proxy") | .uuid' "$config")")
 done
 
-if [[ "$(printf '%s\n' "${uuids[@]}" | sort -u | wc -l)" -ne 4 ]]; then
+if [[ "$(printf '%s\n' "${uuids[@]}" | sort -u | wc -l)" -ne 5 ]]; then
   printf 'Nik device UUIDs must be distinct\n' >&2
   exit 1
 fi
@@ -46,15 +46,17 @@ for profile in ios android; do
   ' "$config" >/dev/null || { printf 'Invalid mobile bootstrap in %s\n' "$config" >&2; exit 1; }
 done
 
-jq -e '
-  any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun"))) and
-  any(.dns.servers[]; has("address") and has("address_resolver")) and
-  any(.route.rule_set[]; .tag == "geoip-ru" and
-    .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
-    .download_detour == "direct")
-' "$config_dir/nik-macos.json" >/dev/null || {
-  printf 'Invalid macOS GUI shape\n' >&2; exit 1;
-}
+for profile in macos m1max; do
+  jq -e '
+    any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun"))) and
+    any(.dns.servers[]; has("address") and has("address_resolver")) and
+    any(.route.rule_set[]; .tag == "geoip-ru" and
+      .url == "https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-ru.srs" and
+      .download_detour == "direct")
+  ' "$config_dir/nik-$profile.json" >/dev/null || {
+    printf 'Invalid macOS GUI shape in nik-%s.json\n' "$profile" >&2; exit 1;
+  }
+done
 
 jq -e '
   any(.inbounds[]; .type == "tun" and .interface_name == "throne-tun" and
@@ -69,4 +71,4 @@ jq -e '
   printf 'Invalid Windows Throne shape\n' >&2; exit 1;
 }
 
-printf 'PASS: four Nik profiles have distinct UUIDs and expected identity/shapes\n'
+printf 'PASS: five Nik profiles have distinct UUIDs and expected identity/shapes\n'
