@@ -58,6 +58,16 @@ for profile in macos m1max m3max; do
   }
 done
 
+jq -e --arg server "$server" --arg public_key "$public_key" --arg short_id "$short_id" '
+  (.outbounds[] | select(.tag == "proxy") |
+    .server == $server and .server_port == 443 and
+    .tls.reality.public_key == $public_key and .tls.reality.short_id == $short_id and
+    .uuid == "df7f7c43-b03e-429d-a0c5-fa05af774ef6") and
+  any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun")))
+' "$config_dir/goar-macos.json" >/dev/null || {
+  printf 'Invalid goar-macos profile\n' >&2; exit 1;
+}
+
 jq -e '
   any(.inbounds[]; .type == "tun" and .interface_name == "throne-tun" and
     (has("auto_redirect") | not)) and
@@ -71,4 +81,4 @@ jq -e '
   printf 'Invalid Windows Throne shape\n' >&2; exit 1;
 }
 
-printf 'PASS: seven Nik profiles have distinct UUIDs and expected identity/shapes\n'
+printf 'PASS: seven Nik profiles and goar-macos have distinct UUIDs and expected identity/shapes\n'

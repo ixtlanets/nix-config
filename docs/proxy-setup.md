@@ -814,7 +814,7 @@ over both the tailnet and the public IP.
 **Owner client profiles**: `secrets/vless/nik-{ios,android,macos,windows}.json`,
 `secrets/vless/nik-m1max.json`, `secrets/vless/nik-m3max.json` and
 `secrets/vless/nik-galaxy-s22.json` (plus a `.vless.txt` link and `.qr.png` for
-the phone). The two Mac profiles follow the macOS GUI shape of
+the phone), and `secrets/vless/goar-macos.json` for Goar's own Mac. The two Mac profiles follow the macOS GUI shape of
 `m1max-gui.json`/`m3max-gui.json` (TUN `utun19`, mixed `127.0.0.1:2080`, UDP 443
 blocked, `geoip-ru` direct from the jsDelivr mirror); the phone profile follows
 `nik-android.json` with the mobile DNS bootstrap. Each device has its own UUID;

@@ -106,6 +106,11 @@ mobile-carrier reason as `nik-ios`. Both UUIDs were validated from the host
 (exit IP `148.253.210.41`, HTTP 204 from Google); the QR decodes byte for byte
 to the link; the engine was restarted to activate the users.
 
+`goar-macos` (`df7f7c43-b03e-429d-a0c5-fa05af774ef6`) was then added for Goar's own
+Mac, with `secrets/vless/goar-macos.json` in the same macOS GUI shape as
+`nik-m1max.json`. Validation after an engine restart: exit IP
+`148.253.210.41`, HTTP 204 from Google; the DR bundle was refreshed.
+
 ## LTE failure on 2026-10-17: Chrome TLS fingerprint blocked on the mobile path
 
 The owner's iPhone on Megafon (`31.173.82.54`) stopped passing traffic through
