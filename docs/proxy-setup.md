@@ -18,7 +18,7 @@ handled by Frankfurt instead.
   │   └─ everything else ─────► proxy  │   │   └─ everything else ──► proxy      │
   └──────────┬──────────────┬───────────┘   └──────────────────┬──────────────────┘
              │ VLESS+Reality │ SOCKS5 over                      │ VLESS+Reality
-             │ port 443      │ Tailscale                        │ port 443
+             │ port 24443    │ Tailscale                        │ port 24443
              │               │                                  │
              ▼               │                                  │
    ┌────────────────────────────────────────────────────────────────────────────┐
@@ -401,6 +401,8 @@ installer that creates a Docker Compose stack running `sing-box` as a VLESS+Real
 - These paths are intended to hold the like-for-like recovery state for a replacement VPS while keeping secrets under git-crypt.
 - Status: populated from live Frankfurt host on `2026-04-22`.
 
+**Incident note (2026-10-26/28)**: REALITY on port 443 failed from zenbook while an alternate port worked; path interference was suspected, not proven. The server mapping `24443:8443` was added without removing 443. On um790pro, a temporary `proxy` detour via London made all VLESS traffic depend on Tailscale and the London SOCKS service; remove that detour, retain the separate Google rule, and test both TUN traffic and direct proxy egress. The configs in this repository were updated; other devices require their profiles to be deployed separately. Recreating the Frankfurt container interrupts existing sessions.
+
 **Current status note (2026-04-22)**: the Frankfurt server was upgraded from
 `sing-box 1.8.14` to `1.13.5` after users across multiple ISPs and OSes reported VLESS
 failures. Keeping the same REALITY identity (`private_key`, `short_id`, UUIDs,
@@ -536,7 +538,7 @@ warp=OFF
 ```
 
 **Docker container**: `gzxhwq/sing-box:1.13.5`, named `reality-ezpz-engine-1`
-- Listens on `0.0.0.0:443` (host) → container port `8443` (VLESS+Reality)
+- Listens on `0.0.0.0:443` and `0.0.0.0:24443` (host) → container port `8443` (VLESS+Reality). The repository Frankfurt profiles use `24443`; port `443` remains available for older deployed clients.
 - Listens on `0.0.0.0:80` (host) → container port `8080` (HTTP redirect / camouflage)
 
 **Upgrade caveat**: `1.13.x` is stricter than `1.8.x`. A straight image bump from
