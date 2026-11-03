@@ -110,9 +110,9 @@ in
     ssh.settings = {
       "um790pro-frankfurt" = {
         BatchMode = true;
-        HostName = "198.18.77.6";
+        HostName = "100.95.213.117";
         HostKeyAlias = "192.168.1.241";
-        ProxyJump = "frankfurt";
+        ProxyJump = "none";
         User = "nik";
         IdentityFile = "~/.ssh/id_rsa_1";
         IdentitiesOnly = true;
@@ -120,7 +120,8 @@ in
       "zenbook-frankfurt" = {
         BatchMode = true;
         HostName = "100.114.155.30";
-        ProxyJump = "frankfurt,um790pro-frankfurt";
+        HostKeyAlias = "100.114.155.30";
+        ProxyJump = "none";
         User = "nik";
         IdentityFile = "~/.ssh/id_rsa_1";
         IdentitiesOnly = true;
@@ -164,7 +165,7 @@ in
         BatchMode = true;
         HostName = "192.168.1.174";
         HostKeyAlias = "192.168.1.174";
-        ProxyJump = "frankfurt,um790pro-frankfurt";
+        ProxyJump = "um790pro";
         User = "nik";
         IdentityFile = "~/.ssh/id_rsa_1";
         IdentitiesOnly = true;

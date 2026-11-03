@@ -1301,12 +1301,17 @@ configure_tailscale_subnet_router() {
 }
 
 configure_wireguard_overlay() {
+  if [[ "$HOSTNAME_SHORT" == "um790pro" ]]; then
+    log "Frankfurt WireGuard retired on um790pro; management uses Tailscale"
+    sudo systemctl disable --now wg-quick@wg-hosts.service
+    return
+  fi
+
   local address
   case "$HOSTNAME_SHORT" in
     x13) address="198.18.77.2/32" ;;
     zenbook) address="198.18.77.3/32" ;;
     x1carbon) address="198.18.77.5/32" ;;
-    um790pro) address="198.18.77.6/32" ;;
     *)
       log "skipping WireGuard host overlay; no address assigned to ${HOSTNAME_SHORT}"
       return

@@ -163,8 +163,10 @@ It is not an internet exit path and does not replace VLESS+Reality.
 | x13 | `198.18.77.2/32` | `hosts/x13/nixos/configuration.nix`; manual profile `secrets/wireguard/x13.conf` |
 | zenbook | `198.18.77.3/32` | `hosts/zenbook/nixos/configuration.nix` |
 | x1carbon | `198.18.77.5/32` | `hosts/x1carbon/nixos/configuration.nix` |
-| um790pro | `198.18.77.6/32` | `hosts/um790pro/nixos/configuration.nix`; CachyOS setup in `install.sh` |
 | desktop | `198.18.77.7/32` | manual profile `secrets/wireguard/desktop.conf` |
+
+The um790pro WireGuard overlay (`198.18.77.6/32`) was retired on 2026-11-02;
+management now uses its Tailscale address `100.95.213.117`.
 
 NixOS hosts use `networking.wireguard.interfaces.wg-hosts` with:
 - endpoint `31.58.85.163:51820`
@@ -179,26 +181,33 @@ can be intercepted by the transparent proxy instead of using the kernel WireGuar
 Manual `wg-quick` profiles under `secrets/wireguard/*.conf` are for non-NixOS or transitional Linux
 installs. If helper-script behavior for those installs changes, keep `install.sh` in sync.
 
-### SSH access through Frankfurt
-
-Home Manager configures `ssh frankfurt` to use `~/.ssh/id_rsa_1` explicitly. `IdentitiesOnly`
-prevents unrelated agent keys from being tried, while `BatchMode` disables password fallback. On
-`m3max`, `ssh um790pro-frankfurt` jumps through `frankfurt`. The explicit fallback alias
-`ssh m1max-frankfurt` uses the following full jump chain:
-
-```text
-m3max -> frankfurt (31.58.85.163) -> um790pro (198.18.77.6) -> m1max (192.168.1.174)
-```
-
-The Frankfurt-to-um790pro hop depends on the `wg-hosts` WireGuard overlay. On CachyOS/Arch,
-`install.sh` writes `/etc/wireguard/wg-hosts.conf` from the encrypted per-host key and enables
-`wg-quick@wg-hosts.service`.
-
-To configure only this overlay without running the full installer:
+To configure only this overlay on a supported client without running the full installer:
 
 ```bash
 ./install.sh wireguard-overlay
 ```
+
+On um790pro this command disables `wg-quick@wg-hosts.service`, matching the retired NixOS
+configuration. It does not recreate the former Frankfurt-to-um790pro route.
+
+### SSH access and Tailscale aliases
+
+Home Manager configures `ssh frankfurt` to use `~/.ssh/id_rsa_1` explicitly. `IdentitiesOnly`
+prevents unrelated agent keys from being tried, while `BatchMode` disables password fallback.
+On `m3max`, the aliases with the historical `-frankfurt` suffix now use Tailscale:
+
+| SSH alias | Destination | Jump host |
+|-----------|-------------|-----------|
+| `um790pro-frankfurt` | `100.95.213.117` (Tailscale) | none |
+| `zenbook-frankfurt` | `100.114.155.30` (Tailscale) | none |
+| `m1max-frankfurt` | `192.168.1.174` (home LAN) | `um790pro` at `100.95.213.117` |
+
+```text
+m3max -> Tailscale -> um790pro (100.95.213.117) -> m1max (192.168.1.174)
+```
+
+All three aliases depend on Tailscale connectivity; the historical suffix does not provide an
+independent Frankfurt fallback. The Frankfurt-to-um790pro WireGuard recovery path has been retired.
 
 The primary `m3max` SSH aliases now use the CLI Tailscale route: `ssh zenbook` resolves
 `zenbook.tailf108.ts.net`; `ssh m1max` resolves `m1max.nikcode.xyz` to its home LAN IP and reaches
