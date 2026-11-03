@@ -1,5 +1,9 @@
 # Proxy Setup
 
+## Agreed Moscow ingress target
+
+See [moscow1-vless-target.md](moscow1-vless-target.md) for the agreed target: Moscow terminates client VLESS, manual foreign-egress selection, per-device subscriptions and direct Frankfurt as the independent fallback. Existing connections below remain active during the pilot; this target does not imply a completed client migration.
+
 Transparent proxy for bypassing geo-restrictions, using VLESS+Reality for most traffic and a
 London SOCKS5 relay for Google/YouTube, ElevenLabs, OpenAI/ChatGPT, and Stripe traffic. Linux
 hosts also have a separate WireGuard host overlay for private host-to-host access. Windows uses

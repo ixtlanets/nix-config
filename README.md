@@ -2,6 +2,10 @@
 
 This repository contains a Nix flake configuration for managing multiple machines running NixOS, macOS (via Nix-Darwin), and standalone Home Manager setups (e.g., WSL).
 
+## Proxy architecture
+
+The agreed Moscow ingress, per-device subscriptions and direct Frankfurt fallback are described in [docs/moscow1-vless-target.md](docs/moscow1-vless-target.md). Existing proxy operation remains documented in [docs/proxy-setup.md](docs/proxy-setup.md).
+
 ## Supported Machines
 
 - **NixOS**: Linux machines with full NixOS installations.

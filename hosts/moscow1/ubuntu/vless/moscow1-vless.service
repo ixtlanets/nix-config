@@ -1,0 +1,32 @@
+# Managed by moscow1-vless pilot
+[Unit]
+Description=Moscow VLESS ingress pilot
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=moscow1
+Group=moscow1
+ExecStartPre=/usr/local/lib/moscow1/sing-box check -c /etc/moscow1/server.json
+ExecStart=/usr/local/lib/moscow1/sing-box run -c /etc/moscow1/server.json
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+LockPersonality=true
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=multi-user.target
