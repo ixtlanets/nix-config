@@ -1,0 +1,12 @@
+{
+  "fast": {
+    "model": "gpt-6.1-terra",
+    "reasoning_effort": "high",
+    "description": "Clear, bounded work with easily checked results."
+  },
+  "deep": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "description": "Ambiguous analysis, complex dependencies and critical review."
+  }
+}

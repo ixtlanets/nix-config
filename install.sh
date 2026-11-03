@@ -473,6 +473,22 @@ write_codex_update_policy() {
   chmod 600 "$codex_config"
 }
 
+install_agent_instructions() {
+  local agent_source_dir="$SCRIPT_DIR/dotfiles/agents"
+  local agent_script="$HOME/.local/libexec/sync-agent-instructions.py"
+  local agent_command="$HOME/.local/bin/agent-instructions-sync"
+
+  log "installing shared agent instructions and fast/deep routes"
+  install -Dm755 "$SCRIPT_DIR/scripts/sync-agent-instructions.py" "$agent_script"
+  mkdir -p "$(dirname "$agent_command")"
+  {
+    printf '#!/usr/bin/env bash\n'
+    printf 'exec /usr/bin/python3 %q --source-dir %q "$@"\n' "$agent_script" "$agent_source_dir"
+  } > "$agent_command"
+  chmod 755 "$agent_command"
+  "$agent_command"
+}
+
 write_starship_config() {
   local starship_dir="${XDG_CONFIG_HOME:-$HOME/.config}"
   mkdir -p "$starship_dir"
@@ -1696,6 +1712,8 @@ main() {
     yt-dlp
     python-curl_cffi
     python-secretstorage
+    python-tomlkit
+    python-yaml
     zoom
     obsidian
     opencode-desktop-bin
@@ -1772,6 +1790,7 @@ main() {
   install_tpm
   write_mise_config
   write_codex_update_policy
+  install_agent_instructions
   write_zshrc
   write_starship_config
   write_tmux_conf
