@@ -802,7 +802,18 @@ London). Password authentication prevents the proxy from being used as an open r
 ### goar-team — independent VLESS+Reality server
 
 **Host**: Hosting-VDS Frankfurt #2 Ubuntu 24.04 VPS, IPv4 `148.253.210.41`.
-**Port**: TCP `443` (REALITY camouflage `www.google.com`), HTTP `80`; SSH `22`.
+**Ports**: deployed additive TCP `24443` → container `8443`, with TCP `443`
+retained for existing imports (REALITY camouflage `www.google.com`); HTTP `80`,
+SSH `22`. Deployment on 2026-10-31 preserved keys, UUIDs, image and per-artifact
+TLS fingerprints. All 42 JSON/link variants for 13 named identities passed
+exit-IP and HTTPS probes on both ports from zenbook. However, isolated probes
+bound to the affected m1max's `en0` failed on both ports; a concurrent server
+capture saw no matching SYN packets. Alternate-port deployment is complete,
+but restoration on that affected path is NOT established; no exact ISP/DPI
+cause is claimed. All 13 named identities have individual link/QR imports and
+eight existing JSON profiles use 24443. Cached app profiles require manual
+re-import; send each recipient only their own private files. See the runbook below.
+
 **Role**: pure VLESS exit for the Goar team with an independent REALITY identity.
 No London routing and no WireGuard `wg0`; existing Frankfurt users remain in place.
 Tailscale is joined as `goar-team` (`100.93.226.82`); key-based root SSH works

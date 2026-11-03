@@ -19,7 +19,7 @@ for profile in "${profiles[@]}"; do
   jq -e --arg server "$server" --arg public_key "$public_key" --arg short_id "$short_id" '
     (.outbounds | map(select(.tag == "proxy" and .type == "vless")) | length) == 1 and
     (.outbounds[] | select(.tag == "proxy") |
-      .server == $server and .server_port == 443 and
+      .server == $server and .server_port == 24443 and
       .tls.enabled == true and .tls.server_name == "www.google.com" and
       .tls.reality.enabled == true and
       .tls.reality.public_key == $public_key and
@@ -60,7 +60,7 @@ done
 
 jq -e --arg server "$server" --arg public_key "$public_key" --arg short_id "$short_id" '
   (.outbounds[] | select(.tag == "proxy") |
-    .server == $server and .server_port == 443 and
+    .server == $server and .server_port == 24443 and
     .tls.reality.public_key == $public_key and .tls.reality.short_id == $short_id and
     .uuid == "df7f7c43-b03e-429d-a0c5-fa05af774ef6") and
   any(.inbounds[]; .type == "tun" and (.interface_name | startswith("utun")))

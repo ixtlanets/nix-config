@@ -1,9 +1,70 @@
 # goar-team VLESS node
 
 Independent Ubuntu 24.04 VPS for the Goar team, serving pure VLESS+Reality over
-TCP 443 with `www.google.com` camouflage. Clients use its IP directly. It has
-its own new REALITY keys, short_id, service_path and UUIDs. It has no London
+TCP with `www.google.com` camouflage. The deployed alternate-port bundle adds
+TCP 24443 while retaining TCP 443 for existing imports. Clients use its IP
+directly. It has its own REALITY keys, short_id, service_path and UUIDs. It has no London
 SOCKS routing and no WireGuard `wg0` hub. Existing Frankfurt users stay unchanged.
+
+## Alternate-port deployment and verification (2026-10-31)
+
+The additive mapping is deployed, TCP 24443 is allowed in UFW, and live
+readback confirms both published ports with unchanged engine/users/image.
+The fresh private rollback backup is
+`/var/lib/reality-ezpz-repair/alternate-port-20261031T114339Z-7nlNlp` on Goar.
+All 42 JSON/link variants covering 13 named identities passed actual exit-IP
+(`148.253.210.41`), Google 204 and example.com 200 checks from zenbook on both
+24443 and 443. Eight full profiles passed the existing 1.13.5 parser with the
+documented legacy client-check compatibility flags.
+
+**Affected-path limitation:** all four isolated nik-m1max JSON/link probes bound
+to `en0` failed on both ports. Separate direct TCP attempts also timed out;
+a concurrent server capture started successfully and saw no matching SYNs.
+Thus the requested additive scheme and artifact regeneration are complete,
+but connectivity restoration from that network is NOT established. These
+observations do not identify the exact filtering or routing cause. Do not
+promise that a new import alone fixes the affected network. Actual team-device
+imports remain untested. No GUI profiles or system routes were changed.
+
+The preparation record below documents the applied candidate and its checks;
+its pre-deployment instructions are historical, not pending deployment gates.
+
+### Preparation record (historical)
+
+The repository candidate publishes **both** `24443:8443` and the existing
+`443:8443`, with image `gzxhwq/sing-box:1.13.5` unchanged. The helper's `config`
+uses `port=24443` for future generated links. `engine.conf` and `users` remain
+byte-identical: no REALITY keys, UUIDs, SNI, flow, routing or DNS were changed.
+All eight existing JSON profiles targeting this node change only `server_port`.
+Every named identity now has a private link and matching QR: seven `nik-*`
+owner devices and six `goar-*` team devices (13 total); five are link-only.
+Existing fingerprints are preserved per artifact, including `goar-macos` Firefox.
+The service identity `RealityEZPZ` is excluded from delivery.
+
+This is **prepared configuration, not a verified live deployment**. The parent
+operator must back up fresh remote state outside `~/backups`, compare all four
+live files against the retained baseline, validate the engine and Compose,
+allow TCP 24443 in UFW and any provider firewall, and recreate only `engine`
+using `--no-deps --pull never`. Preserve all existing firewall rules and port 443.
+Retain the fresh backup and rollback commands. Recreating the engine interrupts
+current connections; existing 443 imports remain compatible after it returns.
+
+Before delivery, verify actual HTTP traffic and exit IP through isolated mixed
+proxies for all 13 identities on 24443 and run 443 compatibility controls. Also
+probe `nik-m1max` via the affected Mac's `en0` route without changing GUI imports.
+The pre-change direct TCP timeouts on both ports do not establish an ISP/DPI cause.
+Offline checks are `python3 tests/goar-team-port.py`,
+`python3 tests/goar-team-links.py` and `python3 tests/goar-team-regressions.py`;
+they need no historical task directory, daemon or live server (`qrencode` for
+preparation, `zbarimg` for verification).
+
+After parent acceptance, **manually re-import** the new JSON or link/QR into each
+existing app; cached imports do not update themselves. Keep the old import until
+the new one works. Send only that person's identity files privately. A link and
+its QR contain connection credentials; never send the whole delivery package to
+each team member. Do not create full JSON profiles for the five link-only clients.
+Historical observations below describe earlier deployments, not acceptance of
+this alternate-port candidate.
 
 ## Deployment order
 

@@ -1,0 +1,45 @@
+{
+  "baseline": "48a4238d58f1fd0de3d9d7aad7f8741b419558db",
+  "bundle_original_sha256": {
+    "config": "13550463adf27aea142332495dc8818760f63e2043ef15ac2a6b898ba249ac19",
+    "docker-compose.yml": "b40b3522d5f628f0643a89cebdca23c9ca11095a4d42ecf2868f771146afb0fa",
+    "engine.conf": "a305e49aa2bc5378a92f7fe3b37e3fa545b25a8d2a4d4969837f8068da0e59cf",
+    "users": "836056c221c6e5a989c4a62424e4cf96016d264dbb025ad38329f4bcd6e1f097"
+  },
+  "json_original_sha256": {
+    "goar-macos.json": "4055085dc46730a90e8432e9d7d0f1a8dddb0df4c8ce90726bce35134b5d0d1f",
+    "nik-android.json": "e9ee64c6e1c4ecbc2fd1f9a42d5febd0adf309d544ee47947b99fab8dd3c8bf7",
+    "nik-galaxy-s22.json": "ebb0200d698b21fb458b9585bf8fff97b1f083b26af19d5459c4bd471ef0d9ac",
+    "nik-ios.json": "8e7a65dd521898f9b5c601ed03d5464607ef810d8d3df360c57d0443b3c8b9aa",
+    "nik-m1max.json": "8de772c2b46be1317d9f6beafdac012a9378f1bfbb188e0491acfe411890885f",
+    "nik-m3max.json": "93a4fcf5663608e4558c2a1e4642ed87e7b2d6ebfb0bccc8bf941a4b80d7e9d1",
+    "nik-macos.json": "ea7d87263b86137a0516fafce72a2e89d14428dc2df3065ce4334b8d864d50e4",
+    "nik-windows.json": "9b82dd70a2af879da8320bd32e10e4f1fcc82e570917244657d23cd2edeee93b"
+  },
+  "link_original_sha256": {
+    "goar-driver-android.vless.txt": "a8385ca8355f6e7be426f49c6cb8661c7e416db35454cea77e3439623b3e39a5",
+    "goar-housekeeper-android.vless.txt": "dcf53cde272ac9a624613db5da77e1e021ad97c950ff55429e752548fc27ed41",
+    "goar-ios.vless.txt": "5210deb68da06e9e274231dcdfa039bccb85efa02706829e7dba61e6809e480d",
+    "goar-macos.vless.txt": "b9664538e008efd3c1705c45ec1a8db7f6fe2f3391f12fc4b87b7a4b8fb921a0",
+    "goar-mother-ios.vless.txt": "26b36dbb57e7b1c4e81413f95d3f547359196581f8ea9a71e7ad0deaff9eadb0",
+    "goar-nanny-android.vless.txt": "50f10668c292c3ea6599209c2379a78d8a48c46061029cdb68c297558db43504",
+    "nik-android.vless.txt": "9701a172c571b1410da33cf584e94a036a2165cfe57ad031ea8115ee732df196",
+    "nik-galaxy-s22.vless.txt": "bf89e4a1d17f2a4ce77bf7d68aff7f21ae7f31cad9441889f13516970248cb69",
+    "nik-ios.vless.txt": "c63cb6a66f943bd5e1d90c724f1480df6124c21bfb71fa47c42f89e7085e2be9"
+  },
+  "names": [
+    "goar-driver-android",
+    "goar-housekeeper-android",
+    "goar-ios",
+    "goar-macos",
+    "goar-mother-ios",
+    "goar-nanny-android",
+    "nik-android",
+    "nik-galaxy-s22",
+    "nik-ios",
+    "nik-m1max",
+    "nik-m3max",
+    "nik-macos",
+    "nik-windows"
+  ]
+}
