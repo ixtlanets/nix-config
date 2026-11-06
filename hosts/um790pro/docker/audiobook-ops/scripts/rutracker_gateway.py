@@ -10,10 +10,10 @@ directly and deliberately supports only the RuTracker endpoints Prowlarr needs.
 RuTracker now challenges the login form with an image captcha, which Prowlarr
 cannot solve. The operator performs one interactive login through the same
 egress path and stores the resulting session cookies as a root-only secret.
-This gateway injects those cookies into every upstream request and answers the
-login POST with a minimal "already authenticated" page so Prowlarr can take
-over the session without ever solving a captcha. When no session is available
-the previous pass-through behaviour is preserved.
+This gateway injects those cookies into upstream requests. For a session login
+POST it verifies a fixed forum page through FlareSolverr before returning a
+minimal authenticated compatibility page. When no session is available the
+previous pass-through behaviour is preserved.
 """
 
 from __future__ import annotations
@@ -26,13 +26,41 @@ import sys
 import urllib.error
 import urllib.request
 from http.cookies import CookieError, SimpleCookie
+from html.parser import HTMLParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 TARGET_ORIGIN = "https://rutracker.org"
 COOKIE_NAME = re.compile(r"[A-Za-z0-9_!#$%&'*+.^`|~-]+")
+COOKIE_VALUE = re.compile(r"[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*")
 DEFAULT_LOGGED_IN_MARKER = 'id="logged-in-username"'
+
+class LoginMarkerParser(HTMLParser):
+    # Content in these elements cannot establish a visible authenticated element.
+    inert_tags = {"script", "style", "textarea", "title", "template", "noscript",
+                  "xmp", "iframe", "noembed", "noframes", "plaintext", "select"}
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.inert: list[str] = []
+        self.found = False
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in self.inert_tags:
+            self.inert.append(tag)
+        if not self.inert and [value for name, value in attrs if name == "id"] == ["logged-in-username"]:
+            self.found = True
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.inert and self.inert[-1] == tag:
+            self.inert.pop()
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        # A slash does not close HTML raw-text/template elements in a browser.
+        self.handle_starttag(tag, attrs)
+        if tag not in self.inert_tags:
+            self.handle_endtag(tag)
 
 class GatewayConfig:
     def __init__(
@@ -78,6 +106,8 @@ class GatewayConfig:
         self.max_timeout_ms = max_timeout_ms
         self.timeout_seconds = timeout_seconds
         self.session_cookies_file = session_cookies_file
+        # Retained as a configuration compatibility input only. Authentication
+        # always requires the canonical actual element, regardless of this value.
         self.logged_in_marker = logged_in_marker
         self.session_cookies = self._load_session_cookies()
 
@@ -104,7 +134,7 @@ class GatewayConfig:
                 isinstance(name, str)
                 and isinstance(value, str)
                 and COOKIE_NAME.fullmatch(name)
-                and not any(character in value for character in "\r\n;")
+                and COOKIE_VALUE.fullmatch(value)
             ):
                 cookies[name] = value
         return cookies
@@ -113,10 +143,11 @@ class GatewayConfig:
         return [{"name": name, "value": value} for name, value in self.session_cookies.items()]
 
 class GatewayRequestError(Exception):
-    def __init__(self, status: int, public_message: str) -> None:
+    def __init__(self, status: int, public_message: str, *, category: str = "unverified") -> None:
         super().__init__(public_message)
         self.status = status
         self.public_message = public_message
+        self.category = category
 
 class GatewayHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
@@ -164,6 +195,12 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
                 # Drain and validate the form body so HTTP keep-alive stays
                 # usable; the credentials themselves are deliberately ignored.
                 self._read_form_body()
+                solution = self._verify_session(self._merged_cookies())
+                # Keep verified rotations in memory so the next injected request
+                # does not overwrite the replayed cookie with the old value.
+                self.config.session_cookies = {
+                    **self.config.session_cookies, **self._solution_cookies(solution),
+                }
                 self._send_session_login()
                 return
 
@@ -181,14 +218,57 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
             solution = self._call_flaresolverr(flare_payload)
             self._send_solution(solution)
         except GatewayRequestError as error:
+            # A rejected form may still have unread credential bytes. Never
+            # let the HTTP parser reinterpret them as a subsequent request.
+            self.close_connection = True
             self._send_json(error.status, {"error": error.public_message})
-        except Exception as error:  # fail closed without request or credential data
+        except Exception:  # fail closed without request or credential data
+            self.close_connection = True
             print(
-                f"rutracker-gateway upstream failure: {type(error).__name__}",
+                "rutracker-gateway upstream failure: exception",
                 file=sys.stderr,
                 flush=True,
             )
             self._send_json(502, {"error": "upstream request failed"})
+
+    def _verify_session(self, cookies: list[dict[str, str]]) -> dict[str, Any]:
+        # Request-local, allowlisted observations only; never retain raw evidence.
+        observations = {"status_class": "not_observed", "final_target_match": "unknown"}
+        login_marker = "not_observed"
+        try:
+            solution = self._call_flaresolverr({
+                "cmd": "request.get",
+                "url": TARGET_ORIGIN + "/forum/index.php",
+                "maxTimeout": self.config.max_timeout_ms,
+                "cookies": cookies,
+            }, auth_observations=observations)
+            status = solution.get("status")
+            if (
+                type(status) is not int
+                or not 200 <= status < 300
+                or solution.get("url") != TARGET_ORIGIN + "/forum/index.php"
+            ):
+                raise GatewayRequestError(502, "RuTracker authentication unverified")
+            marker = LoginMarkerParser()
+            marker.feed(solution["response"])
+            marker.close()
+            login_marker = "true" if marker.found else "false"
+            if not marker.found:
+                raise GatewayRequestError(502, "RuTracker authentication unverified")
+            return solution
+        except Exception as error:
+            category = error.category if isinstance(error, GatewayRequestError) else "exception"
+            print(
+                "rutracker-gateway auth verification failed: "
+                f"status_class={observations['status_class']} "
+                f"final_target_match={observations['final_target_match']} "
+                f"login_marker={login_marker} category={category}",
+                file=sys.stderr,
+                flush=True,
+            )
+            if not isinstance(error, GatewayRequestError):
+                raise GatewayRequestError(502, "upstream request failed") from error
+            raise
 
     def _target_url(self) -> tuple[str, str]:
         parsed = urlsplit(self.path)
@@ -263,13 +343,11 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
     def _send_session_login(self) -> None:
         """Answer the login POST with a minimal authenticated page.
 
-        The session cookies come from an operator-run interactive login, so the
-        gateway can report success without reaching RuTracker. Prowlarr only
-        checks for ``id="logged-in-username"`` and then stores the Set-Cookie
-        values it receives here.
+        Called only after verifying the fixed upstream page, status and canonical
+        element. Prowlarr stores the validated Set-Cookie values returned here.
         """
 
-        marker = self.config.logged_in_marker
+        marker = DEFAULT_LOGGED_IN_MARKER
         html = (
             "<!DOCTYPE html><html><head><meta charset=\"windows-1251\">"
             "<title>RuTracker.org</title></head><body>"
@@ -287,7 +365,9 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _call_flaresolverr(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def _call_flaresolverr(
+        self, payload: dict[str, Any], *, auth_observations: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         headers = {"Content-Type": "application/json"}
         authorization = self._authorization_header()
         if authorization:
@@ -303,19 +383,36 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
                 request, timeout=self.config.timeout_seconds
             ) as response:
                 serialized = response.read(self.config.max_upstream_response_bytes + 1)
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as error:
-            raise GatewayRequestError(502, "FlareSolverr unavailable") from error
+        except urllib.error.HTTPError as error:
+            raise GatewayRequestError(502, "FlareSolverr unavailable", category="http_error") from error
+        except urllib.error.URLError as error:
+            raise GatewayRequestError(502, "FlareSolverr unavailable", category="url_error") from error
+        except TimeoutError as error:
+            raise GatewayRequestError(502, "FlareSolverr unavailable", category="timeout") from error
         if len(serialized) > self.config.max_upstream_response_bytes:
-            raise GatewayRequestError(502, "FlareSolverr response too large")
+            raise GatewayRequestError(502, "FlareSolverr response too large", category="oversized_response")
         try:
             result = json.loads(serialized)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
-            raise GatewayRequestError(502, "invalid FlareSolverr response") from error
+            raise GatewayRequestError(502, "invalid FlareSolverr response", category="invalid_json") from error
         if not isinstance(result, dict) or result.get("status") != "ok":
-            raise GatewayRequestError(502, "FlareSolverr failed")
+            raise GatewayRequestError(502, "FlareSolverr failed", category="flaresolverr_failure")
         solution = result.get("solution")
+        if auth_observations is not None and isinstance(solution, dict):
+            # Observe before rejecting a solution, without accepting its target
+            # or parsing unvalidated HTML. These values never contain input text.
+            status = solution.get("status")
+            if "status" in solution:
+                auth_observations["status_class"] = (
+                    f"{status // 100}xx" if type(status) is int and 100 <= status < 600 else "unknown"
+                )
+            url = solution.get("url")
+            if isinstance(url, str):
+                auth_observations["final_target_match"] = (
+                    "true" if url == TARGET_ORIGIN + "/forum/index.php" else "false"
+                )
         if not isinstance(solution, dict) or not isinstance(solution.get("response"), str):
-            raise GatewayRequestError(502, "invalid FlareSolverr solution")
+            raise GatewayRequestError(502, "invalid FlareSolverr solution", category="invalid_solution")
 
         final_url = urlsplit(str(solution.get("url", "")))
         if (
@@ -325,7 +422,7 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
             or final_url.password
             or final_url.port not in {None, 443}
         ):
-            raise GatewayRequestError(502, "unexpected FlareSolverr target")
+            raise GatewayRequestError(502, "unexpected FlareSolverr target", category="unexpected_target")
         return solution
 
     def _send_solution(self, solution: dict[str, Any]) -> None:
@@ -335,25 +432,32 @@ class RuTrackerGatewayHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        cookies = solution.get("cookies", [])
-        if isinstance(cookies, list):
-            for cookie in cookies:
-                if not isinstance(cookie, dict):
-                    continue
-                name = cookie.get("name")
-                value = cookie.get("value")
-                if (
-                    not isinstance(name, str)
-                    or not COOKIE_NAME.fullmatch(name)
-                    or not isinstance(value, str)
-                    or any(character in value for character in "\r\n;")
-                ):
-                    continue
-                self.send_header(
-                    "Set-Cookie", f"{name}={value}; Path=/; HttpOnly; SameSite=Lax"
-                )
+        for name, value in self._solution_cookies(solution).items():
+            self.send_header(
+                "Set-Cookie", f"{name}={value}; Path=/; HttpOnly; SameSite=Lax"
+            )
         self.end_headers()
         self.wfile.write(body)
+
+    def _solution_cookies(self, solution: dict[str, Any]) -> dict[str, str]:
+        cookies = solution.get("cookies", [])
+        safe: dict[str, str] = {}
+        if not isinstance(cookies, list):
+            return safe
+        for cookie in cookies:
+            if not isinstance(cookie, dict):
+                continue
+            name, value = cookie.get("name"), cookie.get("value")
+            domain = cookie.get("domain", "rutracker.org")
+            if (
+                isinstance(name, str) and COOKIE_NAME.fullmatch(name)
+                and isinstance(value, str) and COOKIE_VALUE.fullmatch(value)
+                and isinstance(domain, str)
+                and domain.lower() in {"rutracker.org", ".rutracker.org"}
+                and cookie.get("path", "/") in ("/", "/forum", "/forum/")
+            ):
+                safe[name] = value
+        return safe
 
     def _send_json(
         self, status: int, payload: dict[str, str], *, include_body: bool = True

@@ -98,7 +98,7 @@ def load_config(path: Path) -> dict[str, object]:
         "timeout_seconds",
         "page_size",
     }
-    if set(payload) != required:
+    if not required <= set(payload) or set(payload) - required - {"silent_origins"}:
         fail("invalid_config")
     payload["mcp_url"] = private_mcp_url(payload["mcp_url"])
     env_name = payload["bearer_env"]
@@ -112,6 +112,20 @@ def load_config(path: Path) -> dict[str, object]:
         or len(set(origins)) != len(origins)
     ):
         fail("invalid_config")
+    silent_origins = payload.get("silent_origins", [])
+    if (
+        not isinstance(silent_origins, list)
+        or any(
+            not isinstance(item, str)
+            or not 1 <= len(item) <= 200
+            or any(not char.isprintable() or char.isspace() for char in item)
+            for item in silent_origins
+        )
+        or len(set(silent_origins)) != len(silent_origins)
+        or any(origin_allowed(item, origins) for item in silent_origins)
+    ):
+        fail("invalid_config")
+    payload["silent_origins"] = silent_origins
     timeout = payload["timeout_seconds"]
     page_size = payload["page_size"]
     if not isinstance(timeout, int) or not 1 <= timeout <= 60:
@@ -273,6 +287,8 @@ def deliver(config: dict[str, object], event: dict[str, object], bearer_env: str
     reason = None if raw_reason is None else clean_text(raw_reason)
     if kind != "verified" and not reason:
         fail("invalid_notification_event")
+    if origin in config["silent_origins"]:
+        return
     if not origin_allowed(origin, config["allowed_origins"]):
         fail("origin_not_allowed")
     message = (

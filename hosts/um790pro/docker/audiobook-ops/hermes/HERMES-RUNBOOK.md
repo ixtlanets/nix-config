@@ -73,6 +73,12 @@ acceptable. The gateway restart below is what loads that code.
    chmod 600 "$profile/audiobook-notifications.json"
    ```
 
+   Optional `silent_origins` is an exact-match list of non-Telegram origins
+   whose outcomes should advance the cursor without sending a notification.
+   It defaults to an empty list. Add an origin only when it identifies the real
+   initiating conversation; unknown origins still stop processing. Silent
+   origins may not overlap the Telegram delivery allowlist.
+
 4. Restart and probe the profile:
 
    ```bash

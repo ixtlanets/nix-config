@@ -217,6 +217,40 @@ class NotificationPollerTests(unittest.TestCase):
         self.assertFalse(self.cursor.exists())
         self.assertEqual(self.sent_commands(), [])
 
+    def test_silent_origin_advances_cursor_and_delivers_subsequent_event(self) -> None:
+        config = json.loads(self.config.read_text())
+        config["silent_origins"] = ["codex:thread-123"]
+        self.config.write_text(json.dumps(config))
+        MCPHandler.events[0]["origin_conversation_id"] = "codex:thread-123"
+
+        self.assertEqual(self.run_poller(), (0, "", ""))
+        self.assertEqual(self.cursor.read_text(), "3\n")
+        self.assertEqual(len(self.sent_commands()), 2)
+        self.assertIn("event #2", self.sent_commands()[0][3])
+
+    def test_silent_origin_matching_is_exact_and_unknown_remains_rejected(self) -> None:
+        config = json.loads(self.config.read_text())
+        config["silent_origins"] = ["codex:thread-123"]
+        self.config.write_text(json.dumps(config))
+        MCPHandler.events[0]["origin_conversation_id"] = "codex:thread-123:other"
+
+        code, _, stderr = self.run_poller()
+        self.assertEqual(code, 1)
+        self.assertIn("origin_not_allowed", stderr)
+        self.assertFalse(self.cursor.exists())
+        self.assertEqual(self.sent_commands(), [])
+
+    def test_invalid_or_overlapping_silent_origins_are_rejected(self) -> None:
+        for silent in ("codex:thread", [""], ["codex:thread", "codex:thread"],
+                       ["telegram:42424242:77"], ["codex:bad\nline"]):
+            with self.subTest(silent=silent):
+                config = json.loads(self.config.read_text())
+                config["silent_origins"] = silent
+                self.config.write_text(json.dumps(config))
+                code, _, stderr = self.run_poller()
+                self.assertEqual(code, 1)
+                self.assertIn("invalid_config", stderr)
+
     def test_failed_delivery_does_not_advance_cursor_or_leak_bearer(self) -> None:
         self.hermes.write_text("#!/bin/sh\necho delivery-failed >&2\nexit 7\n")
         self.hermes.chmod(0o755)

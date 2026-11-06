@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import UTC, datetime
 import hashlib
-from html import unescape
+from html.parser import HTMLParser
+from http.client import HTTPException
 import json
 import re
 from typing import Protocol
@@ -102,11 +104,56 @@ class ProwlarrHTTPClient:
         payload = self._read(request, 2 * 1024 * 1024)
         try:
             value = json.loads(payload)
-        except json.JSONDecodeError as error:
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise OperationError("Prowlarr returned invalid JSON") from error
         if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
             raise OperationError("Prowlarr returned an invalid search result")
+        if not any("rutracker" in str(item.get("indexer", "")).casefold() for item in value):
+            self._require_rutracker_available()
         return value
+
+    def _require_rutracker_available(self) -> None:
+        def read_list(path: str) -> list[dict[str, object]]:
+            request = Request(
+                f"{self._base_url}/api/v1/{path}",
+                headers={"Accept": "application/json", "X-Api-Key": self._api_key},
+            )
+            try:
+                value = json.loads(self._read(request, 1024 * 1024))
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                raise OperationError("Prowlarr returned invalid indexer status") from error
+            if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
+                raise OperationError("Prowlarr returned invalid indexer status")
+            return value
+
+        indexers = read_list("indexer")
+        ids = {
+            item.get("id") for item in indexers
+            if "rutracker" in str(item.get("name", "")).casefold()
+            and item.get("enable") is True and type(item.get("id")) is int
+        }
+        if not ids:
+            raise OperationError("required RuTracker indexer is unavailable")
+        statuses = read_list("indexerstatus")
+        available = set(ids)
+        for status in statuses:
+            if type(status.get("indexerId")) is not int:
+                raise OperationError("Prowlarr returned invalid indexer status")
+            if status.get("indexerId") not in ids:
+                continue
+            disabled_till = status.get("disabledTill")
+            if disabled_till is None:
+                continue
+            try:
+                deadline = datetime.fromisoformat(disabled_till.replace("Z", "+00:00"))
+                if deadline.tzinfo is None:
+                    raise ValueError("missing timezone")
+            except (AttributeError, TypeError, ValueError) as error:
+                raise OperationError("Prowlarr returned invalid indexer status") from error
+            if deadline > datetime.now(UTC):
+                available.discard(status["indexerId"])
+        if not available:
+            raise OperationError("required RuTracker indexer is unavailable")
 
     def health(self) -> None:
         request = Request(
@@ -116,12 +163,16 @@ class ProwlarrHTTPClient:
         payload = self._read(request, 1024 * 1024)
         try:
             value = json.loads(payload)
-        except json.JSONDecodeError as error:
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise OperationError("Prowlarr returned invalid health data") from error
-        if not isinstance(value, list) or value:
-            if isinstance(value, list) and value:
-                raise OperationError("Prowlarr reports health problems")
+        if not isinstance(value, list) or any(not isinstance(item, dict) for item in value):
             raise OperationError("Prowlarr returned invalid health data")
+        if any(
+            item.get("source") != "UpdateCheck" or item.get("type") != "warning"
+            for item in value
+        ):
+            raise OperationError("Prowlarr reports health problems")
+        self._require_rutracker_available()
 
     def topic(self, internal_url: str) -> str:
         request = Request(internal_url, headers={"Accept": "text/html"})
@@ -161,14 +212,24 @@ class ProwlarrHTTPClient:
         try:
             with urlopen(request, timeout=30) as response:
                 declared = response.headers.get("Content-Length")
+                if declared is not None and int(declared) < 0:
+                    raise OperationError("invalid upstream response")
                 if declared is not None and int(declared) > maximum:
                     raise OperationError("upstream response exceeds the size limit")
                 payload = response.read(maximum + 1)
         except HTTPError as error:
             error.close()
+            if type(error.code) is int and 100 <= error.code <= 599:
+                raise OperationError(f"upstream returned HTTP {error.code}") from error
             raise OperationError("upstream request failed") from error
-        except (URLError, TimeoutError, ValueError) as error:
-            raise OperationError("upstream request failed") from error
+        except TimeoutError as error:
+            raise OperationError("upstream request timed out") from error
+        except URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                raise OperationError("upstream request timed out") from error
+            raise OperationError("upstream transport failed") from error
+        except (HTTPException, ValueError) as error:
+            raise OperationError("invalid upstream response") from error
         if len(payload) > maximum:
             raise OperationError("upstream response exceeds the size limit")
         return payload
@@ -314,14 +375,65 @@ def _credential_free_magnet(value: object) -> tuple[str, str] | None:
     return infohash, "magnet:?" + "&".join(components)
 
 
+class _TopicTextParser(HTMLParser):
+    _excluded = frozenset({
+        "script", "style", "form", "input", "textarea", "select", "button",
+        "template", "noscript", "iframe", "object", "embed", "svg", "canvas",
+    })
+    _void = frozenset({
+        "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+        "meta", "param", "source", "track", "wbr",
+    })
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._suppressed: list[str] = []
+        self._in_title = False
+        self.title: list[str] = []
+        self.text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        style = attributes.get("style") or ""
+        hidden = (
+            "hidden" in attributes
+            or (attributes.get("aria-hidden") or "").casefold() == "true"
+            or re.search(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", style, re.I)
+        )
+        if self._suppressed or tag in self._excluded or hidden:
+            if tag not in self._void:
+                self._suppressed.append(tag)
+            return
+        if tag == "title":
+            self._in_title = True
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        # HTML ignores the slash on non-void elements, including suppressed ones.
+        self.handle_starttag(tag, attrs)
+        if tag in self.CDATA_CONTENT_ELEMENTS:
+            self.set_cdata_mode(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if self._suppressed:
+            if tag in self._suppressed:
+                reverse_index = self._suppressed[::-1].index(tag)
+                del self._suppressed[len(self._suppressed) - reverse_index - 1:]
+            return
+        if tag == "title":
+            self._in_title = False
+
+    def handle_data(self, data: str) -> None:
+        if not self._suppressed:
+            self.text.append(data)
+            if self._in_title:
+                self.title.append(data)
+
+
 def _bounded_topic_evidence(document: str) -> tuple[str | None, str]:
-    bounded = document[:65536]
-    title_match = re.search(r"<title[^>]*>(.*?)</title>", bounded, re.I | re.S)
-    title = None
-    if title_match:
-        title = " ".join(unescape(title_match.group(1)).split())[:300]
-    without_markup = re.sub(r"<[^>]+>", " ", bounded)
-    excerpt = " ".join(unescape(without_markup).split())[:1000]
+    parser = _TopicTextParser()
+    parser.feed(document[:65536])
+    title = " ".join(" ".join(parser.title).split())[:300] or None
+    excerpt = " ".join(" ".join(parser.text).split())[:1000]
     return title, excerpt
 
 

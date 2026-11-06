@@ -265,6 +265,75 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
         self.assertNotIn("magnet_uri", inspected)
         self.assertNotIn("download_url", inspected)
 
+    def test_inspect_omits_active_and_hidden_html_but_keeps_release_description(self) -> None:
+        query = "Кроткая Иван"
+        self.http.responses = {
+            query: [self.release(title="Кроткая [Иван] MP3", topic_id="6214434", infohash="a" * 40, seeders=12)]
+        }
+        self.http.topic_html = """<html><head><title>Кроткая - аудиокнига</title>
+            <script>window.BB = 'SCRIPT_SECRET';</script><style>STYLE_SECRET</style></head>
+            <body><form><input name="form_token" value="FORM_SECRET">FORM_SECRET</form>
+            <div hidden>HIDDEN_SECRET</div><div aria-hidden="true">ARIA_SECRET</div>
+            <div style="display: none">DISPLAY_SECRET</div>
+            <p>Автор: Достоевский</p><p>Читает: Иван</p><p>Серия: Классика</p>
+            <p>Описание &amp; содержание</p></body></html>"""
+        candidate = self.adapter.search([query])[0]
+        inspected = self.adapter.inspect(candidate["candidate_id"])
+        excerpt = inspected["topic_excerpt"]
+        self.assertEqual(inspected["topic_title"], "Кроткая - аудиокнига")
+        for text in ("Достоевский", "Читает: Иван", "Серия: Классика", "Описание & содержание"):
+            self.assertIn(text, excerpt)
+        for forbidden in ("window.BB", "form_token", "SCRIPT_SECRET", "STYLE_SECRET", "FORM_SECRET", "HIDDEN_SECRET", "ARIA_SECRET", "DISPLAY_SECRET"):
+            self.assertNotIn(forbidden, json.dumps(inspected, ensure_ascii=False))
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            operations = AudiobookOperations.open(
+                Path(temporary_directory) / "state.sqlite3", release_adapter=self.adapter
+            )
+            try:
+                mcp = MCPAdapter(operations)
+                observed = mcp.call("release_inspect", {"candidate_id": candidate["candidate_id"]})
+                self.http.topic_html = self.http.topic_html.replace("SCRIPT_SECRET", "ROTATED_SCRIPT").replace("FORM_SECRET", "ROTATED_FORM")
+                repeated = mcp.call("release_inspect", {"candidate_id": candidate["candidate_id"]})
+                self.assertEqual(observed["revision"], repeated["revision"])
+                self.assertEqual(observed["topic_excerpt"], repeated["topic_excerpt"])
+                plan = mcp.call("request_plan", {
+                    "candidate_id": candidate["candidate_id"],
+                    "candidate_revision": observed["revision"],
+                    "work": {"title": "Кроткая", "authors": ["Достоевский"], "series": []},
+                    "audio_edition": {"narrators": ["Иван"], "abridged": False},
+                    "origin_conversation_id": "test",
+                })
+                self.assertEqual(plan["status"], "awaiting_approval")
+                self.assertNotIn("ROTATED_FORM", json.dumps(plan))
+            finally:
+                operations.close()
+
+    def test_inspect_ignores_self_closing_slashes_on_suppressed_html_elements(self) -> None:
+        query = "Кроткая Иван"
+        self.http.responses = {
+            query: [self.release(title="Кроткая [Иван] MP3", topic_id="6214434", infohash="a" * 40, seeders=12)]
+        }
+        for opening, closing in (
+            ("<script/>", "</script>"),
+            ("<style/>", "</style>"),
+            ("<form/>", "</form>"),
+            ("<div hidden/>", "</div>"),
+            ('<div aria-hidden="true"/>', "</div>"),
+            ('<div style="display: none"/>', "</div>"),
+        ):
+            with self.subTest(opening=opening):
+                self.http.topic_html = (
+                    "<title>Кроткая - аудиокнига</title>"
+                    + opening + "SESSION_SENTINEL" + closing
+                    + '<input hidden/><p>Читает: Иван</p>'
+                )
+                candidate = self.adapter.search([query])[0]
+                inspected = self.adapter.inspect(candidate["candidate_id"])
+                self.assertEqual(inspected["topic_title"], "Кроткая - аудиокнига")
+                self.assertIn("Читает: Иван", inspected["topic_excerpt"])
+                self.assertNotIn("SESSION_SENTINEL", json.dumps(inspected, ensure_ascii=False))
+
     def test_inspect_rejects_topic_urls_outside_the_exact_internal_route(self) -> None:
         query = "Достоевский Кроткая"
         unsafe_urls = (
@@ -341,7 +410,7 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
                     }
                 )
                 if parsed.path == "/api/v1/search":
-                    body = json.dumps([{"title": "Кроткая"}]).encode()
+                    body = json.dumps([{"title": "Кроткая", "indexer": "RuTracker"}]).encode()
                     content_type = "application/json"
                 else:
                     body = "<title>Кроткая</title>".encode("windows-1251")
@@ -361,7 +430,7 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
         host, port = server.server_address
         try:
             client = ProwlarrHTTPClient(f"http://{host}:{port}", "test-api-key")
-            self.assertEqual(client.search("Фёдор Кроткая"), [{"title": "Кроткая"}])
+            self.assertEqual(client.search("Фёдор Кроткая"), [{"title": "Кроткая", "indexer": "RuTracker"}])
             self.assertEqual(
                 client.topic(f"http://{host}:{port}/forum/viewtopic.php?t=6214434"),
                 "<title>Кроткая</title>",
@@ -436,7 +505,14 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
             problems: list[dict[str, str]] = []
 
             def do_GET(self) -> None:
-                body = json.dumps(self.problems).encode()
+                path = urlparse(self.path).path
+                if path == "/api/v1/health":
+                    value = self.problems
+                elif path == "/api/v1/indexer":
+                    value = [{"id": 1, "name": "RuTracker", "enable": True}]
+                else:
+                    value = []
+                body = json.dumps(value).encode()
                 self.send_response(200)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
@@ -457,6 +533,120 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
             ]
             with self.assertRaisesRegex(OperationError, "health problems"):
                 client.health()
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_prowlarr_health_ignores_update_warning_but_checks_rutracker(self) -> None:
+        class Handler(BaseHTTPRequestHandler):
+            disabled = False
+            backend_down = False
+
+            def do_GET(self) -> None:
+                path = urlparse(self.path).path
+                if self.backend_down:
+                    self.send_response(503)
+                    self.end_headers()
+                    return
+                if path == "/api/v1/health":
+                    value = [{"source": "UpdateCheck", "type": "warning"}]
+                elif path == "/api/v1/indexer":
+                    value = [{"id": 1, "name": "RuTracker", "enable": True}]
+                elif path == "/api/v1/indexerstatus" and self.disabled:
+                    value = [{"indexerId": 1, "disabledTill": "9999-01-01T00:00:00Z"}]
+                else:
+                    value = []
+                body = json.dumps(value).encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, _format: str, *_args: object) -> None:
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        host, port = server.server_address
+        try:
+            client = ProwlarrHTTPClient(f"http://{host}:{port}", "test-api-key")
+            client.health()
+            Handler.disabled = True
+            with self.assertRaisesRegex(OperationError, "required RuTracker indexer is unavailable"):
+                client.health()
+            Handler.backend_down = True
+            with self.assertRaisesRegex(OperationError, "upstream returned HTTP 503"):
+                client.health()
+        finally:
+            server.shutdown()
+            server.server_close()
+
+    def test_empty_search_rejects_disabled_rutracker_after_search(self) -> None:
+        requests: list[str] = []
+
+        class Handler(BaseHTTPRequestHandler):
+            indexers = [{"id": 1, "name": "RuTracker", "enable": True}]
+            statuses: list[dict[str, object]] = []
+
+            def do_GET(self) -> None:
+                path = urlparse(self.path).path
+                requests.append(path)
+                if path == "/api/v1/indexer":
+                    value = self.indexers
+                elif path == "/api/v1/indexerstatus":
+                    value = self.statuses
+                else:
+                    value = []
+                body = json.dumps(value).encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, _format: str, *_args: object) -> None:
+                return
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        host, port = server.server_address
+        try:
+            client = ProwlarrHTTPClient(f"http://{host}:{port}", "secret-api-key")
+            adapter = ProwlarrReleaseAdapter(client, FakeRouteGuard())
+            self.assertEqual(adapter.search(["Кроткая"]), [])
+            Handler.statuses = [{
+                "indexerId": 1, "disabledTill": "9999-01-01T00:00:00Z",
+                "message": "secret-api-key upstream body",
+            }]
+            with self.assertRaises(OperationError) as caught:
+                adapter.search(["Кроткая"])
+            self.assertEqual(str(caught.exception), "required RuTracker indexer is unavailable")
+            self.assertEqual(requests, [
+                "/api/v1/search", "/api/v1/indexer", "/api/v1/indexerstatus",
+                "/api/v1/search", "/api/v1/indexer", "/api/v1/indexerstatus",
+            ])
+            with tempfile.TemporaryDirectory() as temporary_directory:
+                operations = AudiobookOperations.open(
+                    Path(temporary_directory) / "state.sqlite3", release_adapter=adapter
+                )
+                try:
+                    with self.assertRaisesRegex(
+                        OperationError, "required RuTracker indexer is unavailable"
+                    ):
+                        MCPAdapter(operations).call("release_search", {"queries": ["Кроткая"]})
+                finally:
+                    operations.close()
+            Handler.statuses = [{"indexerId": 2, "disabledTill": "9999-01-01T00:00:00Z"}]
+            self.assertEqual(adapter.search(["Кроткая"]), [])
+            Handler.statuses = [{"indexerId": 1, "disabledTill": "2000-01-01T00:00:00Z"}]
+            self.assertEqual(adapter.search(["Кроткая"]), [])
+            Handler.statuses = [{"indexerId": 1, "disabledTill": "bad secret"}]
+            with self.assertRaisesRegex(OperationError, "invalid indexer status"):
+                adapter.search(["Кроткая"])
+            Handler.indexers = [{"id": 1, "name": "RuTracker", "enable": False}]
+            with self.assertRaisesRegex(OperationError, "required RuTracker indexer is unavailable"):
+                adapter.search(["Кроткая"])
         finally:
             server.shutdown()
             server.server_close()
@@ -484,7 +674,7 @@ class ProwlarrReleaseAdapterTests(unittest.TestCase):
             server.server_close()
 
         message = str(caught.exception)
-        self.assertEqual(message, "upstream request failed")
+        self.assertEqual(message, "upstream returned HTTP 503")
         self.assertNotIn("secret-api-key", message)
         self.assertNotIn("accidental detail", message)
 

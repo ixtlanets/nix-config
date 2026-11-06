@@ -89,9 +89,51 @@ config files) to stay readable by the service without being world-readable.
 and values. RuTracker now challenges the login form with an image captcha, which
 Prowlarr cannot solve; the operator performs one interactive login through the
 gateway's own egress path and stores the resulting cookies here. The gateway
-injects them into every upstream request and answers Prowlarr's login POST with a
-minimal authenticated page, so Prowlarr adopts the session without a captcha.
+injects them into upstream requests. For Prowlarr's login POST, it drains the
+form without forwarding credentials, then requests the fixed
+`https://rutracker.org/forum/index.php` page through FlareSolverr. Only a successful
+HTTP status, that exact final URL, and an actual `id="logged-in-username"` HTML
+element permit a minimal authenticated compatibility page. Unverified responses
+produce a bounded error without upstream HTML or session cookies. The legacy
+`RUTRACKER_GATEWAY_LOGGED_IN_MARKER` setting no longer changes this auth contract.
+Safe cookies from verified login responses override stored values in memory
+and are replayed to Prowlarr; they are not written back to the secret file.
 Absent or malformed, the gateway degrades to its historical pass-through mode.
+
+Release-search errors distinguish observed HTTP status, timeout, transport
+failure and malformed data without exposing upstream bodies or request details.
+A Prowlarr HTTP 401/403 does not establish a RuTracker authentication failure;
+an empty successful search remains an empty successful search.
+
+## RuTracker authentication diagnostics
+
+After a separately authorized owner deployment, a failed session-login
+verification emits one stderr line (at most 200 characters), prefixed
+`rutracker-gateway auth verification failed:`. Successful verification,
+request-validation rejections, and pass-through requests emit no new diagnostic.
+The fields report observations, not proof of a root cause:
+
+- `status_class`: the returned solution's strict integer HTTP class, `1xx`
+  through `5xx` (100–599). `unknown` means a present value is invalid, including
+  booleans and strings; `not_observed` means no solution status was available.
+  This is not the FlareSolverr endpoint's own HTTP status.
+- `final_target_match`: `true` or `false` for an exact string match to the fixed
+  verification target; `unknown` for a missing or non-string value. Rejected
+  targets can still provide these safe observations; validation is unchanged.
+- `login_marker`: `false` when the canonical HTML parser found no authenticated
+  element; `not_observed` when validation stopped before parsing. Absence of the
+  marker does not identify a guest page or challenge. No justified structural
+  guest/challenge contract is available, so those heuristics are omitted.
+- `category`: one of `unverified`, `http_error`, `url_error`, `timeout`,
+  `invalid_json`, `oversized_response`, `flaresolverr_failure`, `invalid_solution`,
+  `unexpected_target`, or `exception`. `url_error` includes wrapped timeouts;
+  `exception` covers other exceptions, including malformed target parsing.
+
+No raw evidence is emitted: no URLs, HTML, upstream messages, exception text or
+dynamic class names, credentials, cookie metadata, identifiers, or secret paths.
+Do not add secrets to logs when investigating these observations. This checkout
+alone produces no production evidence; deployment and log inspection remain
+owner-authorized steps.
 
 ## RuTracker session refresh (owner gate)
 
@@ -99,18 +141,29 @@ The stored session expires with RuTracker's `bb_session` cookie (about 30 days)
 or on a manual logout. When `external-search` reports `degraded` and Prowlarr logs
 `Invalid Credentials for RuTracker`, refresh it:
 
-1. Fetch the login page and its captcha through the gateway path so the egress
-   IP matches, keeping the returned `cap_sid` and the `cap_code_*` field name.
-2. Read the captcha image and POST `login_username`, `login_password`,
-   `cap_sid`, `cap_code_*`, `login=вход`, and `redirect=index.php` in the same
-   session. Success leaves a `bb_session` cookie.
-3. Write the session cookies as a flat JSON object to
-   `/etc/audiobook-ops/secrets/gateway-session-cookie` (root:nik, mode `0640`)
-   and recreate the gateway container so it reloads the file.
+With current explicit owner authorization, an operator may perform a bounded
+recovery through a disposable browser using the actual FlareSolverr network
+route. Keep JavaScript enabled for provider checks, select the visible canonical
+login form, and retain the same browser through authentication and verification.
+A hidden quick-login form may coexist with the visible full form. CAPTCHA may or
+may not be required; do not assume that every refresh needs human input. The
+2026-11-04 recovery completed without CAPTCHA.
 
-Do not start a long-lived agent auto-login here: the captcha needs a human and the
-same-egress requirement forbids solving it from another host. Keep the raw login
-POST out of logs and chat.
+Read existing credentials only in process memory. Verify a fresh direct visit to
+`https://rutracker.org/forum/index.php` and the canonical `logged-in-username`
+marker matching the intended principal before accepting replacement cookies.
+Publish the flat JSON cookie object atomically to
+`/etc/audiobook-ops/secrets/gateway-session-cookie`, preserving root:nik mode
+`0640` and a private rollback copy. Recreate only the gateway, verify its mounted
+file matches the replacement, then run the native Prowlarr indexer test and real
+MCP release searches. Successful searches and cleared indexer backoff are the
+acceptance evidence; container liveness alone is insufficient.
+
+Keep credentials, cookies, raw HTML and login POST bodies out of logs and chat.
+Do not introduce unattended recurring login or change the network route as part
+of a session refresh. The completed recovery, its limitations and the temporary
+engineering script are documented in
+[2026-11-04 recovery handoff](../../../../docs/handoffs/2026-11-04-audiobook-search-recovery.md).
 
 Install but do not enable or start host assets:
 

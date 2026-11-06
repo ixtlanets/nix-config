@@ -30,6 +30,7 @@ def load_gateway_module():
 
 class FakeFlareSolverrHandler(BaseHTTPRequestHandler):
     requests: list[dict] = []
+    response_override = None
 
     def do_POST(self) -> None:
         body = self.rfile.read(int(self.headers["Content-Length"]))
@@ -48,6 +49,8 @@ class FakeFlareSolverrHandler(BaseHTTPRequestHandler):
                 ],
             },
         }
+        if self.__class__.response_override is not None:
+            response = self.__class__.response_override
         serialized = json.dumps(response).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
@@ -62,6 +65,7 @@ class RuTrackerGatewayTest(unittest.TestCase):
     def setUp(self) -> None:
         self.module = load_gateway_module()
         FakeFlareSolverrHandler.requests = []
+        FakeFlareSolverrHandler.response_override = None
         self.flare_server = ThreadingHTTPServer(("127.0.0.1", 0), FakeFlareSolverrHandler)
         self.flare_thread = threading.Thread(target=self.flare_server.serve_forever)
         self.flare_thread.start()
@@ -186,6 +190,7 @@ class RuTrackerGatewaySessionTest(unittest.TestCase):
     def setUp(self) -> None:
         self.module = load_gateway_module()
         FakeFlareSolverrHandler.requests = []
+        FakeFlareSolverrHandler.response_override = None
         self.flare_server = ThreadingHTTPServer(("127.0.0.1", 0), FakeFlareSolverrHandler)
         self.flare_thread = threading.Thread(target=self.flare_server.serve_forever)
         self.flare_thread.start()
@@ -219,25 +224,44 @@ class RuTrackerGatewaySessionTest(unittest.TestCase):
         self.flare_thread.join()
         os.unlink(self.cookies_path)
 
-    def test_login_is_answered_locally_with_session_cookies(self) -> None:
+    def test_login_checks_upstream_without_forwarding_credentials(self) -> None:
         form = b"login_username=user&login_password=secret&login=Login&redirect=index.php"
         request = urllib.request.Request(
             f"{self.gateway_url}/forum/login.php",
             data=form,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Cookie": "bb_session=client-value; extra=client-extra",
+            },
             method="POST",
         )
 
         with urllib.request.urlopen(request) as response:
             body = response.read().decode("windows-1251")
             cookies = response.headers.get_all("Set-Cookie")
+            self.assertEqual(response.status, 200)
+            self.assertEqual(response.headers["Content-Type"], "text/html; charset=windows-1251")
+            self.assertEqual(response.headers["Cache-Control"], "no-store")
 
         self.assertIn('id="logged-in-username"', body)
         self.assertEqual(len(cookies), 3)
-        for name, value in SESSION_COOKIES.items():
+        for name, value in {
+            "bb_session": "session-value",
+            "cf_clearance": "clearance-value",
+            "bb_guid": "operator-guid-value",
+        }.items():
             self.assertTrue(any(cookie.startswith(f"{name}={value};") for cookie in cookies))
-        # The login POST must not reach FlareSolverr or expose credentials to it.
-        self.assertEqual(FakeFlareSolverrHandler.requests, [])
+        self.assertEqual(FakeFlareSolverrHandler.requests, [{
+            "cmd": "request.get",
+            "url": "https://rutracker.org/forum/index.php",
+            "maxTimeout": 120_000,
+            "cookies": [
+                {"name": "bb_session", "value": "operator-session-value"},
+                {"name": "extra", "value": "client-extra"},
+                {"name": "cf_clearance", "value": "operator-clearance-value"},
+                {"name": "bb_guid", "value": "operator-guid-value"},
+            ],
+        }])
 
     def test_get_injects_session_cookies_and_overrides_client_cookies(self) -> None:
         request = urllib.request.Request(
@@ -255,6 +279,35 @@ class RuTrackerGatewaySessionTest(unittest.TestCase):
         self.assertEqual(sent["bb_guid"], "operator-guid-value")
         # Unrelated client cookies still pass through.
         self.assertEqual(sent["extra"], "client-extra")
+
+    def test_login_rejects_unverified_upstream_without_replaying_secrets(self) -> None:
+        canonical = '<span id="logged-in-username">UPSTREAM_BODY_SENTINEL</span>'
+        good = {"url": "https://rutracker.org/forum/index.php", "status": 200,
+                "response": canonical, "cookies": [{"name": "bb_session", "value": "COOKIE_SENTINEL"}]}
+        for overrides in (
+            {"response": "<html>UPSTREAM_BODY_SENTINEL guest</html>"},
+            {"response": f"<!-- {canonical} -->"},
+            {"status": 403}, {"status": None},
+            {"url": "https://rutracker.org/forum/login.php"},
+            {"url": "https://other.invalid/forum/index.php"},
+            {"response": None},
+        ):
+            with self.subTest(overrides=overrides):
+                FakeFlareSolverrHandler.response_override = {"status": "ok", "solution": {**good, **overrides}}
+                request = urllib.request.Request(
+                    f"{self.gateway_url}/forum/login.php",
+                    data=b"login_username=USER_SENTINEL&login_password=PASSWORD_SENTINEL",
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                )
+                with self.assertRaises(urllib.error.HTTPError) as caught:
+                    urllib.request.urlopen(request)
+                with caught.exception as response:
+                    self.assertEqual(response.code, 502)
+                    self.assertIsNone(response.headers.get_all("Set-Cookie"))
+                    body = response.read()
+                    self.assertLess(len(body), 100)
+                    self.assertNotIn(b"SENTINEL", body)
+                self.assertEqual(FakeFlareSolverrHandler.requests[-1]["cmd"], "request.get")
 
     def test_missing_session_file_degrades_to_pass_through(self) -> None:
         config = self.module.GatewayConfig(
