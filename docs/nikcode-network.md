@@ -137,6 +137,45 @@ WAW/PL.
 Import on the actual phone is still pending. The local JSON does not auto-update;
 future server identity or profile changes require another private import.
 
+### Goar iPhone sing-box bootstrap correction (2026-11-06)
+
+The user reports sing-box 1.14.4 on Goar's iPhone. The previously issued
+`Goar-primary-iPhone-start-2026-11-06.png` encoded a raw VLESS node for Incy,
+not a complete sing-box TUN/DNS/routing profile. Screenshots show a running core
+with zero traffic and no inbound activity. The format mismatch is a leading
+explanation, not a confirmed inspection of the phone's actual JSON.
+
+Only `goar-ios.formats` was extended to permit `sing-box-ios`; the default Incy
+format, fetch token, Firefox fingerprint and shared server identity were retained.
+The explicit modern URL is saved in zenbook pass as
+`nikcode.xyz/config/goar-ios-singbox` (an alias of the same fetch token, not a
+separate identity). Only the Worker secret binding changed. The original Incy
+response remained byte-identical and all 22 existing base URLs returned HTTP 200.
+
+Private artifacts on zenbook are under
+`~/.local/state/nikcode-network/goar-iphones/sing-box-20261106/`:
+`Goar-iPhone-sing-box-1.14.json` is a complete Local bootstrap with inline Russian
+GeoIP, Naive TCP, Firefox VLESS UDP and the public IPv4 policy.
+`Goar-iPhone-sing-box-subscription.png` is the native remote-profile import QR,
+verified by exact decode roundtrip. Import the Local file first if downloading
+the Remote profile fails, then retry the Remote QR over the working VPN and
+enable hourly updates. A Local file does not auto-update.
+
+The complete JSON passed core 1.14.3 check; 1.14.4 was unavailable on zenbook.
+Isolated mixed/DNS tests bound to physical `wlo1` passed through both transports:
+Google 204, Gmail 301, ifconfig.me 200, DNS A answers and empty NOERROR AAAA.
+No system routes or VPN services were changed. The user subsequently confirmed
+that the Local JSON works on Goar's iPhone and chose not to issue the Remote QR.
+Remote import, automatic updates and separate reconnect/Wi-Fi/cellular checks
+have not been confirmed.
+
+At the user's request, `Goar-mother-sing-box-1.14.json` and
+`Goar-nanny-sing-box-1.14.json` are prepared in the same private directory as
+copies of the working Local profile. Their filenames distinguish recipients;
+they retain the same shared server credentials and do not auto-update. No new
+subscription, server identity or QR is created. These files target sing-box 1.14;
+the recipients' app versions, import and connectivity remain unconfirmed.
+
 ### Public VPN traffic uses IPv4 (2026-11-06)
 
 The published Worker now applies an IPv4-only public-traffic policy to its seven
