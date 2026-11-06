@@ -5,10 +5,11 @@ usage() {
   cat >&2 <<'USAGE'
 Usage: transcribe-media [--force] <media-file> [<media-file> ...]
 
-Transcribes local audio or video files with Spokenly and writes sidecars next
+Transcribes local audio or video with macOS Hex API2 (Parakeet v3, ru), locally only.
+Writes sidecars next
  to each input file:
-  <name>.transcript.json  canonical timed transcript
-  <name>.transcript.md    readable transcript with timestamps and speakers
+  <name>.transcript.json  JSON with explicit coarse 120-second audio chunk bounds
+  <name>.transcript.md    readable transcript; no diarization or aligned timings
 
 Options:
   -f, --force  replace existing transcript sidecars
@@ -28,27 +29,98 @@ format_markdown() {
   local title="$2"
 
   jq -r --arg title "$title" '
-    def pad2:
-      tostring | if length < 2 then "0" + . else . end;
+    def pad2: tostring | if length < 2 then "0" + . else . end;
     def timestamp:
       floor as $total
       | ($total / 3600 | floor | pad2) as $hours
       | (($total % 3600) / 60 | floor | pad2) as $minutes
       | ($total % 60 | pad2) as $seconds
       | "\($hours):\($minutes):\($seconds)";
-    (reduce (.segments[] | select(.speakerId != null and .speakerId != "")) as $segment
-      ({labels: {}, count: 0};
-       ($segment.speakerId | tostring) as $speaker_id
-       | if .labels[$speaker_id] then .
-         else .labels[$speaker_id] = "Speaker \(.count + 1)" | .count += 1
-         end)
-    ) as $speakers
-    | "# \($title)\n\n## Transcript\n"
-    , (.segments[]
-       | (.speakerId // "" | tostring) as $speaker_id
-       | ($speakers.labels[$speaker_id] // "Speaker") as $speaker
-       | "[\(.start | timestamp)] \($speaker): \(.text)")
+    "# \($title)\n\n> Hex local Parakeet v3 (ru). Coarse audio-chunk bounds only; not speech-aligned. No speaker diarization or GUI postprocessing.\n\n## Transcript\n",
+    (.segments[] | "[\(.start | timestamp)-\(.end | timestamp)] \(.text)")
   ' "$json_file"
+}
+
+hex_transcribe() {
+  python3 - "$1" <<'HEX_PY'
+import fcntl
+import http.client
+import json
+import pathlib
+import subprocess
+import sys
+import tempfile
+import wave
+
+
+def transcribe():
+    # Discovery is the only endpoint source: never allow remote URLs or proxies.
+    discovery = pathlib.Path.home() / "Library/Application Support/hex/local-api.json"
+    config = json.loads(discovery.read_text())
+    if str(config.get("apiVersion")) != "2":
+        raise ValueError("unsupported local API")
+    port = config["port"]
+    token = config["token"]
+    if type(port) is not int or not 1 <= port <= 65535 or not isinstance(token, str):
+        raise ValueError("invalid discovery")
+    state = pathlib.Path.home() / ".local/state/transcribe-media"
+    state.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with (state / "inference.lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        with tempfile.TemporaryDirectory(prefix="hex-media-") as temp:
+            wav_path = pathlib.Path(temp) / "audio.wav"
+            subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", sys.argv[1],
+                            "-vn", "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le",
+                            str(wav_path)], check=True, stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+            segments = []
+            with wave.open(str(wav_path), "rb") as audio:
+                rate = audio.getframerate()
+                offset = 0
+                while True:
+                    frames = audio.readframes(120 * rate)
+                    if not frames:
+                        break
+                    chunk_path = pathlib.Path(temp) / "chunk.wav"
+                    with wave.open(str(chunk_path), "wb") as chunk:
+                        chunk.setparams((1, 2, rate, 0, "NONE", "not compressed"))
+                        chunk.writeframes(frames)
+                    body = chunk_path.read_bytes()
+                    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=600)
+                    try:
+                        conn.request("POST", "/transcriptions?model=parakeet_v3&language=ru",
+                                     body=body, headers={"Authorization": "Bearer " + token,
+                                     "Content-Type": "audio/wav", "Content-Length": str(len(body))})
+                        response = conn.getresponse()
+                        if response.status != 200:
+                            raise ValueError("local transcription failed")
+                        result = json.loads(response.read(4 * 1024 * 1024))
+                    finally:
+                        conn.close()
+                    text = result.get("transcript")
+                    if not isinstance(text, str) or not text.strip():
+                        raise ValueError("empty or invalid transcript")
+                    end = offset + len(frames) // 2
+                    segments.append({"id": "chunk-" + str(len(segments) + 1),
+                                     "text": text.strip(), "start": offset / rate,
+                                     "end": end / rate, "speakerId": None})
+                    offset = end
+            if not segments:
+                raise ValueError("empty audio")
+            return {"modelId": {"predefined": "parakeet_v3"}, "provider": "hex-local-api2",
+                    "language": "ru", "timing": "coarse-audio-chunks",
+                    "capabilities": {"diarization": False, "alignedTimestamps": False,
+                                     "postprocessing": False}, "segments": segments}
+
+try:
+    result = transcribe()
+except (Exception, KeyboardInterrupt):
+    # No server body, token, media content, or traceback in shared stderr.
+    print("transcribe-media: local Hex failed; check running Hex API2, installed Parakeet v3 and audio", file=sys.stderr)
+    sys.exit(1)
+json.dump(result, sys.stdout, ensure_ascii=False)
+sys.stdout.write("\n")
+HEX_PY
 }
 
 transcribe_file() {
@@ -64,10 +136,10 @@ transcribe_file() {
   file_name="$(basename "$input_file")"
   extension="${file_name##*.}"
   case "$extension" in
-    mp3|wav|m4a|flac|opus|ogg|mp4|mov|m4v)
+    mp3|wav|m4a|flac|opus|ogg|oga|mp4|mov|m4v)
       ;;
     *)
-      printf 'transcribe-media: unsupported file format for %s (supported: mp3, wav, m4a, flac, opus, ogg, mp4, mov, m4v)\n' "$input_file" >&2
+      printf 'transcribe-media: unsupported file format for %s (supported: mp3, wav, m4a, flac, opus, ogg, oga, mp4, mov, m4v)\n' "$input_file" >&2
       return 1
       ;;
   esac
@@ -85,8 +157,8 @@ transcribe_file() {
   temp_json="$(mktemp "$input_dir/.${stem}.transcript.XXXXXX.json")"
   temp_markdown="$(mktemp "$input_dir/.${stem}.transcript.XXXXXX.md")"
 
-  if ! spokenly transcribe "$input_file" --format json --speakers > "$temp_json"; then
-    printf 'transcribe-media: Spokenly failed for %s\n' "$input_file" >&2
+  if ! hex_transcribe "$input_file" > "$temp_json"; then
+    printf 'transcribe-media: Hex failed for %s\n' "$input_file" >&2
     rm -f "$temp_json" "$temp_markdown"
     return 1
   fi
@@ -95,7 +167,7 @@ transcribe_file() {
     (.segments | type == "array")
     and all(.segments[]; (.text | type == "string") and (.start | type == "number") and (.end | type == "number"))
   ' "$temp_json" >/dev/null; then
-    printf 'transcribe-media: Spokenly returned invalid transcript JSON for %s\n' "$input_file" >&2
+    printf 'transcribe-media: Hex returned invalid transcript JSON for %s\n' "$input_file" >&2
     rm -f "$temp_json" "$temp_markdown"
     return 1
   fi
@@ -145,7 +217,8 @@ if [[ ${#files[@]} -eq 0 ]]; then
   exit 1
 fi
 
-require_command spokenly
+require_command python3
+require_command ffmpeg
 require_command jq
 
 status=0

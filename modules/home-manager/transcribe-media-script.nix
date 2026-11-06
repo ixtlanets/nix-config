@@ -5,6 +5,8 @@ let
     name = "transcribe-media";
     runtimeInputs = with pkgs; [
       coreutils
+      ffmpeg
+      python3
       jq
     ];
     text = builtins.readFile ../../dotfiles/omarchy/bin/transcribe-media;
