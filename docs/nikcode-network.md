@@ -186,6 +186,34 @@ peer's IPv6 health. No zenbook peer fix was attempted. The root acceptance recor
 `/var/lib/nikcode-network/t14s/public-ipv4-20261106/result.json`. Reboot and automatic
 rollback execution were not exercised by these acceptance checks.
 
+### M1 Max split DNS accepted (2026-11-06)
+
+The user authorized and accepted a DNS-only repair on M1 Max. Tailscale's global
+DNS override had bypassed SFM's public AAAA policy; forwarding `ts.net` through
+SFM also timed out even though direct Tailscale DNS queries worked. Public DNS
+now uses SFM, while a scoped macOS resolver sends only the tailnet domain and its
+short names to Tailscale. Tailscale accepts no global DNS configuration. SFM and
+Tailscale were not restarted, no exit node was selected, and the existing
+AdminVPS WAW/PL exit and default VPN route were preserved.
+
+The source is [`scripts/m1max-split-dns.py`](../scripts/m1max-split-dns.py).
+Its persistent root launch daemon discovers the Tailscale interface from the
+Mac's own tailnet address every 15 seconds and repairs only the DNS server's
+host route; it does not install a broad tailnet route or manage VPN failover.
+The separate 480-second rollback guard was armed before changes. The user ran
+the local privileged apply and acceptance commands; the accepted marker and
+result were verified, and the temporary guard was unloaded.
+
+Fresh Tailscale SSH, native full and short tailnet-name resolution, and public
+IPv4-only hostname resolution passed after acceptance. Gmail returned HTTP 200
+in about 1.16 seconds and the ordinary public exit matched its pre-change value.
+Five regression tests cover local rollback despite CLI failure, rollback retry,
+expiry, and acceptance/rollback ordering. Native browser reload, reboot, and
+actual automatic rollback were not exercised. Accepted transactions cannot be
+reverted by the script's `rollback` action; emergency reversal requires the
+private snapshot and a separately scoped maintenance change. The user's broader
+no-switching constraint remains in effect.
+
 ## Migration acceptance record
 
 Before the DNS change, three fresh Android Wi-Fi runs exercised ordinary HTTPS,
