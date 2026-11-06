@@ -1110,6 +1110,7 @@ install_vault_backup() {
   log "installing vault-backup-push user units"
   install -Dm644 "${unit_src}/vault-backup-push.service" "${unit_dir}/vault-backup-push.service"
   install -Dm644 "${unit_src}/vault-backup-push.timer" "${unit_dir}/vault-backup-push.timer"
+  install -Dm644 "${unit_src}/vault-backup-alert.service" "${unit_dir}/vault-backup-alert.service"
   systemctl --user daemon-reload
   systemctl --user enable --now vault-backup-push.timer
 }

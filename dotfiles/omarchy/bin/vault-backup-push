@@ -1,104 +1,298 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 077
 
 # Daily encrypted backup of ~/vault pushed to three hosts over tailscale.
-# Stream: tar -> zstd -> gpg; plaintext never touches disk.
-# The archive includes .git so the full git history travels with it.
+# Stream: tar -> zstd -> gpg. History plaintext snapshots use a private workspace.
+# The archive includes .git, plus verified history SQLite snapshots and sources.
 
-vault_dir="${HOME}/vault"
-local_dir="${HOME}/backups/vault"
-gpg_key="539459F1879941F7"
-date_tag="$(date +%F)"
-archive_name="vault-${date_tag}.tar.zst.gpg"
-# destination:retention-days (london has a small disk)
-destinations=(
-  "nik@um790pro:7"
-  "nik@moscow:7"
-  "ubuntu@london:3"
-)
-ssh_opts=(-o BatchMode=yes -o ConnectTimeout=15)
+# Sourceable assembly boundary for synthetic verification without delivery.
+# The history state lives outside the vault so a recursive knowledge-base
+# watcher does not traverse 200k+ archival files. It is still archived under
+# the ./.history-base prefix, which keeps every existing archive restorable
+# and keeps the exclusion patterns in vault_tar_excludes() valid.
+history_archive_stream() {
+  local history_vault="$1" history_workspace="$2" history_python="$3"
+  local history_state="${4:-${history_vault}/.history-base}"
+  local -a history_excludes history_state_args=()
+  python3 "$history_python" tar-excludes --bundle "${history_workspace}/history-backup" >"${history_workspace}/excludes" || return
+  mapfile -d '' -t history_excludes <"${history_workspace}/excludes"
+  # Only add the state as a separate tar source when it is not already a
+  # descendant of the vault; otherwise its members would be duplicated.
+  if [[ "$(realpath -m -- "$history_state")" != "$(realpath -m -- "$history_vault")/.history-base" ]]; then
+    history_state_args=(--directory="$(dirname -- "$history_state")" "./$(basename -- "$history_state")")
+  fi
+  # Remediation workspaces under the history state are scratch: snapshot/,
+  # restored/ and decoded/ copies of the same data. Archived wholesale they
+  # multiplied the nightly stream 10 GiB -> 70 GiB and filled the disk.
+  tar --create --warning=no-file-changed --ignore-failed-read \
+    "${history_excludes[@]}" \
+    --exclude=./.history-base/remediation \
+    --directory="$history_vault" . \
+    "${history_state_args[@]}" \
+    --directory="$history_workspace" history-backup \
+    | python3 "$history_python" validate-stream --bundle "${history_workspace}/history-backup"
+}
+
+# A delivery worker has its own wall-clock limit and never assembles archives.
+# Final remote names are published only after SHA256 verification. Legacy files
+# without checksum markers are preserved for manual classification.
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3)
 
 log() {
   printf '[vault-backup] %s\n' "$*"
 }
+
+deliver_backup() {
+  local dest="$1" retention="$2" archive="$3" name expected="${4-}" size prepared
+  name="$(basename -- "$archive")"
+  [[ "$name" =~ ^vault-[0-9]{4}-[0-9]{2}-[0-9]{2}\.tar\.zst\.gpg$ && "$retention" =~ ^[1-9][0-9]*$ ]] || return 2
+  if [[ -z "$expected" ]]; then
+    expected="$(sha256sum -- "$archive")"
+    expected="${expected%% *}"
+  fi
+  size="$(stat -c %s -- "$archive")"
+  log "${dest}: starting ${name} (${size} bytes)"
+  if ! prepared="$(ssh "${ssh_opts[@]}" "$dest" bash -s -- "$name" "$expected" "$size" <<'REMOTE_PREPARE'
+set -euo pipefail
+umask 077
+name="$1" expected="$2" size="$3"
+mkdir -p -- "$HOME/backups/vault"
+cd -- "$HOME/backups/vault"
+# At most one resumable upload. These hidden files are never restore candidates.
+find . -maxdepth 1 -type f -name '.upload-vault-*.tar.zst.gpg' ! -name ".upload-${name}" -delete
+if [[ -f "$name" && "$(stat -c %s -- "$name")" == "$size" && "$(sha256sum -- "$name" | cut -d ' ' -f 1)" == "$expected" ]]; then
+  rm -f -- ".upload-${name}"
+  printf 'complete\n'
+  exit 0
+fi
+partial_size=0
+[[ ! -f ".upload-${name}" ]] || partial_size="$(stat -c %s -- ".upload-${name}")"
+((partial_size <= size)) || partial_size=0
+free_kb="$(df -Pk . | awk 'NR==2 {print $4}')"
+need_kb=$(((size - partial_size + 1023) / 1024 + 1024 * 1024))
+if ((free_kb < need_kb)); then
+  printf 'insufficient space: %s KiB free, %s KiB needed; preserving all completed archives\n' "$free_kb" "$need_kb" >&2
+  exit 1
+fi
+printf 'ready\n'
+REMOTE_PREPARE
+)"; then
+    log "${dest}: FAILED preparing receiver (prior archives preserved)"
+    return 1
+  fi
+  if [[ "$prepared" != complete ]]; then
+    if [[ "$prepared" != ready ]] || ! rsync -a --checksum --partial --inplace --timeout=1800 \
+      --rsh="ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3" \
+      "$archive" "${dest}:backups/vault/.upload-${name}"; then
+      log "${dest}: FAILED transfer; hidden upload retained for retry"
+      return 1
+    fi
+  fi
+  if ! ssh "${ssh_opts[@]}" "$dest" bash -s -- "$name" "$expected" "$retention" <<'REMOTE_PUBLISH'
+set -euo pipefail
+umask 077
+name="$1" expected="$2" retention="$3"
+cd -- "$HOME/backups/vault"
+if [[ -f ".upload-${name}" ]]; then
+  actual="$(sha256sum -- ".upload-${name}" | cut -d ' ' -f 1)"
+  [[ "$actual" == "$expected" ]] || { printf 'SHA256 mismatch for hidden upload\n' >&2; exit 1; }
+  mv -f -- ".upload-${name}" "$name"
+else
+  [[ -f "$name" && "$(sha256sum -- "$name" | cut -d ' ' -f 1)" == "$expected" ]] || exit 1
+fi
+printf '%s  %s\n' "$expected" "$name" > ".${name}.sha256.tmp"
+mv -f -- ".${name}.sha256.tmp" "${name}.sha256"
+# Rotate only artifacts with a verification marker from this delivery protocol.
+# Old unmarked files could be interrupted uploads from the previous script.
+kept=0
+while IFS= read -r marker; do
+  archive="${marker%.sha256}"
+  [[ -f "$archive" ]] || continue
+  read -r digest recorded < "$marker" || continue
+  [[ "$digest" =~ ^[[:xdigit:]]{64}$ && "$recorded" == "$archive" ]] || continue
+  kept=$((kept + 1))
+  if ((kept > retention)); then rm -f -- "$archive" "$marker"; fi
+done < <(printf '%s\n' vault-????-??-??.tar.zst.gpg.sha256 | LC_ALL=C sort -r)
+REMOTE_PUBLISH
+  then
+    log "${dest}: FAILED checksum/publication; prior archives preserved"
+    return 1
+  fi
+  log "${dest}: delivered and SHA256 verified (retention ${retention} verified archives)"
+}
+
+# Sourcing exposes only assembly/delivery functions and has no side effects.
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  return 0
+fi
+
+# Internal worker entry point: bounded by timeout in the parent.
+if [[ "${1-}" == --deliver-worker && "$#" == 5 ]]; then
+  deliver_backup "$2" "$3" "$4" "$5"
+  exit "$?"
+fi
+
+vault_dir="${HOME}/vault"
+history_state="${HOME}/.history-base"
+archive_root="${HOME}/research/archive"
+local_dir="${HOME}/backups/vault"
+gpg_key="539459F1879941F7"
+date_tag="$(date +%F)"
+archive_name="vault-${date_tag}.tar.zst.gpg"
+# destination:retention-count (number of newest archives kept)
+destinations=(
+  "nik@um790pro:3"
+  "nik@moscow:3"
+  "ubuntu@london:3"
+)
+# Three finalized local archives plus at most one assembly file.
+local_keep=3
+# Parallel workers prevent a slow receiver starving the others. London measured
+# ~1.13 MiB/s over relay: a 21.8 GiB archive needs ~5.5h before verification.
+# Allow 6h per receiver and 8h for assembly plus delivery, below the daily cadence.
+delivery_timeout=6h
 
 [[ -d "$vault_dir" ]] || {
   log "vault directory ${vault_dir} not found"
   exit 1
 }
 
-mkdir -p "$local_dir"
-incoming="${local_dir}/.incoming-${archive_name}"
+# --history-local-check creates only a bounded history artifact and restores it.
+# It returns before any backup-directory, network or retention operation.
+check_dir=""
+retry_delivery=0
+if (($#)); then
+  if [[ "$#" == 2 && "$1" == --history-local-check && -n "${2-}" ]]; then
+    check_dir="$2"
+  elif [[ "$#" == 1 && "$1" == --retry-delivery ]]; then
+    retry_delivery=1
+  else
+    log "usage: vault-backup-push [--retry-delivery | --history-local-check NEW_PRIVATE_DIRECTORY]"
+    exit 2
+  fi
+fi
 
-# tar | zstd | gpg in a single stream. The vault is live: file-changed
-# warnings are expected and must not fail the backup.
-tar --create \
-  --directory="$vault_dir" \
-  --warning=no-file-changed \
-  --ignore-failed-read \
-  . \
-  | zstd -q -3 -T0 \
-  | gpg --batch --yes --quiet --trust-model always \
-    --encrypt --recipient "$gpg_key" \
-    --output "$incoming"
-
-size_kb="$(stat -c %s "$incoming")"
-size_kb=$((size_kb / 1024))
-need_kb=$((size_kb + 1024 * 1024)) # archive + 1 GiB headroom
-
-remote_free_kb() {
-  ssh "${ssh_opts[@]}" "$1" 'df -Pk "$HOME/backups/vault" | awk "NR==2 {print \$4}"'
+history_tool="${vault_dir}/tools/history_backup.py"
+history_work_root="${history_state}/backup-work"
+mkdir -p -m 700 -- "$history_work_root"
+# Refuse a shared/symlink workspace, including symlinked ancestors.
+python3 - "$history_work_root" <<'PRIVATE'
+import os
+from pathlib import Path
+import sys
+p = Path(os.path.abspath(sys.argv[1]))
+if any(q.is_symlink() for q in (p, *p.parents)) or p.stat().st_mode & 0o077:
+    raise SystemExit('private real history workspace required')
+PRIVATE
+exec {history_lock_fd}>"${history_work_root}/.lock"
+flock -n "$history_lock_fd" || { log "history backup already running"; exit 1; }
+history_work=""
+incoming=""
+cleanup() {
+  [[ -z "$incoming" ]] || rm -f -- "$incoming"
+  [[ -z "$history_work" ]] || rm -rf -- "$history_work"
 }
+trap cleanup EXIT
+trap 'exit 143' TERM
+trap 'exit 130' INT
+archive="${local_dir}/${archive_name}"
+if ((retry_delivery)); then
+  archive="$(find "$local_dir" -maxdepth 1 -type f -name 'vault-????-??-??.tar.zst.gpg' -printf '%f\n' | LC_ALL=C sort -r | head -n 1)"
+  [[ -n "$archive" ]] || { log "no finalized local archive available for retry"; exit 1; }
+  archive="${local_dir}/${archive}"
+fi
+# An already finalized daily artifact is immutable, so partial rsync data remains
+# useful on retries and a repeated run does not create another 23 GiB archive.
+if [[ -n "$check_dir" ]] || { ((retry_delivery == 0)) && [[ ! -f "$archive" ]]; }; then
+  history_work="$(mktemp -d "${history_work_root}/run.XXXXXXXX")"
+  python3 "$history_tool" snapshot \
+    --state-root "${history_state}" --archive-root "$archive_root" \
+    --workflow-config "${history_state}/workflow-backup.json" \
+    --output "${history_work}/history-backup"
+fi
 
-remote_drop_oldest() {
-  ssh "${ssh_opts[@]}" "$1" 'cd "$HOME/backups/vault" && ls -1tr vault-*.tar.zst.gpg 2>/dev/null | head -n 1 | xargs -r rm --'
-}
+if [[ -n "$check_dir" ]]; then
+  python3 - "$check_dir" <<'CHECKDIR'
+import os
+from pathlib import Path
+import sys
+p = Path(os.path.abspath(sys.argv[1]))
+if any(q.is_symlink() for q in (p, *p.parents)) or p.parent.stat().st_mode & 0o077:
+    raise SystemExit('private real check parent required')
+p.mkdir(mode=0o700)
+CHECKDIR
+  python3 "$history_tool" restore --bundle "${history_work}/history-backup" --output "${check_dir}/snapshot"
+  artifact="${check_dir}/history-test.tar.zst.gpg"
+  tar --create --directory="$history_work" history-backup \
+    | zstd -q -3 -T0 \
+    | gpg --batch --yes --quiet --trust-model always --encrypt --recipient "$gpg_key" --output "$artifact"
+  mkdir -m 700 -- "${check_dir}/decoded"
+  gpg --batch --quiet --pinentry-mode error --decrypt "$artifact" \
+    | zstd -dq \
+    | tar --extract --directory="${check_dir}/decoded" --no-same-owner
+  python3 "$history_tool" restore --bundle "${check_dir}/decoded/history-backup" --output "${check_dir}/restored"
+  sha256sum -- "$artifact"
+  log "history encrypted roundtrip verified locally"
+  exit 0
+fi
 
-remote_retention_cleanup() {
-  ssh "${ssh_opts[@]}" "$1" "find \$HOME/backups/vault -maxdepth 1 -name 'vault-*.tar.zst.gpg' -mtime +$2 -delete"
-}
+mkdir -p -m 700 -- "$local_dir"
+# A lock excludes another run. Files left by interrupted assembly have no proof
+# of completion and must never be promoted based on size or name.
+if ((retry_delivery == 0)); then
+  # Old versions left even fully assembled archives under .incoming names.
+  # Their provenance is unknown: retain them for explicit manual classification.
+  if find "$local_dir" -maxdepth 1 -type f -name '.incoming-vault-*.tar.zst.gpg' -print -quit | read -r _; then
+    log "legacy .incoming archive(s) preserved; manual classification required"
+  fi
+  find "$local_dir" -maxdepth 1 -type f -name '.assembling-vault-*.tar.zst.gpg' -delete
+fi
+if [[ ! -f "$archive" ]]; then
+  incoming="${local_dir}/.assembling-${archive_name}"
+  # Keep existing live-vault tolerance, encryption and history validation.
+  history_archive_stream "$vault_dir" "$history_work" "$history_tool" "$history_state" \
+    | zstd -q -3 -T0 \
+    | gpg --batch --yes --quiet --trust-model always \
+      --encrypt --recipient "$gpg_key" \
+      --output "$incoming"
+  python3 "$history_tool" verify --bundle "${history_work}/history-backup"
+  mv -f -- "$incoming" "$archive"
+  incoming=""
+  log "finalized local archive $(basename -- "$archive")"
+else
+  log "reusing finalized local archive $(basename -- "$archive")"
+fi
+# Commit/rotation is independent of network success. Sort by ISO date rather
+# than mutable mtimes; filenames never contain whitespace.
+if ((retry_delivery == 0)); then
+  while IFS= read -r old; do
+    [[ -z "$old" ]] || rm -f -- "${local_dir}/${old}"
+  done < <(find "$local_dir" -maxdepth 1 -type f -name 'vault-????-??-??.tar.zst.gpg' -printf '%f\n' | LC_ALL=C sort -r | tail -n +$((local_keep + 1)))
+fi
 
+# History verification workspace can be large and is not needed during upload.
+[[ -z "$history_work" ]] || rm -rf -- "$history_work"
+history_work=""
+archive_sha="$(sha256sum -- "$archive")"
+archive_sha="${archive_sha%% *}"
 status=0
+pids=()
+worker_destinations=()
 for entry in "${destinations[@]}"; do
   dest="${entry%%:*}"
   retention="${entry##*:}"
-
-  if ! ssh "${ssh_opts[@]}" "$dest" 'mkdir -p "$HOME/backups/vault"'; then
-    log "FAILED to reach ${dest}"
-    status=1
-    continue
-  fi
-
-  # Free-space guard: drop oldest archives until the new one fits.
-  for _ in 1 2 3 4; do
-    free_kb="$(remote_free_kb "$dest" || printf 0)"
-    if ((free_kb >= need_kb)); then
-      break
-    fi
-    log "${dest}: only ${free_kb} KiB free, dropping oldest archive"
-    remote_drop_oldest "$dest"
-  done
-
-  if rsync -a --partial --timeout=1800 \
-    --rsh="ssh -o BatchMode=yes -o ConnectTimeout=15" \
-    "$incoming" "${dest}:backups/vault/${archive_name}"; then
-    remote_size="$(ssh "${ssh_opts[@]}" "$dest" "stat -c %s \$HOME/backups/vault/${archive_name}" || printf 0)"
-    local_size="$(stat -c %s "$incoming")"
-    if [[ "$remote_size" == "$local_size" ]]; then
-      remote_retention_cleanup "$dest" "$retention"
-      log "delivered to ${dest} (retention ${retention}d)"
-    else
-      log "SIZE MISMATCH on ${dest}: remote ${remote_size} != local ${local_size}"
-      status=1
-    fi
+  timeout --kill-after=30s "$delivery_timeout" bash "$0" --deliver-worker "$dest" "$retention" "$archive" "$archive_sha" &
+  pids+=("$!")
+  worker_destinations+=("$dest")
+done
+for index in "${!pids[@]}"; do
+  if wait "${pids[$index]}"; then
+    :
   else
-    log "FAILED to deliver to ${dest}"
+    worker_status="$?"
+    log "${worker_destinations[$index]}: FAILED delivery worker (exit ${worker_status}; timeout limit ${delivery_timeout})"
     status=1
   fi
 done
-
-# Keep the newest artifact local for fast restore; same 7-day retention.
-mv -f -- "$incoming" "${local_dir}/${archive_name}"
-find "$local_dir" -maxdepth 1 -name 'vault-*.tar.zst.gpg' -mtime +7 -delete
-
 exit "$status"

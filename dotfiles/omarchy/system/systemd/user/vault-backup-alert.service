@@ -1,0 +1,6 @@
+[Unit]
+Description=Show a desktop notification when a vault backup fails
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/notify-send --urgency=critical --app-name="Vault Backup" "Vault backup failed" "Some backup destinations may be stale. Check: journalctl --user -u vault-backup-push.service"
