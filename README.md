@@ -4,7 +4,11 @@ This repository contains a Nix flake configuration for managing multiple machine
 
 ## Proxy architecture
 
-The agreed Moscow ingress, per-device subscriptions and direct Frankfurt fallback are described in [docs/moscow1-vless-target.md](docs/moscow1-vless-target.md). Existing proxy operation remains documented in [docs/proxy-setup.md](docs/proxy-setup.md).
+The current Nik Code VPN topology, migration acceptance record, and sanitized
+rollback runbook are in [docs/nikcode-network.md](docs/nikcode-network.md). The
+[Moscow ingress target](docs/moscow1-vless-target.md) is a historical pilot, and
+[the older proxy setup](docs/proxy-setup.md) documents a separate legacy
+architecture rather than the current Nik Code VPN primary.
 
 ## Supported Machines
 

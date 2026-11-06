@@ -1,5 +1,10 @@
 # Proxy Setup
 
+> **Historical/separate architecture.** This document is not the current Nik
+> Code VPN primary runbook. See [nikcode-network.md](nikcode-network.md) for the
+> 2026-11-06 production topology, migration record, and rollback roles. Preserve
+> the London services described below unless a task explicitly changes them.
+
 ## Agreed Moscow ingress target
 
 See [moscow1-vless-target.md](moscow1-vless-target.md) for the agreed target: Moscow terminates client VLESS, manual foreign-egress selection, per-device subscriptions and direct Frankfurt as the independent fallback. Existing connections below remain active during the pilot; this target does not imply a completed client migration.
