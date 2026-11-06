@@ -3,7 +3,6 @@
   key,
   syncthingHome ? "/home/nik/.local/state/syncthing",
   folderPaths ? {
-    "3y3qt-shfv6" = "/home/nik/obsidian-vault";
     "lavhv-cjakz" = "/home/nik/Documents/Проекты";
     wallpapers = "/home/nik/wallpapers";
     "разведмобиль" = "/home/nik/Documents/разведмобиль";
@@ -14,10 +13,6 @@ let
   state = import ./syncthing-shared-state.nix;
 
   mobileShares = {
-    "3y3qt-shfv6" = [
-      "android-phone"
-      "android-tablet"
-    ];
     "lavhv-cjakz" = [ ];
     "wallpapers" = [ ];
     "разведмобиль" = [ ];

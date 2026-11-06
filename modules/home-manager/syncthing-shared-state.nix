@@ -34,24 +34,6 @@
   ];
 
   folders = {
-    obsidian-vault = {
-      id = "3y3qt-shfv6";
-      type = "sendreceive";
-      devices = [
-        "x1carbon"
-        "um790pro"
-        "matebook"
-        "x13"
-        "m1max"
-        "m3max"
-        "zenbook"
-        "t14s"
-        "desktop"
-        "android-phone"
-        "android-tablet"
-      ];
-    };
-
     projects = {
       id = "lavhv-cjakz";
       label = "Проекты";

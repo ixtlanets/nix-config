@@ -60,7 +60,6 @@ device_specs=(
   "android-tablet|${mobile_ids[1]}"
 )
 folder_specs=(
-  "3y3qt-shfv6|3y3qt-shfv6|$HOME/obsidian-vault|sendreceive|mobile"
   "lavhv-cjakz|Проекты|$HOME/Documents/Проекты|sendreceive|computer"
   "wallpapers|wallpapers|$HOME/wallpapers|sendreceive|computer"
   "разведмобиль|разведмобиль|$HOME/Documents/разведмобиль|sendreceive|computer"
@@ -94,6 +93,13 @@ declare -A configured_folders=()
 while IFS= read -r folder_id; do
   [[ -n "$folder_id" ]] && configured_folders["$folder_id"]=1
 done < <(syncthing cli config folders list)
+
+# Retire the former vault share without touching the files in its directory.
+if [[ -n "${configured_folders[3y3qt-shfv6]:-}" ]]; then
+  $check_only && fail "retired folder 3y3qt-shfv6 is still configured"
+  syncthing cli config folders 3y3qt-shfv6 delete
+  log "removed retired folder 3y3qt-shfv6"
+fi
 
 for spec in "${folder_specs[@]}"; do
   IFS='|' read -r folder_id label path folder_type sharing <<< "$spec"
