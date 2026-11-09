@@ -16,6 +16,7 @@ import yaml
 
 START = "<!-- nix-config:agent-instructions:start -->"
 END = "<!-- nix-config:agent-instructions:end -->"
+APPS = ("codex", "opencode", "hermes", "openclaw", "dsh")
 CHILD = (
     "Complete the parent's bounded assignment directly, following applicable "
     "instructions and the assignment's restrictions. Return the shared delegation "
@@ -177,11 +178,31 @@ class Sync:
             self.instructions(Path(workspace).expanduser() / "AGENTS.md", "openclaw")
         self.put(path, json.dumps(config, ensure_ascii=False, indent=2) + "\n")
 
-    def plan(self):
-        self.codex()
-        self.opencode()
-        self.hermes()
-        self.openclaw()
+    def dsh(self):
+        override = self.env.get("DSH_HOME", "").strip()
+        root = Path(override).expanduser() if override else self.home / ".dsh"
+        if not root.is_dir():
+            return
+        user = (self.source / "dsh-user.md").read_text()
+        adapter = (self.source / "dsh.md").read_text()
+        routes = "\n".join(
+            f"- **{name}**: provider `openai-codex`, model `{route['model']}`, "
+            f"reasoning_effort `{route['reasoning_effort']}` — {route['description']}"
+            for name, route in self.routes.items()
+        )
+        adapter = adapter.replace("{{routes}}", routes)
+        path = root / "AGENTS.md"
+        self.put(path, policy_block(self.read(path), user.rstrip() + "\n\n" + self.common, adapter))
+
+    def plan(self, apps=None):
+        selected = APPS if apps is None else tuple(apps)
+        unknown = set(selected) - set(APPS)
+        if unknown:
+            raise ValueError(f"Unknown applications: {', '.join(sorted(unknown))}")
+        self.pending = {}
+        self.warnings = []
+        for app in dict.fromkeys(selected):
+            getattr(self, app)()
         return self.pending
 
     def apply(self):
@@ -214,10 +235,12 @@ def main():
     parser.add_argument("--source-dir", type=Path,
                         default=Path(__file__).resolve().parents[1] / "dotfiles/agents")
     parser.add_argument("--home", type=Path, default=Path.home())
+    parser.add_argument("--app", action="append", choices=APPS,
+                        help="Synchronize only this application (repeatable; default: all)")
     parser.add_argument("--check", action="store_true", help="Report drift without writing")
     args = parser.parse_args()
     sync = Sync(args.home, args.source_dir)
-    pending = sync.plan()  # Parse every input before changing any files.
+    pending = sync.plan(args.app)  # Parse all selected inputs before changing any files.
     for warning in sync.warnings:
         print(f"Warning: {warning}")
     for path in pending:

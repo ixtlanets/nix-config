@@ -2,7 +2,11 @@
 
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import sys
 import tempfile
 import tomllib
 import unittest
@@ -104,6 +108,158 @@ webapp:
         self.assertEqual(claw["agents"]["defaults"]["subagents"]["maxConcurrent"], 2)
         self.assertEqual(claw["agents"]["entries"]["specialist"]["tools"]["deny"], ["image_generate"])
         self.assertEqual(self.planner().plan(), {})
+
+    def test_dsh_is_optional_and_requires_an_existing_directory(self):
+        root = self.home / ".dsh"
+        pending = self.planner().plan()
+        self.assertNotIn(root / "AGENTS.md", pending)
+        self.assertFalse(root.exists())
+        self.assertEqual(self.planner().plan(["dsh"]), {})
+        root.write_text("Not a DSH directory.\n")
+        self.assertEqual(self.planner().plan(["dsh"]), {})
+        self.assertEqual(root.read_text(), "Not a DSH directory.\n")
+
+    def test_dsh_home_override_does_not_fall_back_to_default(self):
+        default = self.write(".dsh/AGENTS.md", "Default DSH guidance.\n")
+        root = self.home / "custom-dsh"
+        env = {"DSH_HOME": str(root)}
+        self.assertEqual(sync.Sync(self.home, self.source, env=env).plan(["dsh"]), {})
+        target = self.write("custom-dsh/AGENTS.md", "Custom DSH guidance.\n")
+        pending = sync.Sync(self.home, self.source, env=env).plan(["dsh"])
+        self.assertEqual(set(pending), {target})
+        self.assertTrue(pending[target].endswith("Custom DSH guidance.\n"))
+        self.assertEqual(default.read_text(), "Default DSH guidance.\n")
+
+    def test_blank_dsh_home_uses_default_not_working_directory(self):
+        target = self.write(".dsh/AGENTS.md", "Default DSH guidance.\n")
+        for override in ["", "  \t "]:
+            with self.subTest(override=override):
+                job = sync.Sync(self.home, self.source, env={"DSH_HOME": override})
+                self.assertEqual(set(job.plan(["dsh"])), {target})
+
+    def test_dsh_preserves_surroundings_backups_and_unrelated_configuration(self):
+        self.fixture()
+        original = f"Personal prefix.\n{sync.START}\nOld DSH policy\n{sync.END}\nPersonal suffix."
+        target = self.write(".dsh/AGENTS.md", original)
+        self.write(".agents/AGENTS.md", "Independent global guidance.\n")
+        self.write(".dsh/profiles/default.json", '{"permissions": "keep"}\n')
+        self.write(".dsh/models.json", '{"allowlist": ["keep"]}\n')
+        self.write(".dsh/permissions.json", '{"edit": "deny"}\n')
+        originals = {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()}
+        job = self.planner()
+        pending = job.plan(["dsh"])
+        self.assertEqual(set(pending), {target})
+        self.assertTrue(pending[target].startswith("Personal prefix.\n"))
+        self.assertTrue(pending[target].endswith("\nPersonal suffix."))
+        self.assertNotIn("Old DSH policy", pending[target])
+        self.assertEqual(pending[target].count(sync.START), 1)
+        self.assertEqual(pending[target].count(sync.END), 1)
+        backup = job.apply()
+        saved = backup / str(target.absolute()).lstrip("/")
+        self.assertEqual(saved.read_text(), original)
+        self.assertEqual(saved.stat().st_mode & 0o777, 0o600)
+        for path, content in originals.items():
+            if path != target:
+                self.assertEqual(path.read_bytes(), content)
+        self.assertEqual(self.planner().plan(["dsh"]), {})
+
+    def test_dsh_only_ignores_invalid_other_app_inputs(self):
+        target = self.write(".dsh/AGENTS.md", "Personal DSH guidance.\n")
+        self.write(".codex/config.toml", "invalid = [")
+        self.write(".config/opencode/agents/fast.md", "No frontmatter")
+        self.write(".hermes/config.yaml", "invalid: [")
+        self.write(".hermes/plugins/advanced-delegation/plugin.yaml", "name: advanced-delegation\n")
+        self.write(".openclaw/openclaw.json", "not json")
+        originals = {p: p.read_bytes() for p in self.home.rglob("*") if p.is_file()}
+        pending = self.planner().plan(["dsh"])
+        self.assertEqual(set(pending), {target})
+        for path, content in originals.items():
+            self.assertEqual(path.read_bytes(), content)
+
+    def test_dsh_user_context_is_first_and_does_not_leak_into_other_apps(self):
+        self.fixture()
+        self.write(".dsh/AGENTS.md", "Personal DSH guidance.\n")
+        source = self.home / "source"
+        shutil.copytree(self.source, source)
+        (source / "dsh-user.md").write_text("DSH-ONLY style and personal context.\n")
+        (source / "common.md").write_text("Common policy sentinel.\n")
+        (source / "dsh.md").write_text("DSH adapter sentinel.\n\n{{routes}}\n")
+        pending = sync.Sync(self.home, source, env={}).plan()
+        target = self.home / ".dsh/AGENTS.md"
+        text = pending[target]
+        self.assertLess(text.index("DSH-ONLY"), text.index("Common policy sentinel."))
+        self.assertLess(text.index("Common policy sentinel."), text.index("DSH adapter sentinel."))
+        self.assertNotIn("{{routes}}", text)
+        for path, content in pending.items():
+            if path != target:
+                self.assertNotIn("DSH-ONLY", content, str(path))
+
+    def test_all_dsh_policy_source_edits_propagate(self):
+        target = self.write(".dsh/AGENTS.md", "Keep personal rules.\n")
+        source = self.home / "source"
+        shutil.copytree(self.source, source)
+        job = sync.Sync(self.home, source, env={})
+        job.plan(["dsh"])
+        job.apply()
+        for name in ["dsh-user.md", "common.md", "dsh.md"]:
+            with self.subTest(source=name):
+                marker = f"Updated {name} rule."
+                with (source / name).open("a") as stream:
+                    stream.write(f"\n{marker}\n")
+                job = sync.Sync(self.home, source, env={})
+                pending = job.plan(["dsh"])
+                self.assertEqual(set(pending), {target})
+                self.assertIn(marker, pending[target])
+                self.assertTrue(pending[target].endswith("Keep personal rules.\n"))
+                job.apply()
+                self.assertEqual(sync.Sync(self.home, source, env={}).plan(["dsh"]), {})
+
+    def test_dsh_route_table_tracks_shared_models_and_efforts(self):
+        target = self.write(".dsh/AGENTS.md", "Personal DSH guidance.\n")
+        source = self.home / "source"
+        shutil.copytree(self.source, source)
+        job = sync.Sync(self.home, source, env={})
+        text = job.plan(["dsh"])[target]
+        self.assertNotIn("{{routes}}", text)
+        for name, route in job.routes.items():
+            self.assertTrue(any(all(value in line for value in
+                                    [name, "openai-codex", route["model"], route["reasoning_effort"]])
+                                for line in text.splitlines()), name)
+        job.apply()
+        routes = json.loads((source / "routes.json").read_text())
+        routes["fast"].update(model="test-updated-model", reasoning_effort="low")
+        (source / "routes.json").write_text(json.dumps(routes))
+        pending = sync.Sync(self.home, source, env={}).plan(["dsh"])
+        self.assertEqual(set(pending), {target})
+        self.assertTrue(any(all(value in line for value in
+                                ["fast", "openai-codex", "test-updated-model", "low"])
+                            for line in pending[target].splitlines()))
+        self.assertNotIn(routes["fast"]["model"], target.read_text())
+
+    def test_cli_dsh_check_accepts_repeated_app_and_never_writes(self):
+        target = self.write(".dsh/AGENTS.md", "Personal DSH guidance.\n")
+        invalid = self.write(".openclaw/openclaw.json", "not json")
+        env = dict(os.environ, HOME=str(self.home), DSH_HOME=str(target.parent),
+                   CODEX_HOME=str(self.home / ".codex"),
+                   OPENCODE_CONFIG_DIR=str(self.home / ".config/opencode"),
+                   HERMES_HOME=str(self.home / ".hermes"),
+                   OPENCLAW_STATE_DIR=str(invalid.parent), OPENCLAW_CONFIG_PATH=str(invalid),
+                   PYTHONDONTWRITEBYTECODE="1")
+        command = [sys.executable, str(REPO / "scripts/sync-agent-instructions.py"),
+                   "--home", str(self.home), "--source-dir", str(self.source),
+                   "--check", "--app", "dsh", "--app", "dsh"]
+        result = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertIn(f"Would update {target}", result.stdout)
+        self.assertEqual(target.read_text(), "Personal DSH guidance.\n")
+        self.assertEqual(invalid.read_text(), "not json")
+        self.assertFalse((self.home / ".local").exists())
+        job = self.planner()
+        job.plan(["dsh"])
+        job.apply()
+        result = subprocess.run(command, env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("Would update", result.stdout)
 
     def test_native_routes_agree_across_apps(self):
         self.fixture()
