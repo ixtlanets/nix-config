@@ -1,0 +1,1402 @@
+{
+  "status": "partial",
+  "generated_at_utc": "2026-11-10T00:16:52.129591+00:00",
+  "quick_live_only": false,
+  "coverage": {
+    "all_events_first_utc": "2026-10-05T23:45:48.063+00:00",
+    "all_events_last_utc": "2026-11-07T07:34:03.558+00:00",
+    "model_calls_first_utc": "2026-10-05T23:45:50.078+00:00",
+    "model_calls_last_utc": "2026-11-07T07:33:43.712+00:00"
+  },
+  "sources": [
+    {
+      "path": "/home/nik/.openclaw/agents/main/agent/openclaw-agent.sqlite",
+      "stats": {
+        "transcript_rows": 242575,
+        "unique_events_added": 246755,
+        "unique_calls_added": 72209,
+        "zstd_rows": 85979,
+        "duplicate_events": 2356,
+        "archive_records": 217,
+        "archive_events": 6536
+      },
+      "agent": "main",
+      "session_windows": 1176,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "openclaw",
+      "session_windows": 0,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/opencode/agent/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "opencode",
+      "session_windows": 2,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/tonal/agent/openclaw-agent.sqlite",
+      "stats": {
+        "transcript_rows": 252,
+        "unique_events_added": 252,
+        "unique_calls_added": 78,
+        "zstd_rows": 81
+      },
+      "agent": "tonal",
+      "session_windows": 4,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/viewer/agent/openclaw-agent.sqlite",
+      "stats": {
+        "transcript_rows": 680,
+        "unique_events_added": 680,
+        "zstd_rows": 154,
+        "unique_calls_added": 202
+      },
+      "agent": "viewer",
+      "session_windows": 6,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/main/agent/openclaw-agent.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {
+        "transcript_rows": 221919,
+        "duplicate_events": 221919,
+        "zstd_rows": 81545,
+        "archive_records": 204,
+        "duplicate_archive_blobs": 204
+      },
+      "agent": "main",
+      "session_windows": 1058,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/main/agent/openclaw-agent.sqlite.pre-startup-migration-d562eabb-057f-8d26-8a5a-c87421e81694.bak",
+      "stats": {
+        "transcript_rows": 113911,
+        "duplicate_events": 113911,
+        "zstd_rows": 56833,
+        "archive_records": 187,
+        "duplicate_archive_blobs": 187
+      },
+      "agent": "main",
+      "session_windows": 381,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {},
+      "agent": "openclaw",
+      "session_windows": 0,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite.pre-startup-migration-d562eabb-057f-8d26-8a5a-c87421e81694.bak",
+      "stats": {},
+      "agent": "openclaw",
+      "session_windows": 0,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/opencode/agent/openclaw-agent.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {},
+      "agent": "opencode",
+      "session_windows": 2,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/opencode/agent/openclaw-agent.sqlite.pre-startup-migration-d562eabb-057f-8d26-8a5a-c87421e81694.bak",
+      "stats": {},
+      "agent": "opencode",
+      "session_windows": 2,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/tonal/agent/openclaw-agent.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {
+        "transcript_rows": 252,
+        "duplicate_events": 252,
+        "zstd_rows": 81
+      },
+      "agent": "tonal",
+      "session_windows": 4,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/tonal/agent/openclaw-agent.sqlite.pre-startup-migration-d562eabb-057f-8d26-8a5a-c87421e81694.bak",
+      "stats": {
+        "transcript_rows": 252,
+        "duplicate_events": 252,
+        "zstd_rows": 81
+      },
+      "agent": "tonal",
+      "session_windows": 4,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/viewer/agent/openclaw-agent.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {
+        "transcript_rows": 680,
+        "duplicate_events": 680,
+        "zstd_rows": 154
+      },
+      "agent": "viewer",
+      "session_windows": 6,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/openclaw/agent.nocow-backup-eejYbp/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "openclaw",
+      "session_windows": 0,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/openclaw/agent.nocow-snapshots-lY6MwM/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "openclaw",
+      "session_windows": 0,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/opencode/agent.nocow-backup-aNbD1J/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "opencode",
+      "session_windows": 2,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/agents/opencode/agent.nocow-snapshots-5cyi2W/openclaw-agent.sqlite",
+      "stats": {},
+      "agent": "opencode",
+      "session_windows": 2,
+      "cold_archive_records": 0
+    },
+    {
+      "path": "/home/nik/.openclaw/state/openclaw.sqlite.pre-codexmig-20261007.bak",
+      "stats": {},
+      "skip": "no transcript_events table"
+    },
+    {
+      "path": "/home/nik/.openclaw/state/openclaw.sqlite.pre-startup-migration-40c8b2fe-58dd-8746-8aed-9efefbcd12ea.bak",
+      "stats": {},
+      "skip": "no transcript_events table"
+    },
+    {
+      "path": "/home/nik/.openclaw/state/openclaw.sqlite.pre-startup-migration-d562eabb-057f-8d26-8a5a-c87421e81694.bak",
+      "stats": {},
+      "skip": "no transcript_events table"
+    },
+    {
+      "path": "/home/nik/.openclaw/update-prep-20261019/sqlite-snapshots/2026-10-19T19-53-34-935Z-5758a415-1a60-42dd-9cad-31f6639a74c3/database.sqlite",
+      "stats": {},
+      "skip": "no transcript_events table"
+    },
+    {
+      "path": "/home/nik/.openclaw/update-prep-20261019/sqlite-snapshots/2026-10-19T19-53-47-067Z-1a121453-273a-4448-bdbd-0b4011a2305f/database.sqlite",
+      "stats": {
+        "transcript_rows": 113770,
+        "duplicate_events": 113770,
+        "zstd_rows": 56771,
+        "archive_records": 187,
+        "duplicate_archive_blobs": 187
+      },
+      "agent": "main",
+      "session_windows": 381,
+      "cold_archive_records": 0
+    }
+  ],
+  "diagnostics": {
+    "repeated_nonempty_provider_response_ids": 0,
+    "calls_without_response_id": 221,
+    "usage_missing_or_non_numeric": 0,
+    "all_zero_usage_calls": 1077,
+    "cache_write_nonzero_calls": 2,
+    "native_nonzero_usage_records": 19,
+    "all_zero_usage_successful_calls": 811,
+    "usage_component_total_mismatches": 0
+  },
+  "excluded_messages": {
+    "synthetic_openclaw_messages": 547,
+    "native_mirrored_messages": 709,
+    "realtime_voice_messages_not_text_requests": 2
+  },
+  "verification": {
+    "independent_binary_search_oracle": "passed",
+    "max_count": 2055,
+    "max_schedule_usd": 19.34346881400012
+  },
+  "calendar_months_utc_not_billing_cycles": {
+    "2026-10": {
+      "calls": 62700,
+      "schedule_usd": 387.6336358860032
+    },
+    "2026-11": {
+      "calls": 9789,
+      "schedule_usd": 62.2949669729998
+    }
+  },
+  "custom_prompt_errors_checked": {
+    "events": 137
+  },
+  "native_coverage_checks": {
+    "main_codex_state_threads": 0,
+    "main_codex_sessions_directory_exists": false,
+    "acpx_codex_sessions_directory_exists": false
+  },
+  "runtime_snapshot_crosscheck": {
+    "model_completed_events": 7487,
+    "assistant_metadata_records": 21434,
+    "matched_transcript_responses": 20838,
+    "unmatched_or_truncated_response_metadata": 596,
+    "truncated_or_absent_snapshots": 2
+  },
+  "all_zero_usage_by_provider_stop_reason": [
+    {
+      "provider": "plusvibe",
+      "stop_reason": "toolUse",
+      "records": 689
+    },
+    {
+      "provider": "closerouter",
+      "stop_reason": "aborted",
+      "records": 104
+    },
+    {
+      "provider": "plusvibe",
+      "stop_reason": "stop",
+      "records": 63
+    },
+    {
+      "provider": "closerouter",
+      "stop_reason": "error",
+      "records": 50
+    },
+    {
+      "provider": "plusvibe",
+      "stop_reason": "error",
+      "records": 28
+    },
+    {
+      "provider": "plusvibe",
+      "stop_reason": "aborted",
+      "records": 28
+    },
+    {
+      "provider": "nano-gpt",
+      "stop_reason": "stop",
+      "records": 25
+    },
+    {
+      "provider": "nano-gpt",
+      "stop_reason": "toolUse",
+      "records": 25
+    },
+    {
+      "provider": "openrouter",
+      "stop_reason": "error",
+      "records": 21
+    },
+    {
+      "provider": "openai",
+      "stop_reason": "error",
+      "records": 12
+    },
+    {
+      "provider": "kimi",
+      "stop_reason": "error",
+      "records": 7
+    },
+    {
+      "provider": "zai",
+      "stop_reason": "error",
+      "records": 6
+    },
+    {
+      "provider": "closerouter",
+      "stop_reason": "toolUse",
+      "records": 6
+    },
+    {
+      "provider": "openrouter",
+      "stop_reason": "aborted",
+      "records": 5
+    },
+    {
+      "provider": "zai",
+      "stop_reason": "aborted",
+      "records": 2
+    },
+    {
+      "provider": "kimi",
+      "stop_reason": "aborted",
+      "records": 2
+    },
+    {
+      "provider": "closerouter",
+      "stop_reason": "stop",
+      "records": 2
+    },
+    {
+      "provider": "zai",
+      "stop_reason": "stop",
+      "records": 1
+    },
+    {
+      "provider": "openai",
+      "stop_reason": "aborted",
+      "records": 1
+    }
+  ],
+  "event_types": {
+    "session": 1312,
+    "model_change": 967,
+    "thinking_level_change": 1390,
+    "custom": 71426,
+    "message": 171291,
+    "custom_message": 1216,
+    "reset": 8,
+    "compaction": 18,
+    "leaf": 59
+  },
+  "usage_report_states": {
+    "legacy_unspecified": 66507,
+    "available": 5347,
+    "unavailable": 635
+  },
+  "missing_usage_models": {},
+  "requests": {
+    "calls": 72489,
+    "first_utc": "2026-10-05T23:45:50.078+00:00",
+    "last_utc": "2026-11-07T07:33:43.712+00:00",
+    "maximum": {
+      "start_exclusive_utc": "2026-10-24T19:47:16.713+00:00",
+      "end_inclusive_utc": "2026-10-25T00:47:16.713+00:00",
+      "start_exclusive_moscow": "2026-10-24T22:47:16.713+03:00",
+      "end_inclusive_moscow": "2026-10-25T03:47:16.713+03:00",
+      "count": 2055,
+      "percent_43330": 4.742672513270252,
+      "by_group": {
+        "main:root": 2055
+      },
+      "all_zero_usage_records": 4
+    },
+    "top_nonoverlapping": [
+      {
+        "start_exclusive_utc": "2026-10-24T19:47:16.713+00:00",
+        "end_inclusive_utc": "2026-10-25T00:47:16.713+00:00",
+        "start_exclusive_moscow": "2026-10-24T22:47:16.713+03:00",
+        "end_inclusive_moscow": "2026-10-25T03:47:16.713+03:00",
+        "count": 2055,
+        "percent_43330": 4.742672513270252,
+        "by_group": {
+          "main:root": 2055
+        },
+        "all_zero_usage_records": 4
+      },
+      {
+        "start_exclusive_utc": "2026-10-22T09:45:43.304+00:00",
+        "end_inclusive_utc": "2026-10-22T14:45:43.304+00:00",
+        "start_exclusive_moscow": "2026-10-22T12:45:43.304+03:00",
+        "end_inclusive_moscow": "2026-10-22T17:45:43.304+03:00",
+        "count": 2032,
+        "percent_43330": 4.689591507039003,
+        "by_group": {
+          "main:root": 2032
+        },
+        "all_zero_usage_records": 0
+      },
+      {
+        "start_exclusive_utc": "2026-11-05T09:00:12.655+00:00",
+        "end_inclusive_utc": "2026-11-05T14:00:12.655+00:00",
+        "start_exclusive_moscow": "2026-11-05T12:00:12.655+03:00",
+        "end_inclusive_moscow": "2026-11-05T17:00:12.655+03:00",
+        "count": 1706,
+        "percent_43330": 3.937225940456958,
+        "by_group": {
+          "main:root": 1520,
+          "main:subagent": 186
+        },
+        "all_zero_usage_records": 289
+      },
+      {
+        "start_exclusive_utc": "2026-10-18T20:19:34.116+00:00",
+        "end_inclusive_utc": "2026-10-19T01:19:34.116+00:00",
+        "start_exclusive_moscow": "2026-10-18T23:19:34.116+03:00",
+        "end_inclusive_moscow": "2026-10-19T04:19:34.116+03:00",
+        "count": 1615,
+        "percent_43330": 3.7272097853681054,
+        "by_group": {
+          "main:root": 1541,
+          "main:subagent": 74
+        },
+        "all_zero_usage_records": 2
+      },
+      {
+        "start_exclusive_utc": "2026-10-17T09:59:56.017+00:00",
+        "end_inclusive_utc": "2026-10-17T14:59:56.017+00:00",
+        "start_exclusive_moscow": "2026-10-17T12:59:56.017+03:00",
+        "end_inclusive_moscow": "2026-10-17T17:59:56.017+03:00",
+        "count": 1540,
+        "percent_43330": 3.5541195476575123,
+        "by_group": {
+          "main:root": 1401,
+          "main:subagent": 139
+        },
+        "all_zero_usage_records": 0
+      }
+    ],
+    "endpoint_windows_above_20": null,
+    "total_usd": null
+  },
+  "groups": {
+    "main:root": {
+      "calls": 68626,
+      "first_utc": "2026-10-05T23:45:50.078+00:00",
+      "last_utc": "2026-11-07T07:33:43.712+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-24T19:47:16.713+00:00",
+        "end_inclusive_utc": "2026-10-25T00:47:16.713+00:00",
+        "start_exclusive_moscow": "2026-10-24T22:47:16.713+03:00",
+        "end_inclusive_moscow": "2026-10-25T03:47:16.713+03:00",
+        "count": 2055,
+        "percent_43330": 4.742672513270252,
+        "by_group": {
+          "main:root": 2055
+        },
+        "all_zero_usage_records": 4
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-24T19:47:16.713+00:00",
+          "end_inclusive_utc": "2026-10-25T00:47:16.713+00:00",
+          "start_exclusive_moscow": "2026-10-24T22:47:16.713+03:00",
+          "end_inclusive_moscow": "2026-10-25T03:47:16.713+03:00",
+          "count": 2055,
+          "percent_43330": 4.742672513270252,
+          "by_group": {
+            "main:root": 2055
+          },
+          "all_zero_usage_records": 4
+        }
+      ],
+      "endpoint_windows_above_20": null,
+      "total_usd": null
+    },
+    "main:subagent": {
+      "calls": 3583,
+      "first_utc": "2026-10-06T08:43:39.450+00:00",
+      "last_utc": "2026-11-06T20:31:50.218+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-26T06:53:27.547+00:00",
+        "end_inclusive_utc": "2026-10-26T11:53:27.547+00:00",
+        "start_exclusive_moscow": "2026-10-26T09:53:27.547+03:00",
+        "end_inclusive_moscow": "2026-10-26T14:53:27.547+03:00",
+        "count": 637,
+        "percent_43330": 1.4701130856219708,
+        "by_group": {
+          "main:subagent": 637
+        },
+        "all_zero_usage_records": 3
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-26T06:53:27.547+00:00",
+          "end_inclusive_utc": "2026-10-26T11:53:27.547+00:00",
+          "start_exclusive_moscow": "2026-10-26T09:53:27.547+03:00",
+          "end_inclusive_moscow": "2026-10-26T14:53:27.547+03:00",
+          "count": 637,
+          "percent_43330": 1.4701130856219708,
+          "by_group": {
+            "main:subagent": 637
+          },
+          "all_zero_usage_records": 3
+        }
+      ],
+      "endpoint_windows_above_20": null,
+      "total_usd": null
+    },
+    "tonal:root": {
+      "calls": 78,
+      "first_utc": "2026-10-12T00:05:09.306+00:00",
+      "last_utc": "2026-10-13T06:37:37.285+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-12T04:45:30.342+00:00",
+        "end_inclusive_utc": "2026-10-12T09:45:30.342+00:00",
+        "start_exclusive_moscow": "2026-10-12T07:45:30.342+03:00",
+        "end_inclusive_moscow": "2026-10-12T12:45:30.342+03:00",
+        "count": 44,
+        "percent_43330": 0.10154627279021462,
+        "by_group": {
+          "tonal:root": 44
+        },
+        "all_zero_usage_records": 16
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-12T04:45:30.342+00:00",
+          "end_inclusive_utc": "2026-10-12T09:45:30.342+00:00",
+          "start_exclusive_moscow": "2026-10-12T07:45:30.342+03:00",
+          "end_inclusive_moscow": "2026-10-12T12:45:30.342+03:00",
+          "count": 44,
+          "percent_43330": 0.10154627279021462,
+          "by_group": {
+            "tonal:root": 44
+          },
+          "all_zero_usage_records": 16
+        }
+      ],
+      "endpoint_windows_above_20": null,
+      "total_usd": null
+    },
+    "viewer:root": {
+      "calls": 202,
+      "first_utc": "2026-10-20T20:11:11.748+00:00",
+      "last_utc": "2026-10-21T10:06:49.443+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-20T17:20:11.152+00:00",
+        "end_inclusive_utc": "2026-10-20T22:20:11.152+00:00",
+        "start_exclusive_moscow": "2026-10-20T20:20:11.152+03:00",
+        "end_inclusive_moscow": "2026-10-21T01:20:11.152+03:00",
+        "count": 140,
+        "percent_43330": 0.32310177705977383,
+        "by_group": {
+          "viewer:root": 140
+        },
+        "all_zero_usage_records": 0
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-20T17:20:11.152+00:00",
+          "end_inclusive_utc": "2026-10-20T22:20:11.152+00:00",
+          "start_exclusive_moscow": "2026-10-20T20:20:11.152+03:00",
+          "end_inclusive_moscow": "2026-10-21T01:20:11.152+03:00",
+          "count": 140,
+          "percent_43330": 0.32310177705977383,
+          "by_group": {
+            "viewer:root": 140
+          },
+          "all_zero_usage_records": 0
+        }
+      ],
+      "endpoint_windows_above_20": null,
+      "total_usd": null
+    }
+  },
+  "models": [
+    {
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "calls": 54844
+    },
+    {
+      "provider": "plusvibe",
+      "model": "deepseek-v4.1-flash",
+      "calls": 10016
+    },
+    {
+      "provider": "zai",
+      "model": "glm-5.3-flash",
+      "calls": 2109
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "calls": 1467
+    },
+    {
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4-pro",
+      "calls": 633
+    },
+    {
+      "provider": "closerouter",
+      "model": "xiaomi/mimo-v2.6-pro",
+      "calls": 453
+    },
+    {
+      "provider": "plusvibe",
+      "model": "deepseek-v4.1-flash-1017",
+      "calls": 437
+    },
+    {
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "calls": 431
+    },
+    {
+      "provider": "closerouter",
+      "model": "xiaomi/mimo-v2.6-flash",
+      "calls": 346
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-6.1-terra",
+      "calls": 329
+    },
+    {
+      "provider": "closerouter",
+      "model": "x-ai/grok-4.7",
+      "calls": 297
+    },
+    {
+      "provider": "closerouter",
+      "model": "moonshotai/kimi-k3.1-pro",
+      "calls": 284
+    },
+    {
+      "provider": "plusvibe",
+      "model": "mimo-v2.6-pro",
+      "calls": 259
+    },
+    {
+      "provider": "plusvibe",
+      "model": "z-ai/glm-5.3",
+      "calls": 146
+    },
+    {
+      "provider": "plusvibe",
+      "model": "gpt-6.1-sol",
+      "calls": 112
+    },
+    {
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4.1-flash-1017",
+      "calls": 97
+    },
+    {
+      "provider": "zai",
+      "model": "glm-5.3",
+      "calls": 63
+    },
+    {
+      "provider": "nano-gpt",
+      "model": "z-ai/glm-5.3-flash-uncensored",
+      "calls": 50
+    },
+    {
+      "provider": "plusvibe",
+      "model": "minimax/minimax-m3.1-flash",
+      "calls": 39
+    },
+    {
+      "provider": "plusvibe",
+      "model": "kimi-k3.1-pro",
+      "calls": 27
+    },
+    {
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.3-flash",
+      "calls": 26
+    },
+    {
+      "provider": "closerouter",
+      "model": "qwen/qwen3.8-max",
+      "calls": 24
+    }
+  ],
+  "stop_reasons": {
+    "stop": 4911,
+    "toolUse": 67274,
+    "error": 136,
+    "length": 26,
+    "aborted": 142
+  },
+  "usage_totals": {
+    "input": 2172870267,
+    "output": 51159868,
+    "cacheRead": 9690342809,
+    "cacheWrite": 72411,
+    "reasoningTokens": 17672165,
+    "totalTokens": 11914445355
+  },
+  "costs": {
+    "schedule": {
+      "calls": 72489,
+      "first_utc": "2026-10-05T23:45:50.078+00:00",
+      "last_utc": "2026-11-07T07:33:43.712+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+        "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+        "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+        "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+        "count": 2055,
+        "percent_43330": 4.742672513270252,
+        "by_group": {
+          "main:root": 2055
+        },
+        "all_zero_usage_records": 3,
+        "usd": 19.34346881400012
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+          "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+          "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+          "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+          "count": 2055,
+          "percent_43330": 4.742672513270252,
+          "by_group": {
+            "main:root": 2055
+          },
+          "all_zero_usage_records": 3,
+          "usd": 19.34346881400012
+        },
+        {
+          "start_exclusive_utc": "2026-10-23T19:32:55.207+00:00",
+          "end_inclusive_utc": "2026-10-24T00:32:55.207+00:00",
+          "start_exclusive_moscow": "2026-10-23T22:32:55.207+03:00",
+          "end_inclusive_moscow": "2026-10-24T03:32:55.207+03:00",
+          "count": 956,
+          "percent_43330": 2.206323563351027,
+          "by_group": {
+            "main:root": 905,
+            "main:subagent": 51
+          },
+          "all_zero_usage_records": 147,
+          "usd": 14.744956902000354
+        },
+        {
+          "start_exclusive_utc": "2026-10-10T20:27:55.161+00:00",
+          "end_inclusive_utc": "2026-10-11T01:27:55.161+00:00",
+          "start_exclusive_moscow": "2026-10-10T23:27:55.161+03:00",
+          "end_inclusive_moscow": "2026-10-11T04:27:55.161+03:00",
+          "count": 735,
+          "percent_43330": 1.6962843295638126,
+          "by_group": {
+            "main:root": 735
+          },
+          "all_zero_usage_records": 2,
+          "usd": 14.09634945299998
+        },
+        {
+          "start_exclusive_utc": "2026-10-20T07:25:31.477+00:00",
+          "end_inclusive_utc": "2026-10-20T12:25:31.477+00:00",
+          "start_exclusive_moscow": "2026-10-20T10:25:31.477+03:00",
+          "end_inclusive_moscow": "2026-10-20T15:25:31.477+03:00",
+          "count": 906,
+          "percent_43330": 2.090930071543965,
+          "by_group": {
+            "main:root": 906
+          },
+          "all_zero_usage_records": 8,
+          "usd": 13.128449760000365
+        },
+        {
+          "start_exclusive_utc": "2026-10-13T08:21:58.033+00:00",
+          "end_inclusive_utc": "2026-10-13T13:21:58.033+00:00",
+          "start_exclusive_moscow": "2026-10-13T11:21:58.033+03:00",
+          "end_inclusive_moscow": "2026-10-13T16:21:58.033+03:00",
+          "count": 1481,
+          "percent_43330": 3.417955227325179,
+          "by_group": {
+            "main:root": 1479,
+            "main:subagent": 2
+          },
+          "all_zero_usage_records": 12,
+          "usd": 10.190516087999896
+        }
+      ],
+      "endpoint_windows_above_20": 0,
+      "total_usd": 449.92860285900474
+    },
+    "all_offpeak": {
+      "calls": 72489,
+      "first_utc": "2026-10-05T23:45:50.078+00:00",
+      "last_utc": "2026-11-07T07:33:43.712+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+        "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+        "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+        "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+        "count": 2055,
+        "percent_43330": 4.742672513270252,
+        "by_group": {
+          "main:root": 2055
+        },
+        "all_zero_usage_records": 3,
+        "usd": 19.343468814000175
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+          "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+          "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+          "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+          "count": 2055,
+          "percent_43330": 4.742672513270252,
+          "by_group": {
+            "main:root": 2055
+          },
+          "all_zero_usage_records": 3,
+          "usd": 19.343468814000175
+        },
+        {
+          "start_exclusive_utc": "2026-10-23T19:32:55.207+00:00",
+          "end_inclusive_utc": "2026-10-24T00:32:55.207+00:00",
+          "start_exclusive_moscow": "2026-10-23T22:32:55.207+03:00",
+          "end_inclusive_moscow": "2026-10-24T03:32:55.207+03:00",
+          "count": 956,
+          "percent_43330": 2.206323563351027,
+          "by_group": {
+            "main:root": 905,
+            "main:subagent": 51
+          },
+          "all_zero_usage_records": 147,
+          "usd": 14.744956901999842
+        },
+        {
+          "start_exclusive_utc": "2026-10-10T20:27:55.161+00:00",
+          "end_inclusive_utc": "2026-10-11T01:27:55.161+00:00",
+          "start_exclusive_moscow": "2026-10-10T23:27:55.161+03:00",
+          "end_inclusive_moscow": "2026-10-11T04:27:55.161+03:00",
+          "count": 735,
+          "percent_43330": 1.6962843295638126,
+          "by_group": {
+            "main:root": 735
+          },
+          "all_zero_usage_records": 2,
+          "usd": 14.096349452999974
+        },
+        {
+          "start_exclusive_utc": "2026-10-20T09:03:48.481+00:00",
+          "end_inclusive_utc": "2026-10-20T14:03:48.481+00:00",
+          "start_exclusive_moscow": "2026-10-20T12:03:48.481+03:00",
+          "end_inclusive_moscow": "2026-10-20T17:03:48.481+03:00",
+          "count": 1093,
+          "percent_43330": 2.522501730902377,
+          "by_group": {
+            "main:root": 1093
+          },
+          "all_zero_usage_records": 5,
+          "usd": 10.416229056000333
+        },
+        {
+          "start_exclusive_utc": "2026-10-19T09:49:17.701+00:00",
+          "end_inclusive_utc": "2026-10-19T14:49:17.701+00:00",
+          "start_exclusive_moscow": "2026-10-19T12:49:17.701+03:00",
+          "end_inclusive_moscow": "2026-10-19T17:49:17.701+03:00",
+          "count": 1022,
+          "percent_43330": 2.358642972536349,
+          "by_group": {
+            "main:root": 1022
+          },
+          "all_zero_usage_records": 2,
+          "usd": 9.650619192000704
+        }
+      ],
+      "endpoint_windows_above_20": 0,
+      "total_usd": 385.70835092699923
+    },
+    "all_peak": {
+      "calls": 72489,
+      "first_utc": "2026-10-05T23:45:50.078+00:00",
+      "last_utc": "2026-11-07T07:33:43.712+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+        "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+        "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+        "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+        "count": 2055,
+        "percent_43330": 4.742672513270252,
+        "by_group": {
+          "main:root": 2055
+        },
+        "all_zero_usage_records": 3,
+        "usd": 38.68693762800035
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-24T19:48:14.062+00:00",
+          "end_inclusive_utc": "2026-10-25T00:48:14.062+00:00",
+          "start_exclusive_moscow": "2026-10-24T22:48:14.062+03:00",
+          "end_inclusive_moscow": "2026-10-25T03:48:14.062+03:00",
+          "count": 2055,
+          "percent_43330": 4.742672513270252,
+          "by_group": {
+            "main:root": 2055
+          },
+          "all_zero_usage_records": 3,
+          "usd": 38.68693762800035
+        },
+        {
+          "start_exclusive_utc": "2026-10-23T19:32:55.207+00:00",
+          "end_inclusive_utc": "2026-10-24T00:32:55.207+00:00",
+          "start_exclusive_moscow": "2026-10-23T22:32:55.207+03:00",
+          "end_inclusive_moscow": "2026-10-24T03:32:55.207+03:00",
+          "count": 956,
+          "percent_43330": 2.206323563351027,
+          "by_group": {
+            "main:root": 905,
+            "main:subagent": 51
+          },
+          "all_zero_usage_records": 147,
+          "usd": 29.489913803999684
+        },
+        {
+          "start_exclusive_utc": "2026-10-10T20:27:55.161+00:00",
+          "end_inclusive_utc": "2026-10-11T01:27:55.161+00:00",
+          "start_exclusive_moscow": "2026-10-10T23:27:55.161+03:00",
+          "end_inclusive_moscow": "2026-10-11T04:27:55.161+03:00",
+          "count": 735,
+          "percent_43330": 1.6962843295638126,
+          "by_group": {
+            "main:root": 735
+          },
+          "all_zero_usage_records": 2,
+          "usd": 28.192698905999947
+        },
+        {
+          "start_exclusive_utc": "2026-10-20T09:03:48.481+00:00",
+          "end_inclusive_utc": "2026-10-20T14:03:48.481+00:00",
+          "start_exclusive_moscow": "2026-10-20T12:03:48.481+03:00",
+          "end_inclusive_moscow": "2026-10-20T17:03:48.481+03:00",
+          "count": 1093,
+          "percent_43330": 2.522501730902377,
+          "by_group": {
+            "main:root": 1093
+          },
+          "all_zero_usage_records": 5,
+          "usd": 20.832458112000666
+        },
+        {
+          "start_exclusive_utc": "2026-10-19T09:49:17.701+00:00",
+          "end_inclusive_utc": "2026-10-19T14:49:17.701+00:00",
+          "start_exclusive_moscow": "2026-10-19T12:49:17.701+03:00",
+          "end_inclusive_moscow": "2026-10-19T17:49:17.701+03:00",
+          "count": 1022,
+          "percent_43330": 2.358642972536349,
+          "by_group": {
+            "main:root": 1022
+          },
+          "all_zero_usage_records": 2,
+          "usd": 19.301238384001408
+        }
+      ],
+      "endpoint_windows_above_20": 2554,
+      "total_usd": 771.4167018539985
+    },
+    "no_cache": {
+      "calls": 72489,
+      "first_utc": "2026-10-05T23:45:50.078+00:00",
+      "last_utc": "2026-11-07T07:33:43.712+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-07T18:36:20.222+00:00",
+        "end_inclusive_utc": "2026-10-07T23:36:20.222+00:00",
+        "start_exclusive_moscow": "2026-10-07T21:36:20.222+03:00",
+        "end_inclusive_moscow": "2026-10-08T02:36:20.222+03:00",
+        "count": 1364,
+        "percent_43330": 3.147934456496654,
+        "by_group": {
+          "main:root": 1337,
+          "main:subagent": 27
+        },
+        "all_zero_usage_records": 0,
+        "usd": 66.94526700000031
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-07T18:36:20.222+00:00",
+          "end_inclusive_utc": "2026-10-07T23:36:20.222+00:00",
+          "start_exclusive_moscow": "2026-10-07T21:36:20.222+03:00",
+          "end_inclusive_moscow": "2026-10-08T02:36:20.222+03:00",
+          "count": 1364,
+          "percent_43330": 3.147934456496654,
+          "by_group": {
+            "main:root": 1337,
+            "main:subagent": 27
+          },
+          "all_zero_usage_records": 0,
+          "usd": 66.94526700000031
+        },
+        {
+          "start_exclusive_utc": "2026-10-18T20:32:50.179+00:00",
+          "end_inclusive_utc": "2026-10-19T01:32:50.179+00:00",
+          "start_exclusive_moscow": "2026-10-18T23:32:50.179+03:00",
+          "end_inclusive_moscow": "2026-10-19T04:32:50.179+03:00",
+          "count": 1602,
+          "percent_43330": 3.697207477498269,
+          "by_group": {
+            "main:root": 1528,
+            "main:subagent": 74
+          },
+          "all_zero_usage_records": 2,
+          "usd": 61.13161799999955
+        },
+        {
+          "start_exclusive_utc": "2026-10-16T19:17:56.438+00:00",
+          "end_inclusive_utc": "2026-10-17T00:17:56.438+00:00",
+          "start_exclusive_moscow": "2026-10-16T22:17:56.438+03:00",
+          "end_inclusive_moscow": "2026-10-17T03:17:56.438+03:00",
+          "count": 1419,
+          "percent_43330": 3.274867297484422,
+          "by_group": {
+            "main:root": 1397,
+            "main:subagent": 22
+          },
+          "all_zero_usage_records": 0,
+          "usd": 58.92458774999966
+        },
+        {
+          "start_exclusive_utc": "2026-10-16T07:48:53.165+00:00",
+          "end_inclusive_utc": "2026-10-16T12:48:53.165+00:00",
+          "start_exclusive_moscow": "2026-10-16T10:48:53.165+03:00",
+          "end_inclusive_moscow": "2026-10-16T15:48:53.165+03:00",
+          "count": 1376,
+          "percent_43330": 3.175628894530348,
+          "by_group": {
+            "main:root": 1376
+          },
+          "all_zero_usage_records": 0,
+          "usd": 54.35951309999837
+        },
+        {
+          "start_exclusive_utc": "2026-10-22T09:41:59.835+00:00",
+          "end_inclusive_utc": "2026-10-22T14:41:59.835+00:00",
+          "start_exclusive_moscow": "2026-10-22T12:41:59.835+03:00",
+          "end_inclusive_moscow": "2026-10-22T17:41:59.835+03:00",
+          "count": 2018,
+          "percent_43330": 4.657281329333025,
+          "by_group": {
+            "main:root": 2018
+          },
+          "all_zero_usage_records": 0,
+          "usd": 52.248043499996356
+        }
+      ],
+      "endpoint_windows_above_20": 29096,
+      "total_usd": 2018.608100999989
+    }
+  },
+  "native_mirror_usage_only": {
+    "records": 19,
+    "request_count_unknown": true,
+    "usage_totals": {
+      "input": 308540,
+      "output": 30037,
+      "cacheRead": 10088960,
+      "cacheWrite": 0
+    },
+    "terminal_time_schedule_estimate": {
+      "calls": 19,
+      "first_utc": "2026-10-15T09:54:31.470+00:00",
+      "last_utc": "2026-10-16T22:55:07.044+00:00",
+      "maximum": {
+        "start_exclusive_utc": "2026-10-15T07:15:26.856+00:00",
+        "end_inclusive_utc": "2026-10-15T12:15:26.856+00:00",
+        "start_exclusive_moscow": "2026-10-15T10:15:26.856+03:00",
+        "end_inclusive_moscow": "2026-10-15T15:15:26.856+03:00",
+        "count": 17,
+        "percent_43330": 0.03923378721440111,
+        "by_group": {
+          "main:root": 17
+        },
+        "all_zero_usage_records": 0,
+        "usd": 0.09008151600000001
+      },
+      "top_nonoverlapping": [
+        {
+          "start_exclusive_utc": "2026-10-15T07:15:26.856+00:00",
+          "end_inclusive_utc": "2026-10-15T12:15:26.856+00:00",
+          "start_exclusive_moscow": "2026-10-15T10:15:26.856+03:00",
+          "end_inclusive_moscow": "2026-10-15T15:15:26.856+03:00",
+          "count": 17,
+          "percent_43330": 0.03923378721440111,
+          "by_group": {
+            "main:root": 17
+          },
+          "all_zero_usage_records": 0,
+          "usd": 0.09008151600000001
+        },
+        {
+          "start_exclusive_utc": "2026-10-16T17:55:07.044+00:00",
+          "end_inclusive_utc": "2026-10-16T22:55:07.044+00:00",
+          "start_exclusive_moscow": "2026-10-16T20:55:07.044+03:00",
+          "end_inclusive_moscow": "2026-10-17T01:55:07.044+03:00",
+          "count": 2,
+          "percent_43330": 0.004615739672282483,
+          "by_group": {
+            "main:subagent": 2
+          },
+          "all_zero_usage_records": 0,
+          "usd": 0.01791923999999999
+        }
+      ],
+      "endpoint_windows_above_20": 0,
+      "total_usd": 0.108000756
+    }
+  },
+  "rate_limit_or_quota_errors": [
+    {
+      "timestamp_utc": "2026-10-13T18:59:38.803+00:00",
+      "timestamp_moscow": "2026-10-13T21:59:38.803+03:00",
+      "agent": "main",
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "event_id": "a16ee7fc-61c5-43f6-8564-f8d22f4c033b",
+      "session_id": "7dfb7644-261f-434a-82a6-a887d1b679fa",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-15T09:48:34.951+00:00",
+      "timestamp_moscow": "2026-10-15T12:48:34.951+03:00",
+      "agent": "main",
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "event_id": "0f89213d-e1b1-471f-bc80-6e704f5d9b1c",
+      "session_id": "c5623a0f-39dc-42e7-8598-20a80c273c7b",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-15T09:48:38.241+00:00",
+      "timestamp_moscow": "2026-10-15T12:48:38.241+03:00",
+      "agent": "main",
+      "provider": "closerouter",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "event_id": "a71f89d4-26a9-4dcc-b1d4-22e1848815a3",
+      "session_id": "b0ce308d-c08b-4e65-8089-7ce424a1bd59",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:35:44.896+00:00",
+      "timestamp_moscow": "2026-10-25T23:35:44.896+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "90d9cd30-60a1-49e8-99fe-e145bc153f6e",
+      "session_id": "21ca86e1-1fb6-4223-bd7f-715e2cd3bcb5",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:35:51.711+00:00",
+      "timestamp_moscow": "2026-10-25T23:35:51.711+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "35086af5-0b85-411c-bb5a-dde8a3071d66",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:36:30.193+00:00",
+      "timestamp_moscow": "2026-10-25T23:36:30.193+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "822ba19d-5a3e-40f3-9e18-10c682b67ebc",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:38:34.715+00:00",
+      "timestamp_moscow": "2026-10-25T23:38:34.715+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "3528d708-887c-4f46-9e44-a85f7db04099",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:38:39.812+00:00",
+      "timestamp_moscow": "2026-10-25T23:38:39.812+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "016baef2-da0d-4db4-a5e6-8f9ab1dafcfe",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-25T20:38:44.139+00:00",
+      "timestamp_moscow": "2026-10-25T23:38:44.139+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "07c82805-9bf2-4cc8-98f4-0383ab95fab9",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-10-26T12:38:16.349+00:00",
+      "timestamp_moscow": "2026-10-26T15:38:16.349+03:00",
+      "agent": "main",
+      "provider": "kimi",
+      "model": "k3.1-pro",
+      "event_id": "16b805de-b1a3-4fd1-bb4a-38664f7fb8e2",
+      "session_id": "193d3d15-df80-499d-9413-80614cfbe888",
+      "tags": [
+        "http_429",
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T00:00:47.063+00:00",
+      "timestamp_moscow": "2026-11-06T03:00:47.063+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "916f9df5-7722-4957-8984-cc2874002f02",
+      "session_id": "0e15ab21-b185-4e9c-8296-8767df5bc566",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T00:00:52.390+00:00",
+      "timestamp_moscow": "2026-11-06T03:00:52.390+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "27f015fd-6afb-469d-91e8-016b2df57670",
+      "session_id": "59246cf1-25ec-4c13-9eb9-050be753a626",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T00:00:55.468+00:00",
+      "timestamp_moscow": "2026-11-06T03:00:55.468+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "ac525102-44ab-4e4d-ae2e-694109805cf6",
+      "session_id": "8b4e7a48-d6df-4703-8c09-3d8be84f0eef",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T00:01:07.343+00:00",
+      "timestamp_moscow": "2026-11-06T03:01:07.343+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "cac46abe-e7d3-4a44-8616-503241ebf238",
+      "session_id": "8b45407b-0f6d-4cf9-8207-e8f9db4b6890",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T17:11:17.206+00:00",
+      "timestamp_moscow": "2026-11-06T20:11:17.206+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "8984abb2-2529-470b-99af-3345c8ad5d69",
+      "session_id": "2039b8d2-79bd-475e-83ab-b590ed15cdd3",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T17:11:23.759+00:00",
+      "timestamp_moscow": "2026-11-06T20:11:23.759+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "f594c25c-5060-4840-bf87-632b619ea604",
+      "session_id": "a2291a44-c40e-462b-b28b-df3ce364f1f6",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T17:13:49.834+00:00",
+      "timestamp_moscow": "2026-11-06T20:13:49.834+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "275886c8-9001-4864-a847-df453aa8d526",
+      "session_id": "a2291a44-c40e-462b-b28b-df3ce364f1f6",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    },
+    {
+      "timestamp_utc": "2026-11-06T17:15:45.268+00:00",
+      "timestamp_moscow": "2026-11-06T20:15:45.268+03:00",
+      "agent": "main",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "event_id": "0779dbb8-35bd-4515-b8e8-c20038f08f6b",
+      "session_id": "a2291a44-c40e-462b-b28b-df3ce364f1f6",
+      "tags": [
+        "quota_or_capacity"
+      ],
+      "stop_reason": "error"
+    }
+  ],
+  "method": {
+    "window": "(end - 5 hours, end], timestamps from message.timestamp then event.timestamp; all endpoints tested",
+    "dedup": "agent + original event id + event timestamp across live DB, branches, archives and backups; call key also includes message timestamp/provider/model; archives deduplicated by SHA-256",
+    "count": "assistant model response records, including recorded error/aborted retries; synthetic openclaw, native mirrored messages and realtime excluded; not a complete HTTP attempt ledger",
+    "cost": "normalized usage input+cacheWrite at uncached input rate, cacheRead at cache rate, output at output rate; reasoning not added twice; no-cache sensitivity prices cacheRead as input",
+    "prices_per_million_offpeak": {
+      "input": 0.15,
+      "output": 0.6,
+      "cacheRead": 0.003
+    },
+    "peak_multiplier": 2,
+    "peak_utc": "Mon-Fri [01:00,04:00), [06:00,10:00)",
+    "reference_requests_estimate_not_quota": 43330,
+    "reference_cost_per_5h_usd": 20,
+    "privacy": "local read-only sqlite with WAL, libzstd; no conversation/error bodies emitted; no network",
+    "additional_coverage_checks": "native codex threads table and sessions directory existence; all custom prompt-error events checked for quota markers"
+  },
+  "limitations": [
+    "Surviving local history only; deleted history before retained snapshots is unknowable.",
+    "Internal SDK HTTP retries and compaction/summarization calls not necessarily persisted as assistant events.",
+    "Native Codex mirrored commentary/final messages are not a per-request ledger; nonzero terminal usage kept separate.",
+    "Foreign tokenizer and historical cache-hit patterns do not predict Flash Go exactly; missing/zero usage is not proof of free calls.",
+    "Token-based counterfactual does not simulate stopping at $20 or later blocked/retried requests; Go billing/reset mechanics may differ.",
+    "No guarantee of fixed 43330 requests; no claim that quotas are shared across models."
+  ]
+}
