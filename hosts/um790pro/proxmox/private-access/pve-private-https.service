@@ -1,0 +1,19 @@
+[Unit]
+Description=Transparent TCP forwarding to native Proxmox TLS
+Requires=pveproxy.service
+After=pveproxy.service
+
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 127.0.0.1:8006
+DynamicUser=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+Restart=on-failure
+RestartSec=2s

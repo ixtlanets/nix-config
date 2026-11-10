@@ -1,0 +1,12 @@
+[Unit]
+Description=Private Proxmox HTTPS on Tailscale only
+Requires=pve-private-access-firewall.service
+After=pve-private-access-firewall.service
+
+[Socket]
+ListenStream=@TAILSCALE_IPV4@:443
+FreeBind=yes
+NoDelay=yes
+
+[Install]
+WantedBy=sockets.target

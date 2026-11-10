@@ -1,0 +1,18 @@
+[Unit]
+Description=Private Proxmox Tailscale ingress policy
+# The socket starts before sockets.target/basic.target. Avoid a default
+# After=basic.target dependency, which would create a boot ordering cycle.
+DefaultDependencies=no
+After=local-fs.target
+Before=tailscaled.service pve-private-https.socket shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f /etc/pve-private-access.nft
+ExecReload=/usr/sbin/nft -f /etc/pve-private-access.nft
+RemainAfterExit=yes
+# Deliberately retain the policy on stop; never open access during a restart.
+
+[Install]
+WantedBy=multi-user.target

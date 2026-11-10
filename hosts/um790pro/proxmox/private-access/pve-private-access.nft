@@ -1,0 +1,35 @@
+# Only this table is managed here; never flush the host/guest firewall.
+# These are explicit personal admin clients, not every node in the shared tailnet.
+# New/reinstalled devices require review and an IP update here.
+add table inet pve_private_access
+delete table inet pve_private_access
+
+table inet pve_private_access {
+  set admin_ipv4 {
+    type ipv4_addr
+    elements = {
+      100.114.155.30, # zenbook
+      100.80.137.100, # t14s
+      100.107.212.33, # x1carbon
+      100.96.214.79, # x13
+      100.66.3.101, # m1max
+      100.118.153.72, # m3max GUI
+      100.109.51.2, # m3max CLI
+      100.76.38.69, # m3max VLESS canary
+      100.112.11.20, # i9mac
+      100.95.81.88, # Sergey's S22
+      100.124.204.53, # Samsung tablet
+      100.104.80.72 # iphone-sergey-72
+    }
+  }
+
+  chain input {
+    type filter hook input priority -20; policy accept;
+    # Restrict the entire new Tailscale interface, including SSH/API/RPC.
+    iifname "tailscale0" ip saddr @admin_ipv4 counter accept
+    # Tailscale IPv6 also fails closed; only the A record is published.
+    iifname "tailscale0" counter drop
+    # Port 443 must not be reachable by routing the private address over LAN/WAN.
+    iifname != "lo" ip daddr 100.64.0.0/10 tcp dport 443 counter drop
+  }
+}
