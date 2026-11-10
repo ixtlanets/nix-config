@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+# Exact pins only: never source runtime.env or use moving mise shims for DSH.
+set -euo pipefail
+umask 077
+DSH_VERSION= NODE_VERSION=
+while IFS='=' read -r key value || [[ -n "$key$value" ]]; do
+  case "$key" in
+    DSH_VERSION)
+      [[ -z "$DSH_VERSION" && "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]] || exit 1
+      DSH_VERSION=$value ;;
+    NODE_VERSION)
+      [[ -z "$NODE_VERSION" && "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+      NODE_VERSION=$value ;;
+    *) printf 'Invalid runtime.env key\n' >&2; exit 1 ;;
+  esac
+done < "$HOME/.config/dsh-local/runtime.env"
+[[ -n "$DSH_VERSION" && -n "$NODE_VERSION" ]]
+export DSH_HOME="$HOME/.dsh"
+# Keep project tools accessible, but mise exec chooses exact Node/DSH binaries.
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:/usr/share/omarchy/bin:/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+export MISE_AUTO_INSTALL=false MISE_NOT_FOUND_AUTO_INSTALL=false
+cd "$HOME"
+"$HOME/.local/bin/dsh-local" runtime-guard
+exec /usr/bin/mise exec "node@$NODE_VERSION" "npm:@deepseek-ai/dsh@$DSH_VERSION" -- \
+  dsh web --no-open --host 127.0.0.1 --port 3080

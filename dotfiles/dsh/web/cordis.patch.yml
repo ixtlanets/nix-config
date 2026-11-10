@@ -1,0 +1,83 @@
+# Model configuration mirrored from the local Harness on 2026-11-08.
+# API keys and OAuth grants belong in ~/.dsh/.credentials.yaml, never here.
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      kimi-coding:
+        apiKeyEnv: KIMI_CODING_API_KEY
+      openai-codex:
+        displayName: ChatGPT (Codex subscription)
+        reasoning: high
+        models:
+          - id: gpt-5.6-luna
+            reasoningEfforts: &codex-efforts
+              minimal: low
+              low: low
+              medium: medium
+              high: high
+              xhigh: xhigh
+              max: max
+          - id: gpt-5.6-sol
+            reasoningEfforts: *codex-efforts
+          - id: gpt-5.6-terra
+            reasoningEfforts: *codex-efforts
+          - id: gpt-6-astra
+            name: GPT-6 Astra
+            contextWindow: 272000
+            maxTokens: 128000
+            input: [ text, image ]
+            reasoningEfforts: *codex-efforts
+          - id: gpt-6.1-sol
+            name: GPT-6.1 Sol
+            contextWindow: 272000
+            maxTokens: 128000
+            input: [ text, image ]
+            reasoningEfforts: *codex-efforts
+          - id: gpt-6.1-terra
+            name: GPT-6.1 Terra
+            contextWindow: 272000
+            maxTokens: 128000
+            input: [ text, image ]
+            reasoningEfforts: *codex-efforts
+      plusvibe:
+        displayName: PlusVibe (pablito)
+        api: openai-completions
+        baseURL: https://gw.plusvibeapi.ru/v1
+        apiKeyEnv: PLUSVIBE_API_KEY
+        compat:
+          thinkingFormat: deepseek
+        models:
+          - id: deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash
+            contextWindow: 900000
+            maxTokens: 393216
+            input: [ text, image ]
+            reasoningEfforts:
+              off:
+              low: low
+              medium: medium
+              high: high
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: openai-codex
+    model: gpt-6.1-sol
+    reasoningEffort: high
+- id: subagent-model-selection-settings
+  name: "@deepseek-ai/dsh-tool-subagent/model-selection-settings"
+  config:
+    enabled: true
+    allowedModels:
+      - provider: kimi-coding
+        model: k3.1-pro
+      - provider: plusvibe
+        model: deepseek-v4.1-flash
+      - provider: openai-codex
+        model: gpt-6.1-sol
+      - provider: openai-codex
+        model: gpt-6.1-terra

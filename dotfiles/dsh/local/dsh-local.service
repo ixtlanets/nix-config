@@ -1,0 +1,23 @@
+# User service: installation enables but never starts/restarts it.
+[Unit]
+Description=Pinned local DeepSeek Harness Web (loopback)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+ExecStart=%h/.local/bin/dsh-local-runtime
+Environment=HOME=%h
+Environment=DSH_HOME=%h/.dsh
+Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:/usr/share/omarchy/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dsh-local
+
+[Install]
+WantedBy=default.target

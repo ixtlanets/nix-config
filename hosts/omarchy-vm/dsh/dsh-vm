@@ -1,0 +1,539 @@
+#!/usr/bin/python3
+"""Pinned, user-local DSH lifecycle. Run as nik, never with sudo.
+
+install; start; status; url; check; login; login-status; update VERSION [NODE_VERSION];
+rollback SNAPSHOT --yes (restores ALL state, including credentials/history).
+Snapshots contain secrets: keep them local, private, and outside Git/backups
+unless those backups are encrypted. No OAuth transfer or network provisioning.
+"""
+import datetime
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import runpy
+import signal
+import socket
+import subprocess
+import sys
+import tarfile
+import tempfile
+import time
+import uuid
+from urllib.parse import urlsplit
+
+MISE = "/usr/bin/mise"
+# The installed local executable is this same standalone engine, renamed. VM
+# bundles remain self-contained (including deployments shipped using tar).
+LOCAL_MODE = Path(sys.argv[0]).name == "dsh-local"
+APP = "dsh-local" if LOCAL_MODE else "dsh-vm"
+UNIT = APP + ".service"
+INITIAL = {"DSH_VERSION": "0.2.2-rc.1", "NODE_VERSION": "26.13.0"}
+PUBLIC = "https://personal-openclaw.tailf108.ts.net:8443/"
+LOCAL = "http://127.0.0.1:3080/"
+if LOCAL_MODE:
+    PUBLIC = LOCAL
+VERSION = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?")
+NAME = re.compile(r"[0-9]{8}T[0-9]{6}Z-(?:update|rollback)-[0-9a-f]{12}")
+HOME = Path(os.environ["HOME"])
+CONFIG = HOME / ".config" / APP
+ENV = CONFIG / "runtime.env"
+STATE = HOME / ".dsh"
+DATA = HOME / ".local/state" / APP
+SNAPS = DATA / "snapshots"
+
+
+def fail(message):
+    raise RuntimeError(message)
+
+
+def run(*args, **kwargs):
+    # Never surface subprocess stdout/stderr on failure: journal/curl can carry tokens.
+    result = subprocess.run(args, capture_output=True, text=True, **kwargs)
+    if result.returncode:
+        fail(f"{Path(args[0]).name} {args[1] if len(args) > 1 else ''} failed (exit {result.returncode})")
+    return result.stdout
+
+
+def ctl(*args):
+    return run("systemctl", "--user", *args)
+
+
+def local_guard(allow_unit=False):
+    """Fail closed on competing DSH processes, open writers, or a listener.
+
+    The lifecycle lock excludes our own commands; /proc additionally catches
+    manually launched DSH (including before it opens a DB/listener). An active
+    managed unit may be excluded only before our explicit systemd stop.
+    """
+    if not LOCAL_MODE:
+        return
+    group = ""
+    managed_active = False
+    if allow_unit:
+        fields = dict(line.split("=", 1) for line in ctl(
+            "show", UNIT, "--property=ActiveState,ControlGroup").splitlines() if "=" in line)
+        managed_active = fields.get("ActiveState") == "active"
+        candidate = fields.get("ControlGroup", "")
+        if managed_active and candidate.endswith("/" + UNIT):
+            group = candidate
+    for process in Path("/proc").iterdir():
+        if not process.name.isdigit() or int(process.name) == os.getpid():
+            continue
+        dsh_process = False
+        try:
+            if process.stat().st_uid != os.getuid():
+                continue
+            if group and any(line.split(":", 2)[-1] == group for line in
+                             (process / "cgroup").read_text().splitlines()):
+                continue
+            argv = (process / "cmdline").read_bytes().split(b"\0")
+            dsh_process = any(Path(os.fsdecode(arg)).name == "dsh" or
+                              b"/@deepseek-ai/dsh/" in arg or
+                              b"/npm-deepseek-ai-dsh/" in arg for arg in argv if arg)
+            if dsh_process:
+                environ = dict(item.split(b"=", 1) for item in
+                               (process / "environ").read_bytes().split(b"\0") if b"=" in item)
+                state = environ.get(b"DSH_HOME")
+                if state is None:
+                    state = environ.get(b"HOME", b"") + b"/.dsh"
+                if Path(os.fsdecode(state)).resolve() == STATE.resolve():
+                    fail("Competing DSH process uses ~/.dsh; stop it explicitly before proceeding")
+            for fd in (process / "fd").iterdir():
+                try:
+                    destination = Path(os.readlink(fd).removesuffix(" (deleted)"))
+                    if destination.is_absolute() and destination.is_relative_to(STATE):
+                        fields = dict(line.split(":", 1) for line in
+                                      (process / "fdinfo" / fd.name).read_text().splitlines() if ":" in line)
+                        if int(fields.get("flags", "0").strip(), 8) & os.O_ACCMODE:
+                            fail("External writer has ~/.dsh open; stop it explicitly before proceeding")
+                except (FileNotFoundError, ProcessLookupError):
+                    continue
+        except (FileNotFoundError, ProcessLookupError):
+            continue  # Process exited during inspection.
+        except PermissionError:
+            # Desktop credential agents can intentionally deny /proc FD access.
+            # They are not DSH writers; an uninspectable DSH process, however,
+            # cannot be proved to use another state directory: refuse it.
+            if dsh_process:
+                fail("Cannot inspect a DSH process for ~/.dsh writers; refusing unsafe cutover")
+    if not managed_active:
+        import errno
+        with socket.socket() as listener:
+            # Match Node's bind semantics: accepted connections can remain in
+            # TIME_WAIT after shutdown, without any competing live listener.
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                listener.bind(("127.0.0.1", 3080))
+            except OSError as error:
+                if error.errno != errno.EADDRINUSE:
+                    raise
+                fail("Competing listener on 127.0.0.1:3080; refusing state changes or launch")
+
+
+def private_dir(path):
+    if path.is_symlink():
+        fail(f"Refusing symlink directory: {path}")
+    path.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path.chmod(0o700)
+
+
+def atomic(path, contents, mode=0o600):
+    if path.is_symlink():
+        fail(f"Refusing symlink file: {path}")
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".dsh-vm-", delete=False) as out:
+        temporary = Path(out.name)
+        os.fchmod(out.fileno(), mode)
+        out.write(contents)
+        out.flush()
+        os.fsync(out.fileno())
+    os.replace(temporary, path)
+
+
+def encode(values):
+    return "".join(f"{key}={values[key]}\n" for key in INITIAL).encode()
+
+
+def parse(contents):
+    values = {}
+    for line in contents.decode().splitlines():
+        key, sep, value = line.partition("=")
+        if not sep or key not in INITIAL or key in values or not VERSION.fullmatch(value):
+            fail("Invalid runtime.env: only exact DSH_VERSION and NODE_VERSION are accepted")
+        values[key] = value
+    if values.keys() != INITIAL.keys() or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", values["NODE_VERSION"]):
+        fail("runtime.env must contain both exact versions")
+    return values
+
+
+def config():
+    return parse(ENV.read_bytes())
+
+
+def preinstall(values):
+    node = "node@" + values["NODE_VERSION"]
+    package = "npm:@deepseek-ai/dsh@" + values["DSH_VERSION"]
+    run(MISE, "install", node)
+    # npm backend needs the chosen Node, not mise's moving current/default Node.
+    run(MISE, "exec", node, "--", MISE, "install", package)
+    if LOCAL_MODE:
+        # Even a future version's --version handler must not migrate live state
+        # during installation/preflight. The real state is used only at launch.
+        with tempfile.TemporaryDirectory(prefix=".version-", dir=DATA) as scratch:
+            run(MISE, "exec", node, package, "--", "dsh", "--version",
+                env=dict(os.environ, DSH_HOME=scratch), cwd=HOME)
+    else:
+        run(MISE, "exec", node, package, "--", "dsh", "--version")
+
+
+def identity():
+    fields = dict(line.split("=", 1) for line in ctl(
+        "show", UNIT, "--property=ActiveState,InvocationID,MainPID").splitlines() if "=" in line)
+    invocation = fields.get("InvocationID", "")
+    if (fields.get("ActiveState") != "active" or not re.fullmatch(r"[0-9a-f]{32}", invocation)
+            or not fields.get("MainPID", "0").isdigit() or int(fields.get("MainPID", "0")) <= 0):
+        fail("Service is not active with a live main process")
+    return invocation, fields["MainPID"]
+
+
+def launch_url(expected):
+    messages = run("journalctl", "--user", "--boot=0", "--unit=" + UNIT,
+                   "_SYSTEMD_INVOCATION_ID=" + expected[0], "--output=json", "--no-pager")
+    found = None
+    for line in messages.splitlines():
+        row = json.loads(line)
+        if row.get("_SYSTEMD_INVOCATION_ID") != expected[0]:
+            continue
+        match = re.search(r"dsh web:\s+(https?://\S+)", str(row.get("MESSAGE", "")))
+        if match:
+            candidate = match[1]
+            if re.fullmatch(re.escape(PUBLIC) + r"\?token=[A-Za-z0-9_-]+", candidate):
+                found = candidate
+    if not found:
+        fail("No launch URL for the current service invocation (journal access/printUrl required)")
+    if identity() != expected:
+        fail("Service invocation changed while reading readiness")
+    return found
+
+
+def curl(url, *args):
+    # Token goes over stdin, not argv; suppress curl diagnostics containing secrets.
+    output = run("curl", "--disable", "--silent", "--show-error", "--noproxy", "*", "--max-time", "3",
+                 "--config", "-", "--write-out", "\n%{http_code}", *args,
+                 input="url = " + json.dumps(url) + "\n")
+    body, code = output.rsplit("\n", 1)
+    return body, int(code)
+
+
+def probe(expected):
+    url = launch_url(expected)
+    token_query = urlsplit(url).query
+    request_id = str(uuid.uuid4())
+    payload = json.dumps({"type": "client-request", "rpcId": request_id,
+                          "method": "agentPresets/list", "payload": {"args": {}}})
+    api = LOCAL + "api/agentPresets/list"
+    request = ("--header", "Content-Type: application/json", "--data-binary", payload)
+    if curl(api, *request)[1] != 401:
+        fail("Unauthenticated API did not reject the request")
+    # Only this short-lived cookie file is deleted, never runtime state/snapshots.
+    with tempfile.NamedTemporaryFile(dir=CONFIG, prefix=".readiness-") as cookie:
+        if curl(LOCAL + "?" + token_query, "--cookie-jar", cookie.name)[1] != 303:
+            fail("Current process launch-token exchange failed")
+        body, status = curl(api, "--cookie", cookie.name, *request)
+    response = json.loads(body)
+    if not isinstance(response, dict):
+        fail("Authenticated API returned an invalid envelope")
+    result = response.get("result")
+    value = result.get("value") if isinstance(result, dict) else None
+    if (status != 200 or response.get("type") != "server-response"
+            or response.get("rpcId") != request_id or not isinstance(result, dict) or result.get("ok") is not True
+            or not isinstance(value, dict) or not isinstance(value.get("presets"), list)):
+        fail("Authenticated agentPresets/list API readiness failed")
+    if identity() != expected:
+        fail("Service invocation changed during authenticated readiness")
+
+
+def ready(wait=0):
+    deadline = time.monotonic() + wait
+    while True:
+        try:
+            probe(identity())
+            return
+        except (RuntimeError, ValueError, OSError, KeyError) as error:
+            if time.monotonic() >= deadline:
+                raise RuntimeError("Authenticated readiness unavailable: " + str(error)) from None
+            time.sleep(1)
+
+
+def snapshot(reason):
+    local_guard()
+    name = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ-") + reason + "-" + uuid.uuid4().hex[:12]
+    target = SNAPS / name
+    if STATE.is_symlink() or not STATE.is_dir():
+        fail("~/.dsh must be an existing real directory")
+    # Never cut over using a safety snapshot our strict restore cannot load.
+    if LOCAL_MODE:
+        helper = Path(sys.argv[0]).resolve().parent / "dsh-local-snapshot.py"
+        if not helper.is_file() or helper.is_symlink():
+            fail("Local snapshot helper missing/unsafe; reinstall from the repository")
+        # The local archive preserves legacy npx dependency graphs without
+        # allowing external links in the result or changing the live state.
+        # Failed validation must not publish even an incomplete snapshot folder.
+        with tempfile.TemporaryDirectory(prefix=".snapshot-", dir=DATA) as temporary:
+            archive_path = Path(temporary) / "state.tar"
+            runpy.run_path(str(helper))["archive_state"](STATE, archive_path)
+            private_dir(target)
+            os.replace(archive_path, target / "state.tar")
+    else:
+        # Keep the VM's existing conservative archive policy unchanged.
+        for directory, directories, files in os.walk(STATE, followlinks=False):
+            for entry in directories + files:
+                path = Path(directory) / entry
+                if path.is_symlink():
+                    if (Path(os.readlink(path)).is_absolute()
+                            or not path.resolve().is_relative_to(STATE)):
+                        fail("State contains an absolute/external symlink; cannot create a restorable snapshot")
+                elif not path.is_dir() and not path.is_file():
+                    fail("State contains a special file; cannot create a restorable snapshot")
+        private_dir(target)
+        with tarfile.open(target / "state.tar", "w", dereference=False) as archive:
+            archive.add(STATE, arcname="state")
+        (target / "state.tar").chmod(0o600)
+    atomic(target / "runtime.env", ENV.read_bytes())
+    with (target / "state.tar").open("rb") as source:
+        digest = hashlib.file_digest(source, "sha256").hexdigest()
+    metadata = {"schema": 1, "reason": reason, "versions": config(), "sha256": digest}
+    atomic(target / "metadata.json", json.dumps(metadata).encode())
+    atomic(target / "complete", b"1\n")
+    print(f"Snapshot: {target}", flush=True)
+    return target
+
+
+def validate_snapshot(raw):
+    # Only a direct generated child of our snapshot root, by name OR absolute path.
+    path = Path(raw)
+    if path.is_absolute():
+        if path.parent != SNAPS or str(path) != raw:
+            fail("Absolute snapshot path must be a direct child of " + str(SNAPS))
+        name = path.name
+    else:
+        name = raw
+    if not NAME.fullmatch(name):
+        fail("Invalid snapshot name: no relative paths or traversal allowed")
+    target = SNAPS / name
+    for path in (target, target / "state.tar", target / "runtime.env", target / "metadata.json", target / "complete"):
+        if path.is_symlink() or not path.exists():
+            fail("Snapshot is incomplete or contains a symlink")
+    values = parse((target / "runtime.env").read_bytes())
+    metadata = json.loads((target / "metadata.json").read_bytes())
+    with (target / "state.tar").open("rb") as source:
+        digest = hashlib.file_digest(source, "sha256").hexdigest()
+    if (not isinstance(metadata, dict) or metadata.get("schema") != 1
+            or metadata.get("versions") != values or metadata.get("sha256") != digest):
+        fail("Snapshot metadata/checksum mismatch")
+    return target, values
+
+
+def restore(target):
+    local_guard()
+    # Extract fully before touching current state. data filter rejects devices,
+    # absolute paths, traversal, and symlinks escaping the extraction directory.
+    staging = HOME / ("." + APP + "-restore-" + uuid.uuid4().hex)
+    private_dir(staging)
+    def state_filter(member, destination):
+        filtered = tarfile.data_filter(member, destination)
+        root = staging / "state"
+        path = staging / member.name
+        if not path.resolve().is_relative_to(root):
+            fail("Snapshot member escapes state directory")
+        if member.issym() or member.islnk():
+            linked = (path.parent if member.issym() else staging) / member.linkname
+            if not linked.resolve().is_relative_to(root):
+                fail("Snapshot link escapes state directory")
+        return filtered
+
+    with tarfile.open(target / "state.tar", "r") as archive:
+        for member in archive.getmembers():
+            if member.name != "state" and not member.name.startswith("state/"):
+                fail("Snapshot archive contains an unexpected root")
+        archive.extractall(staging, filter=state_filter)
+    restored = staging / "state"
+    if restored.is_symlink() or not restored.is_dir() or STATE.is_symlink():
+        fail("Unsafe state directory in restore")
+    local_guard()
+    preserved = HOME / ("." + APP + "-preserved-" + uuid.uuid4().hex)
+    private_dir(preserved)
+    atomic(preserved / "runtime.env", ENV.read_bytes())
+    if STATE.exists():
+        STATE.chmod(0o700)
+        STATE.rename(preserved / "state")
+    try:
+        restored.rename(STATE)
+        STATE.chmod(0o700)
+        atomic(ENV, (target / "runtime.env").read_bytes())
+    except BaseException:
+        # Even a failed restore never discards the pre-restore state.
+        if not STATE.exists() and (preserved / "state").exists():
+            (preserved / "state").rename(STATE)
+        raise
+    print(f"Preserved displaced state/config: {preserved}", flush=True)
+
+
+def transition(values, old, restore_target=None):
+    if STATE.is_symlink() or not STATE.is_dir():
+        fail("~/.dsh must be an existing real directory")
+    local_guard(allow_unit=True)
+    stopped = False
+    safety = None
+    try:
+        ctl("stop", UNIT)
+        stopped = True
+        safety = snapshot("rollback" if restore_target else "update")
+        if restore_target:
+            restore(restore_target)
+        else:
+            local_guard()
+            atomic(ENV, encode(values))
+        local_guard()
+        ctl("reset-failed", UNIT)
+        ctl("start", UNIT)
+        ready(wait=60)
+    except BaseException as error:
+        if stopped:
+            try:
+                # Never restore active external state or spawn a second server,
+                # even when the competing writer arrived during the cutover.
+                local_guard(allow_unit=True)
+                ctl("stop", UNIT)
+                local_guard()
+                if safety:
+                    restore(safety)
+                else:
+                    atomic(ENV, encode(old))
+                local_guard()
+                ctl("reset-failed", UNIT)
+                ctl("start", UNIT)
+                ready(wait=60)
+                print("Previous pinned runtime and complete state restored.", file=sys.stderr)
+            except BaseException as recovery:
+                fail(f"Recovery needs attention: {recovery}. Safety snapshot: {safety}; no state was deleted")
+        raise RuntimeError(f"Transition failed: {error}") from None
+
+
+def install():
+    source = Path(sys.argv[0]).resolve().parent
+    unit_source = source / UNIT
+    if source == HOME / ".local/bin":
+        unit_source = HOME / ".config/systemd/user" / UNIT
+    assets = ((APP, APP + "-runtime", "dsh-local-snapshot.py") if LOCAL_MODE
+              else (APP, APP + "-runtime", APP + "-login.mjs"))
+    for path in (*(source / name for name in assets), unit_source):
+        if not path.is_file():
+            fail("Install assets missing; run install from the repository bundle")
+    values = config() if ENV.exists() else INITIAL.copy()
+    preinstall(values)
+    for directory in (HOME / ".local/bin", HOME / ".config/systemd/user"):
+        if directory.is_symlink():
+            fail("Refusing symlink installation directory")
+        directory.mkdir(parents=True, exist_ok=True)
+    for name in assets:
+        # Repository local wrapper bootstraps the shared engine; installed CLI
+        # is standalone and never depends on the repository remaining in place.
+        payload = Path(__file__).read_bytes() if LOCAL_MODE and name == APP else (source / name).read_bytes()
+        atomic(HOME / ".local/bin" / name, payload, 0o700)
+    atomic(HOME / ".config/systemd/user" / UNIT, unit_source.read_bytes())
+    if not ENV.exists():
+        atomic(ENV, encode(values))
+    if LOCAL_MODE:
+        if STATE.is_symlink() or STATE.exists() and not STATE.is_dir():
+            fail("~/.dsh must be a real directory")
+        if not STATE.exists():
+            private_dir(STATE)
+        # Existing state/profile/credentials and directory permissions are owned
+        # by DSH, not by the installer. Never chmod or rewrite them here.
+    else:
+        private_dir(STATE)
+    ctl("daemon-reload")
+    ctl("enable", UNIT)
+    print("Installed/enabled for this user; not started. Run: " + APP + " start")
+
+
+def main():
+    os.umask(0o077)
+    if not HOME.is_absolute() or HOME.resolve() != HOME or os.getuid() == 0:
+        fail("Use an absolute, canonical HOME as user nik, never sudo/root")
+    command, *args = sys.argv[1:]
+    if LOCAL_MODE and command == "runtime-guard" and not args:
+        config()
+        local_guard()
+        return
+    if command not in {"install", "start", "status", "url", "check", "login", "login-status", "update", "rollback"} or (LOCAL_MODE and command in {"login", "login-status"}):
+        fail(__doc__)
+    if (command == "update" and len(args) not in (1, 2)
+            or command == "rollback" and (len(args) != 2 or args[1] != "--yes")
+            or command not in {"update", "rollback"} and args):
+        fail("Usage: " + __doc__)
+    for directory in (CONFIG, DATA, SNAPS):
+        private_dir(directory)
+    with (DATA / "lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if command == "install":
+            install()
+        elif command == "status":
+            # systemctl status includes journal lines and would leak the token.
+            print(encode(config()).decode(), end="")
+            print(ctl("show", UNIT, "--property=ActiveState,SubState,MainPID,InvocationID,Result"), end="")
+            print(("Local URL" if LOCAL_MODE else "Public URL") + " (no credential): " + PUBLIC)
+        elif command == "url":
+            print(launch_url(identity()))
+        elif command == "check":
+            ready()
+            print("Authenticated API ready (current service invocation).")
+        elif command in {"login", "login-status"}:
+            values = config()
+            script = Path(__file__).resolve().parent / "dsh-vm-login.mjs"
+            if not script.is_file():
+                fail("Login asset missing; refresh the installed source bundle")
+            # Keep the lifecycle lock while OAuth runs, but do not stop the Web UI.
+            # Inherit the terminal: device codes must not enter captured logs.
+            env = dict(os.environ, DSH_HOME=str(STATE))
+            result = subprocess.run([MISE, "exec", "node@" + values["NODE_VERSION"],
+                                     "npm:@deepseek-ai/dsh@" + values["DSH_VERSION"],
+                                     "--", "node", str(script),
+                                     "login" if command == "login" else "status"], env=env, cwd=HOME)
+            if result.returncode:
+                fail("Codex login/status failed; retry interactively")
+        elif command == "start":
+            config()
+            local_guard(allow_unit=True)
+            ctl("start", UNIT)
+            ready(wait=60)
+            print("Authenticated API ready. Run " + APP + " url for the private launch URL.")
+        else:
+            old = config()
+            target = None
+            if command == "rollback":
+                print("WARNING: rollback restores ALL ~/.dsh state, including credentials, settings and history; newer changes are displaced.", file=sys.stderr, flush=True)
+                target, values = validate_snapshot(args[0])
+            else:
+                values = {"DSH_VERSION": args[0], "NODE_VERSION": args[1] if len(args) == 2 else old["NODE_VERSION"]}
+                parse(encode(values))
+            local_guard(allow_unit=True)
+            preinstall(values)  # Nothing live is changed before this succeeds.
+            transition(values, old, target)
+            print("Pinned runtime ready: DSH " + values["DSH_VERSION"] + "; Node " + values["NODE_VERSION"])
+
+
+if __name__ == "__main__":
+    def interrupted(signum, frame):
+        raise KeyboardInterrupt("Interrupted; recovering stopped transaction")
+    signal.signal(signal.SIGTERM, interrupted)
+    try:
+        if len(sys.argv) < 2:
+            fail(__doc__)
+        main()
+    except (RuntimeError, OSError, ValueError, tarfile.TarError, KeyboardInterrupt) as error:
+        print(APP + ": " + str(error), file=sys.stderr)
+        sys.exit(1)

@@ -1836,4 +1836,14 @@ main() {
   log "done. run 'chsh -s $(command -v zsh)' to make zsh your login shell if needed."
 }
 
+# DSH is opt-in: do not run the workstation-wide installer for a service-only setup.
+if [[ "${1:-}" == "--dsh-vm" ]]; then
+  shift
+  exec bash "$SCRIPT_DIR/scripts/install-dsh-vm.sh" "$@"
+fi
+if [[ "${1:-}" == "--dsh-local" ]]; then
+  shift
+  exec bash "$SCRIPT_DIR/scripts/install-dsh-local.sh" "$@"
+fi
+
 main "$@"

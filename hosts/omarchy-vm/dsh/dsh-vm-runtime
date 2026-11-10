@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+# User unit entry point. Never source runtime.env or depend on mise current.
+set -euo pipefail
+umask 077
+DSH_VERSION= NODE_VERSION=
+while IFS='=' read -r key value; do
+  case "$key" in
+    DSH_VERSION)
+      [[ -z "$DSH_VERSION" && "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$ ]] || exit 1
+      DSH_VERSION=$value ;;
+    NODE_VERSION)
+      [[ -z "$NODE_VERSION" && "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+      NODE_VERSION=$value ;;
+    *) printf 'Invalid runtime.env key\n' >&2; exit 1 ;;
+  esac
+done < "$HOME/.config/dsh-vm/runtime.env"
+[[ -n "$DSH_VERSION" && -n "$NODE_VERSION" ]]
+export DSH_HOME="$HOME/.dsh"
+export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+cd "$HOME"
+exec /usr/bin/mise exec "node@$NODE_VERSION" "npm:@deepseek-ai/dsh@$DSH_VERSION" -- \
+  dsh --profile web --no-open --host 127.0.0.1 --port 3080 \
+  --public-url https://personal-openclaw.tailf108.ts.net:8443/ \
+  --trusted-host personal-openclaw.tailf108.ts.net:8443

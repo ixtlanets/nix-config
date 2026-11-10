@@ -10,6 +10,12 @@ rollback runbook are in [docs/nikcode-network.md](docs/nikcode-network.md). The
 [the older proxy setup](docs/proxy-setup.md) documents a separate legacy
 architecture rather than the current Nik Code VPN primary.
 
+## DSH on Omarchy VM
+
+The [DSH VM runbook](docs/dsh-omarchy-vm.md) covers the private Tailscale HTTPS
+endpoint, model setup, pinned user service, and manual updates with state-matched
+rollback. Deployment is opt-in via `bash install.sh --dsh-vm`.
+
 ## Supported Machines
 
 - **NixOS**: Linux machines with full NixOS installations.

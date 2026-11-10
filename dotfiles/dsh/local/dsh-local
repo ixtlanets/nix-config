@@ -1,0 +1,8 @@
+#!/usr/bin/python3
+"""Repository bootstrap; install writes the shared, standalone lifecycle engine."""
+from pathlib import Path
+
+engine = Path(__file__).resolve().parents[3] / "hosts/omarchy-vm/dsh/dsh-vm"
+# Execute without replacing argv[0]: it selects local identity and assets path.
+namespace = {"__name__": "__main__", "__file__": str(engine)}
+exec(compile(engine.read_bytes(), str(engine), "exec"), namespace)

@@ -1,0 +1,23 @@
+# User service: install/run as nik; no root or system-wide deployment.
+[Unit]
+Description=Pinned DeepSeek Harness Web (loopback)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+ExecStart=%h/.local/bin/dsh-vm-runtime
+Environment=HOME=%h
+Environment=DSH_HOME=%h/.dsh
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+UMask=0077
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=60
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dsh-vm
+
+[Install]
+WantedBy=default.target
