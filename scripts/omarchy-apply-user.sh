@@ -287,6 +287,22 @@ configure_cursor() {
   fi
 }
 
+configure_hex_gliff() {
+  if [[ "$expected_host" != zenbook ]] || ! command -v hex >/dev/null 2>&1; then
+    return 0
+  fi
+
+  install_file "$source_root/scripts/hex-gliff-wtype.py" "$HOME/.local/lib/hex-gliff/bin/wtype"
+  install_file "$source_root/scripts/hex-gliff-service.sh" "$HOME/.local/lib/hex-gliff/service"
+  install_file \
+    "$source_root/dotfiles/omarchy/systemd/hex.service.d/gliff-paste.conf" \
+    "$HOME/.config/systemd/user/hex.service.d/gliff-paste.conf"
+  chmod 0755 "$HOME/.local/lib/hex-gliff/bin/wtype" "$HOME/.local/lib/hex-gliff/service"
+  systemctl --user daemon-reload
+  # Do not interrupt a recording. The drop-in applies at the next service start.
+  log "Hex Gliff paste installed; restart hex.service when dictation is idle"
+}
+
 configure_host_gpu() {
   if [[ "$expected_host" != zenbook ]]; then
     return 0
@@ -356,6 +372,7 @@ configure_foot
 configure_ghostty
 configure_cursor
 configure_host_gpu
+configure_hex_gliff
 omarchy-shell shell rescanPlugins >/dev/null
 if [[ -f "$local_lock_restart_marker" ]]; then
   omarchy restart shell
