@@ -1040,6 +1040,12 @@ EOF
   chmod +x "$tat_path"
 }
 
+install_omarchy_tunnels() {
+  local target="${HOME}/.local/bin/omarchy-tunnels"
+  log "installing ${target}"
+  install -Dm755 "${SCRIPT_DIR}/scripts/omarchy-tunnels.sh" "$target"
+}
+
 install_yp_script() {
   local bin_dir="${HOME}/.local/bin"
   mkdir -p "$bin_dir"
@@ -1808,6 +1814,7 @@ main() {
   install_gnome_packages
   configure_gnome_settings
   install_tat
+  install_omarchy_tunnels
   write_vpn_script
   enable_tailscale_service
   configure_tailscale_dns

@@ -62,6 +62,11 @@ let
       "${config.home.homeDirectory}/Library/Application Support/Bitwarden CLI/data.json"
     else
       "${config.xdg.configHome}/Bitwarden CLI/data.json";
+  omarchy-tunnels = pkgs.writeShellApplication {
+    name = "omarchy-tunnels";
+    runtimeInputs = [ pkgs.openssh ];
+    text = builtins.readFile ../../scripts/omarchy-tunnels.sh;
+  };
   tat-script = pkgs.writeShellScriptBin "tat" ''
     #!/bin/sh
     #
@@ -162,6 +167,7 @@ in
       gum
       pscale
       tat-script
+      omarchy-tunnels
       fd # modern find
       dust # modern du
       speedtest-rs # speedtest
