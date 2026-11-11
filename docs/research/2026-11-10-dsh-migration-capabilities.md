@@ -30,6 +30,18 @@
 
 Отдельный default-on session-log contributor касается **official DeepSeek API requests**, а не произвольного Codex inference: [Session-log README:10–36](</home/nik/.local/share/mise/installs/npm-deepseek-ai-dsh/0.2.2-rc.1/node_modules/.mise/@deepseek-ai+dsh-session-log-deepseek@0.2.2-rc.1_@deepseek-ai+cordis@4.1.0_@deepseek-ai_72f44b0d62b7a81dd64cab8ee726ca13/node_modules/@deepseek-ai/dsh-session-log-deepseek/README.md#L10-L36>). Фактические overrides VM и факт отправки телеметрии этим аудитом не установлены; это вопрос проверки, а не утверждение об утечке.
 
-## Оценка
+## Оценка с учетом живой нагрузки OpenClaw
 
-Интерактивную агентную работу и часть расписаний переносить технически реалистично. Полную замену OpenClaw нельзя объявить готовой без живых проверок Telegram, heartbeat/уведомлений, MCP userbot/browser, ролевых контекстов и памяти. Критичную автоматику разумно оставить детерминированным сервисам/таймерам с журналом результата и idempotency, а не полагаться на факт доставки запроса агенту.
+[Инвентаризация VM](2026-11-10-openclaw-vm-inventory.md) установила: фактически активна роль main/Telegram; tonal и viewer не проявляли активности за сутки. В OpenClaw 13 enabled cron (включая heartbeat и dreaming), 21 disabled. Активного backlog не найдено, но есть 4 failed session deliveries и три last-error расписания; у двух последних ошибки старые, текущие условные проверки skipped. Важные работающие сценарии — inbox/document ingestion в vault, mail digest, обслуживание vault, исследования переписки, Audiobook Ops notifications и внешний health watcher.
+
+**Мнение: постепенный перенос — хорошая идея; полная замена прямо сейчас — преждевременная.** Интерактивную агентную работу и часть расписаний переносить технически реалистично. Полную замену OpenClaw нельзя объявить готовой без живых проверок Telegram, heartbeat/уведомлений, MCP userbot/browser, ролевых контекстов и памяти. Критичную автоматику разумно оставить детерминированным сервисам/таймерам с журналом результата и idempotency, а не полагаться на факт доставки запроса агенту.
+
+Рекомендуемый порядок для отдельного будущего поручения:
+
+1. Зафиксировать service baseline выбранных сценариев и защитить shared paths. Отдельные Indexary, userbot listener, viewer, VNC, llama-dashboard не переустанавливать. Нельзя удалять дерево OpenClaw: viewer исполняет его Node, VNC читает credential file, Audiobook notify helper вызывает `openclaw message send`.
+2. Перенести один интерактивный сценарий main (например inbox → vault) в существующий DSH с выборочными skills, MCP и теми же границами данных. Проверить результат, а не только наличие инструментов. У main 168 agent-owned workshop skills сверх extraDirs: слепое копирование/одновременная загрузка не требуется.
+3. Воспроизвести двусторонний Telegram с allowlist, адресацией и обработкой медиа; userbot listener сам по себе bot gateway не заменяет. Не запускать два конкурирующих poller одного bot token.
+4. Переносить расписания по одному с сохранением Europe/Moscow, trigger/script, once, cursor, suppress/announce и дедупликации. Command-only pollers/watchers — кандидаты на независимые systemd timers; agent work требует проверки выполнения и уведомления. Не включать автоматически 21 disabled job.
+5. Решить судьбу failed deliveries, старых ошибок, dreaming/памяти, двух будущих напоминаний и неактивных ролей; архивировать старую историю, не считать импорт доказанным. Затем отдельный согласованный cutover с одним активным scheduler и сохраненным rollback.
+
+Это не реализация и не разрешение на изменения. Стандартные OpenClaw плагины Google Workspace/iCal и его memory search не становятся DSH-плагинами при копировании JSON/SQLite. Смена default OpenClaw DeepSeek/PlusVibe на нынешний DSH Codex также меняет свойства модели/стоимость/лимиты; данный аудит их не измерял.
