@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Create only the dedicated Infra Panel bridge and atomically load its rules.
+--verify is a read-only CT105 startup gate; failed rules never authorize boot.
+"""
+import hashlib
+import ipaddress
+import json
+import os
+import pathlib
+import socket
+import subprocess
+import sys
+
+assert socket.gethostname() == 'pve-um790', 'wrong physical host'
+assert pathlib.Path('/proc/sys/net/ipv4/ip_forward').read_text().strip() == '1', 'existing forwarding must already be enabled'
+RULES = pathlib.Path('/etc/infra-panel/network.nft')
+STAMP = pathlib.Path('/run/infra-panel-network.json')
+
+def run(*args):
+    return subprocess.run(args, check=True, text=True, capture_output=True).stdout
+
+def canonical(value):
+    if isinstance(value, dict):
+        return {k: canonical(v) for k, v in value.items() if k not in ('handle', 'metainfo')}
+    if isinstance(value, list):
+        return [canonical(v) for v in value if not isinstance(v, dict) or 'metainfo' not in v]
+    return value
+
+def evidence():
+    tables = [canonical(json.loads(run('nft', '-j', 'list', 'table', family, name)))
+              for family, name in [('inet', 'infra_panel_network'), ('ip', 'infra_panel_nat')]]
+    return {'rulesSha256': hashlib.sha256(RULES.read_bytes()).hexdigest(),
+            'runtimeSha256': hashlib.sha256(json.dumps(tables, sort_keys=True).encode()).hexdigest()}
+
+links = json.loads(run('ip', '-j', '-d', 'link', 'show'))
+bridge = next((link for link in links if link['ifname'] == 'vmbr2'), None)
+if bridge is not None:
+    assert bridge.get('linkinfo', {}).get('info_kind') == 'bridge', 'vmbr2 is not our bridge'
+else:
+    assert '--verify' not in sys.argv, 'bridge missing'
+    for route in json.loads(run('ip', '-j', '-4', 'route', 'show', 'table', 'main')):
+        if route.get('dst') and route['dst'] != 'default':
+            assert not ipaddress.ip_network(route['dst']).overlaps(ipaddress.ip_network('10.77.8.0/24')), 'network collision'
+
+if '--verify' in sys.argv:
+    assert json.loads(STAMP.read_text()) == evidence(), 'network evidence missing or changed'
+    addresses = [a for entry in json.loads(run('ip', '-j', '-4', 'address', 'show', 'dev', 'vmbr2')) for a in entry.get('addr_info', [])]
+    assert len(addresses) == 1 and addresses[0]['local'] == '10.77.8.1' and addresses[0]['prefixlen'] == 24, 'bridge address mismatch'
+    assert bridge and 'UP' in bridge['flags'], 'bridge is down'
+    print('Infra Panel network startup gate: PASS')
+    sys.exit(0)
+
+# Filter FIRST. An existing/auto-configured bridge must not authorize CT startup
+# until the hook verifies both runtime rules and their root-owned source hash.
+run('nft', '-c', '-f', str(RULES))
+run('nft', '-f', str(RULES))
+if bridge is None:
+    run('ip', 'link', 'add', 'vmbr2', 'type', 'bridge')
+addresses = [a for entry in json.loads(run('ip', '-j', '-4', 'address', 'show', 'dev', 'vmbr2')) for a in entry.get('addr_info', [])]
+assert all(a['local'] == '10.77.8.1' and a['prefixlen'] == 24 for a in addresses), 'unexpected bridge address'
+if not addresses:
+    run('ip', 'address', 'add', '10.77.8.1/24', 'dev', 'vmbr2')
+run('ip', 'link', 'set', 'dev', 'vmbr2', 'up')
+old_mask = os.umask(0o077)
+try:
+    temp = STAMP.with_suffix('.tmp')
+    temp.write_text(json.dumps(evidence(), sort_keys=True) + '\n')
+    os.replace(temp, STAMP)
+finally:
+    os.umask(old_mask)
+print('Infra Panel bridge ready; isolated CT105 rules loaded')

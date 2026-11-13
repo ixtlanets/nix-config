@@ -1,0 +1,11 @@
+[Unit]
+Description=Root/Serve-only loopback socket for Infra Panel
+Requires=infra-panel-network.service
+After=infra-panel-network.service
+
+[Socket]
+ListenStream=127.0.0.1:3101
+NoDelay=true
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Isolated network for Infra Panel CT105
+After=networking.service
+Before=pve-guests.service
+Wants=networking.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/infra-panel-network
+# Deliberately do not tear down a running container's network on stop/reload.
+
+[Install]
+WantedBy=multi-user.target

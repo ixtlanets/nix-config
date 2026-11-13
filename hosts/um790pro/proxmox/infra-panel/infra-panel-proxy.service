@@ -1,0 +1,17 @@
+[Unit]
+Description=Unprivileged Infra Panel TCP socket proxy behind Tailscale HTTP Serve
+Requires=infra-panel-network.service
+After=infra-panel-network.service
+
+[Service]
+User=infra-panel-proxy
+Group=infra-panel-proxy
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd 10.77.8.2:3100
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077

@@ -1,0 +1,48 @@
+# Own isolated CT105 bridge; does not modify pve_guest_vpn or pve_home.
+# Load atomically with nft -f; add/delete makes reload idempotent without a gap.
+add table inet infra_panel_network
+delete table inet infra_panel_network
+table inet infra_panel_network {
+  chain ingress {
+    type filter hook prerouting priority -151; policy accept;
+    iifname "vmbr2" meta nfproto ipv6 drop
+    iifname "vmbr2" ip saddr != 10.77.8.2 drop
+  }
+  chain input {
+    type filter hook input priority -16; policy accept;
+    iifname "vmbr2" ct state established,related accept
+    iifname "vmbr2" ip saddr 10.77.8.2 ip daddr 10.77.8.1 tcp dport 8006 accept
+    iifname "vmbr2" reject with icmpx type admin-prohibited
+  }
+  chain output {
+    type filter hook output priority -16; policy accept;
+    # Only root/Serve and the dedicated socket proxy may assert identity.
+    ip daddr 10.77.8.2 tcp dport 3100 meta skuid != { 0, "infra-panel-proxy" } reject with icmp type admin-prohibited
+    ip daddr 127.0.0.1 tcp dport 3101 meta skuid != 0 reject with icmp type admin-prohibited
+    ip6 daddr ::1 tcp dport 3101 meta skuid != 0 reject with icmpv6 type admin-prohibited
+  }
+  chain forward {
+    type filter hook forward priority -16; policy accept;
+    iifname "vmbr2" ct state established,related accept
+    oifname "vmbr2" ct state established,related accept
+    # Observations over the existing host tailnet, not a new authenticated peer.
+    iifname "vmbr2" ip daddr 100.64.0.0/10 oifname "tailscale0" tcp dport { 443, 8443, 8300 } accept
+    iifname "vmbr2" ip daddr { 1.1.1.1, 1.0.0.1 } udp dport 53 accept
+    iifname "vmbr2" ip daddr { 1.1.1.1, 1.0.0.1 } tcp dport 53 accept
+    iifname "vmbr2" ip daddr { 0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4 } reject with icmp type admin-prohibited
+    # Bootstrap/updates and external HTTPS checks. Not a guest VPN exit.
+    iifname "vmbr2" oifname "pvewifi0" tcp dport { 80, 443 } accept
+    iifname "vmbr2" oifname "pvewifi0" ip daddr 31.58.85.163 tcp dport 24443 accept
+    iifname "vmbr2" reject with icmpx type admin-prohibited
+    oifname "vmbr2" reject with icmpx type admin-prohibited
+  }
+}
+add table ip infra_panel_nat
+delete table ip infra_panel_nat
+table ip infra_panel_nat {
+  chain postrouting {
+    type nat hook postrouting priority srcnat; policy accept;
+    ip saddr 10.77.8.2 oifname "pvewifi0" masquerade
+    ip saddr 10.77.8.2 oifname "tailscale0" masquerade
+  }
+}

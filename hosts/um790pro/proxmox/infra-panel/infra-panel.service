@@ -1,0 +1,35 @@
+[Unit]
+Description=Infra Panel private inventory and monitoring
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=infra-panel
+Group=infra-panel
+WorkingDirectory=/opt/infra-panel/app
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=512
+EnvironmentFile=/etc/infra-panel/app.env
+ExecStart=/opt/infra-panel/node/bin/node --import tsx server/main.ts
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+UMask=0077
+StateDirectory=infra-panel
+StateDirectoryMode=0700
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/infra-panel
+NoNewPrivileges=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
