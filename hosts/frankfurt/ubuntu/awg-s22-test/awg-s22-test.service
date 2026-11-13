@@ -1,0 +1,47 @@
+[Unit]
+Description=Isolated Frankfurt AmneziaWG S22 test (userspace)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+UMask=0077
+LimitCORE=0
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+RuntimeDirectory=awg-s22-test
+RuntimeDirectoryMode=0700
+# Preserve the ownership marker if cleanup fails; never manage /run/amneziawg.
+RuntimeDirectoryPreserve=yes
+ExecStartPre=/usr/bin/python3 /etc/awg-s22-test/control.py preflight
+ExecStart=/etc/awg-s22-test/amneziawg-go -f awgs22
+ExecStartPost=/usr/bin/python3 /etc/awg-s22-test/control.py up
+# Also runs after failed ExecStartPre/ExecStartPost. Ownership is invocation-scoped.
+ExecStopPost=/usr/bin/python3 /etc/awg-s22-test/control.py down
+KillMode=control-group
+TimeoutStartSec=60
+TimeoutStopSec=60
+Restart=no
+# Do not expose daemon/setconf/config parser output (may include private material).
+StandardOutput=null
+StandardError=null
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+ProtectSystem=strict
+ReadWritePaths=/run
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+PrivateTmp=yes
+PrivateDevices=no
+DevicePolicy=closed
+DeviceAllow=/dev/net/tun rw
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+{
+  "site": {
+    "external_ipv4": "194.87.166.59",
+    "external_prefix": "REPLACE_WITH_OBSERVED_INTEGER",
+    "external_interface": "REPLACE_WITH_OBSERVED_INTERFACE",
+    "external_gateway": "REPLACE_WITH_OBSERVED_IPV4_GATEWAY"
+  },
+  "profile": {
+    "Jc": "OWNER_APPROVED_VALUE",
+    "Jmin": "OWNER_APPROVED_VALUE",
+    "Jmax": "OWNER_APPROVED_VALUE",
+    "S1": "OWNER_APPROVED_VALUE",
+    "S2": "OWNER_APPROVED_VALUE",
+    "S3": "OWNER_APPROVED_VALUE",
+    "S4": "OWNER_APPROVED_VALUE",
+    "H1": "OWNER_APPROVED_VALUE_OR_RANGE",
+    "H2": "OWNER_APPROVED_VALUE_OR_RANGE",
+    "H3": "OWNER_APPROVED_VALUE_OR_RANGE",
+    "H4": "OWNER_APPROVED_VALUE_OR_RANGE",
+    "ContentPaddingAddition": "4-28",
+    "RandomTrailers": "on"
+  },
+  "client_dns": ["REPLACE_WITH_APPROVED_PUBLIC_IPV4_DNS"]
+}

@@ -6,11 +6,13 @@ import ipaddress
 import json
 import os
 import pathlib
+import re
 import secrets
 import socket
 import ssl
 import subprocess
 import sys
+import uuid
 import urllib.error
 import urllib.request
 
@@ -19,6 +21,7 @@ ZONE = "815edebe16f70d535787e951ac38d7eb"
 WORKER = "nikcode-subscriptions"
 HOST = "config.nikcode.xyz"
 STATE_ENTRY = "nikcode.xyz/config/service-state"
+PILOT_STATE_ENTRY = "nikcode.xyz/config/pilot-state"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 FORMATS = ["sing-box", "sing-box-macos", "sing-box-linux", "sing-box-android", "sing-box-ios", "sing-box-ios-legacy", "outbounds", "throne", "hiddify", "incy", "happ"]
 PRESETS = {"linux": "sing-box", "macos": "sing-box", "windows": "throne", "ios": "incy", "android": "hiddify"}
@@ -105,6 +108,141 @@ def worker_state(state):
     }
 
 
+def pilot_projection(state):
+    """Only renderer inputs enter the separate PILOT_CONFIG secret binding."""
+    result = {key: state[key] for key in ("schema", "magic_dns_suffix", "ru_domains", "ru_rules", "subscription_hosts", "rules_url") if key in state}
+    result["nodes"] = [
+        {key: node[key] for key in ("id", "enabled", "protocol", "host", "port", "server_name", "public_key", "short_id")}
+        for node in state["nodes"]
+    ]
+    result["devices"] = [
+        {**{key: device[key] for key in ("id", "hash", "enabled", "tailscale", "credentials")},
+         **({"rule_set_mode": device["rule_set_mode"]} if "rule_set_mode" in device else {})}
+        for device in state["devices"]
+    ]
+    return result
+
+
+def validate_pilot(state, private=True):
+    projection = pilot_projection(state)
+    raw = json.dumps(projection, separators=(",", ":"))
+    if len(raw.encode()) > 5000:
+        raise ValueError("PILOT_CONFIG exceeds the 5000-byte budget; do not deploy")
+    script = "import {validPilot} from './src/worker.js';let s='';for await(const c of process.stdin)s+=c;process.exit(validPilot(JSON.parse(s))?0:1);"
+    check = subprocess.run(["node", "--input-type=module", "-e", script], input=raw,
+                           cwd=ROOT, text=True, capture_output=True, timeout=15)
+    if check.returncode:
+        raise ValueError("Invalid pilot renderer configuration")
+    if private:
+        tokens = []
+        for device in state["devices"]:
+            token = device.get("token", "")
+            if not re.fullmatch(r"p_[A-Za-z0-9_-]{43}", token):
+                raise ValueError("Invalid pilot fetch token")
+            if hashlib.sha256(token.encode()).hexdigest() != device["hash"]:
+                raise ValueError("Pilot token/hash mismatch")
+            tokens.append(token)
+        if len(set(tokens)) != len(tokens):
+            raise ValueError("Duplicate pilot token")
+    return projection
+
+
+def new_pilot(spec):
+    """Generate locally; server installation and Worker deployment are separate."""
+    allowed_node_keys = ("id", "enabled", "protocol", "host", "port", "server_name", "public_key", "short_id")
+    state = {"schema": 1, "nodes": [{key: node[key] for key in allowed_node_keys} for node in spec["nodes"]],
+             "magic_dns_suffix": spec["magic_dns_suffix"], "devices": []}
+    for key in ("ru_domains", "ru_rules", "subscription_hosts", "rules_url"):
+        if key in spec:
+            state[key] = spec[key]
+    for device_id in ("nik-iphone-primary", "nik-iphone-spare"):
+        token = "p_" + secrets.token_urlsafe(32)
+        state["devices"].append({
+            "id": device_id, "token": token, "hash": hashlib.sha256(token.encode()).hexdigest(),
+            "enabled": True, "tailscale": True,
+            "credentials": {node["id"]: {"uuid": str(uuid.uuid4())} for node in state["nodes"]},
+            "server_revocation": {node["id"]: "not-requested" for node in state["nodes"]},
+        })
+    validate_pilot(state)
+    return state
+
+
+def revoke_pilot(state, device_id):
+    device = next((d for d in state["devices"] if d["id"] == device_id), None)
+    if device is None:
+        raise ValueError("Unknown pilot device")
+    device["enabled"] = False
+    # Fetch revocation is effective only after publishing the projected binding.
+    # Existing clients retain credentials until every server removes its user.
+    device["server_revocation"] = {node["id"]: "pending-removal" for node in state["nodes"]}
+    validate_pilot(state)
+    return state
+
+
+def write_private_output(path, value):
+    output = pathlib.Path(path).expanduser().resolve()
+    git_root = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT, capture_output=True, text=True)
+    protected = [ROOT.resolve(), (pathlib.Path.home() / "nix-config").resolve()]
+    if git_root.returncode == 0:
+        protected.append(pathlib.Path(git_root.stdout.strip()).resolve())
+    if any(output == repo or repo in output.parents for repo in protected):
+        raise ValueError("Private pilot output must stay outside the Git repository")
+    output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    descriptor = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w") as stream:
+        stream.write(value)
+
+
+def pilot_action(args):
+    if not args.input:
+        raise ValueError("Pilot actions require --input pointing to private JSON")
+    state = json.loads(pathlib.Path(args.input).expanduser().read_text())
+    if args.action == "pilot-init":
+        result = new_pilot(state)
+    else:
+        validate_pilot(state)
+        if args.action == "pilot-validate":
+            print("Pilot validated; no network or encrypted state changed")
+            return
+        if args.action == "pilot-project":
+            result = pilot_projection(state)
+        elif args.action == "pilot-revoke":
+            if not args.label:
+                raise ValueError("pilot-revoke requires --label device-id")
+            result = revoke_pilot(state, args.label)
+        elif args.action == "pilot-users":
+            if not args.node or args.node not in {node["id"] for node in state["nodes"]}:
+                raise ValueError("pilot-users requires a configured --node")
+            result = [{"name": d["id"], "uuid": d["credentials"][args.node]["uuid"], "flow": "xtls-rprx-vision"}
+                      for d in state["devices"] if d["enabled"]]
+        elif args.action == "pilot-export":
+            device = next((d for d in state["devices"] if d["id"] == args.label and d["enabled"]), None)
+            if device is None:
+                raise ValueError("pilot-export requires an enabled --label device-id")
+            if args.node:
+                if not any(n["id"] == args.node and n["enabled"] for n in state["nodes"]):
+                    raise ValueError("Unknown or disabled fallback --node")
+                for node in state["nodes"]:
+                    node["enabled"] = node["id"] == args.node
+            script = ("import {singBoxPilot} from './src/worker.js';let s='';for await(const c of process.stdin)s+=c;"
+                      "const p=JSON.parse(s);process.stdout.write(JSON.stringify(singBoxPilot(p.config,p.device),null,2)+'\\n');")
+            rendered = subprocess.run(["node", "--input-type=module", "-e", script],
+                                      input=json.dumps({"config": pilot_projection(state), "device": {**device, "rule_set_mode": "inline"}}),
+                                      cwd=ROOT, text=True, capture_output=True, timeout=15, check=True)
+            if not args.output:
+                raise ValueError("pilot-export requires --output outside the repository")
+            write_private_output(args.output, rendered.stdout)
+            print("Private Local profile exported; no server or Worker was changed")
+            return
+        else:
+            raise ValueError("Unknown pilot action")
+    if not args.output:
+        raise ValueError("Pilot output requires --output outside the repository")
+    serialized = json.dumps(result, separators=(",", ":")) if args.action == "pilot-project" else json.dumps(result, indent=2)
+    write_private_output(args.output, serialized + "\n")
+    print("Private pilot output prepared; no server or Worker was changed")
+
+
 def verify_identity():
     account = api("accounts/" + ACCOUNT)
     zone = api("zones/" + ZONE)
@@ -144,6 +282,7 @@ def deploy(state, code_only=False):
     for name, filename, kind, body in [
         ("metadata", None, "application/json", json.dumps(metadata).encode()),
         ("worker.js", "worker.js", "application/javascript+module", (ROOT / "src/worker.js").read_bytes()),
+        ("geoip-ru.js", "geoip-ru.js", "application/javascript+module", (ROOT / "src/geoip-ru.js").read_bytes()),
     ]:
         disposition = f'Content-Disposition: form-data; name="{name}"'
         if filename:
@@ -223,10 +362,21 @@ def verify(state, direct=False):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=["bootstrap", "deploy", "publish", "verify", "export", "revoke"])
+    parser.add_argument("action", choices=["bootstrap", "deploy", "publish", "verify", "export", "revoke",
+                        "pilot-init", "pilot-validate", "pilot-project", "pilot-revoke", "pilot-users", "pilot-export"])
     parser.add_argument("--direct", action="store_true")
     parser.add_argument("--label")
+    parser.add_argument("--input")
+    parser.add_argument("--output")
+    parser.add_argument("--node")
     args = parser.parse_args()
+    if args.action.startswith("pilot-"):
+        try:
+            pilot_action(args)
+        except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as error:
+            # Never include parsed state or subprocess output in diagnostics.
+            parser.exit(1, "Pilot action failed (" + type(error).__name__ + "); inspect private inputs and output permissions\n")
+        return
     if args.action == "bootstrap":
         bootstrap()
         return

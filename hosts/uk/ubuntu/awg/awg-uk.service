@@ -1,0 +1,44 @@
+[Unit]
+Description=Owned UK AmneziaWG userspace endpoint (partial until live acceptance)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+UMask=0077
+LimitCORE=0
+Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+RuntimeDirectory=awg-uk
+RuntimeDirectoryMode=0700
+RuntimeDirectoryPreserve=yes
+ExecStartPre=/usr/bin/python3 /etc/awg-uk/control.py preflight
+ExecStart=/etc/awg-uk/amneziawg-go -f awguk
+ExecStartPost=/usr/bin/python3 /etc/awg-uk/control.py up
+ExecStopPost=/usr/bin/python3 /etc/awg-uk/control.py down
+KillMode=control-group
+TimeoutStartSec=60
+TimeoutStopSec=60
+Restart=no
+StandardOutput=null
+StandardError=null
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+ProtectSystem=strict
+ReadWritePaths=/run
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+PrivateTmp=yes
+PrivateDevices=no
+DevicePolicy=closed
+DeviceAllow=/dev/net/tun rw
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=multi-user.target

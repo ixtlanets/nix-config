@@ -1,0 +1,15 @@
+{
+	admin off
+	log default {
+		exclude http.log.error
+	}
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+	servers {
+		protocols h1 h2
+	}
+}
+
+subscriptions.nikcode.xyz {
+	encode gzip
+	reverse_proxy 127.0.0.1:8787
+}

@@ -1,0 +1,29 @@
+[Unit]
+Description=Nik Code personal subscriptions and immutable RU rule set
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nikcode-subscriptions
+Group=nikcode-subscriptions
+ExecStart=/opt/nikcode-subscriptions/node /opt/nikcode-subscriptions/src/server.js /etc/nikcode-subscriptions/pilot.json /opt/nikcode-subscriptions/geoip-ru.srs 8787
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LimitCORE=0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,31 @@
+[Unit]
+Description=Additive Nik Code sing-box subscription pilot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nikcode-singbox-pilot
+Group=nikcode-singbox-pilot
+ExecStartPre=/opt/nikcode-singbox-pilot/sing-box check -c /etc/nikcode-singbox-pilot/config.json
+ExecStart=/opt/nikcode-singbox-pilot/sing-box run -c /etc/nikcode-singbox-pilot/config.json
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+LimitCORE=0
+StandardOutput=null
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

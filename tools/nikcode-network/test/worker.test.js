@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker, { tokenHash, singBoxLinux, render } from "../src/worker.js";
+import worker, { tokenHash, singBoxLinux, render, singBoxPilot, validPilot, OWN_SUBSCRIPTION_HOST, OWN_RULES_URL } from "../src/worker.js";
 
 const token = "A".repeat(43);
 async function fixture() {
@@ -13,6 +13,281 @@ async function fixture() {
 async function call(path, config, method = "GET") {
   return worker.fetch(new Request("https://config.nikcode.xyz" + path, { method }), { SERVICE_CONFIG: JSON.stringify(config) });
 }
+
+const pilotToken = "p_" + "C".repeat(43);
+async function pilotFixture() {
+  return { schema: 1, magic_dns_suffix: "example.ts.net", nodes: [
+    { id: "france", enabled: true, protocol: "vless", host: "192.0.2.1", port: 443, server_name: "example.com", public_key: "A".repeat(43), short_id: "abcd" },
+    { id: "frankfurt", enabled: true, protocol: "vless", host: "192.0.2.2", port: 34443, server_name: "example.com", public_key: "B".repeat(43), short_id: "abcd" },
+  ], devices: [
+    { id: "nik-iphone-primary", enabled: true, tailscale: true, hash: await tokenHash(pilotToken), credentials: {
+      france: { uuid: "11111111-1111-4111-8111-111111111111" }, frankfurt: { uuid: "22222222-2222-4222-8222-222222222222" },
+    } },
+    { id: "nik-iphone-spare", enabled: true, tailscale: true, hash: await tokenHash("p_" + "D".repeat(43)), credentials: {
+      france: { uuid: "33333333-3333-4333-8333-333333333333" }, frankfurt: { uuid: "44444444-4444-4444-8444-444444444444" },
+    } },
+  ] };
+}
+const sixDeviceTokens = [..."CDEFGH"].map((letter) => "p_" + letter.repeat(43));
+async function fourNodeSixDeviceFixture() {
+  const config = await pilotFixture();
+  config.subscription_hosts = ["config.nikcode.xyz", OWN_SUBSCRIPTION_HOST];
+  config.rules_url = OWN_RULES_URL;
+  config.nodes.push(
+    { id: "poland", enabled: true, protocol: "vless", host: "192.0.2.3", port: 443, server_name: "example.com", public_key: "E".repeat(43), short_id: "abcd" },
+    { id: "italy", enabled: true, protocol: "vless", host: "192.0.2.4", port: 443, server_name: "example.com", public_key: "F".repeat(43), short_id: "abcd" },
+  );
+  for (const id of ["nik-galaxy-s22", "goar-iphone-primary", "goar-iphone-second", "andrey-maksimov-iphone"]) {
+    config.devices.push({ id, enabled: true, tailscale: id === "nik-galaxy-s22",
+      hash: await tokenHash(sixDeviceTokens[config.devices.length]), credentials: {} });
+  }
+  for (const [index, device] of config.devices.entries()) {
+    device.rule_set_mode = index === 2 ? "remote" : "inline";
+    for (const [offset, node] of config.nodes.entries()) {
+      device.credentials[node.id] ??= { uuid: "00000000-0000-4000-8000-" + String(index * 4 + offset + 1).padStart(12, "0") };
+    }
+  }
+  return config;
+}
+async function pilotCall(path, config, legacy = undefined) {
+  return worker.fetch(new Request("https://config.nikcode.xyz" + path), {
+    ...(legacy ? { SERVICE_CONFIG: JSON.stringify(legacy) } : {}), PILOT_CONFIG: JSON.stringify(config),
+  });
+}
+
+test("pilot credentials are isolated per device and node without legacy secrets", async () => {
+  const config = await pilotFixture();
+  assert.equal(validPilot(config), true);
+  const response = await pilotCall("/s/" + pilotToken, config);
+  assert.equal(response.status, 200);
+  const profile = await response.json();
+  assert.deepEqual(profile.outbounds.filter((o) => o.type === "vless").map((o) => o.uuid),
+    Object.values(config.devices[0].credentials).map((c) => c.uuid));
+  assert.doesNotMatch(JSON.stringify(profile), /33333333|44444444|test-secret|notes.nikcode.xyz/);
+  const spare = await (await pilotCall("/s/p_" + "D".repeat(43), config)).json();
+  assert.notEqual(profile.endpoints[0].state_directory, spare.endpoints[0].state_directory);
+});
+
+test("six devices retain inline, remote and Tailscale shape when the equal VPN pool expands to four nodes", async () => {
+  const config = await fourNodeSixDeviceFixture();
+  const unchanged = structuredClone(config);
+  const before = structuredClone(config);
+  before.nodes = before.nodes.slice(0, 2);
+  for (const device of before.devices) {
+    delete device.credentials.poland;
+    delete device.credentials.italy;
+  }
+  assert.equal(validPilot(config), true);
+  assert.equal(new Set(config.devices.flatMap((device) => Object.values(device.credentials).map((c) => c.uuid))).size, 24);
+  for (const [index, device] of config.devices.entries()) {
+    const path = "/s/" + sixDeviceTokens[index];
+    const response = await pilotCall(path, config);
+    assert.equal(response.status, 200);
+    const body = await response.text();
+    assert.equal(await (await pilotCall(path, config)).text(), body);
+    assert.equal(await (await pilotCall(path + "/sing-box-ios", config)).text(), body);
+    const profile = JSON.parse(body);
+    assert.equal(profile.route.final, "proxy");
+    assert.deepEqual(profile.outbounds[0], {
+      type: "urltest", tag: "proxy", outbounds: ["france", "frankfurt", "poland", "italy"],
+      url: "https://www.gstatic.com/generate_204", interval: "1m", tolerance: 100, interrupt_exist_connections: false,
+    });
+    assert.deepEqual(profile.outbounds.filter((o) => o.type === "vless").map((o) => o.uuid),
+      [device.credentials.france.uuid, device.credentials.frankfurt.uuid, device.credentials.poland.uuid, device.credentials.italy.uuid]);
+    assert.equal(profile.route.rule_set[0].type, index === 2 ? "remote" : "inline");
+    if (index === 2) {
+      assert.equal(profile.route.rule_set[0].url, OWN_RULES_URL);
+      assert.deepEqual(profile.route.rule_set[0].http_client, { engine: "go", detour: "direct" });
+    } else {
+      assert.ok(profile.route.rule_set[0].rules[0].ip_cidr.length > 10000);
+    }
+    assert.equal(profile.experimental.cache_file.cache_id, device.id);
+    if (index < 3) {
+      assert.equal(profile.endpoints[0].hostname, device.id);
+      assert.equal(profile.endpoints[0].state_directory, "tailscale-" + device.id);
+      assert.equal(profile.endpoints[0].auth_key, undefined);
+    } else {
+      assert.equal(profile.endpoints, undefined);
+      assert.equal(profile.dns.servers.some((server) => server.type === "tailscale"), false);
+      assert.equal(profile.route.rules.some((rule) => rule.outbound === "ts-ep"), false);
+    }
+    const previous = await (await pilotCall(path, before)).json();
+    // Only the new pool members, their VLESS outbounds and bootstrap names may differ.
+    const normalized = structuredClone(profile);
+    normalized.outbounds = normalized.outbounds.filter((o) => !["poland", "italy"].includes(o.tag));
+    normalized.outbounds[0].outbounds = ["france", "frankfurt"];
+    const bootstrap = normalized.dns.rules.find((rule) => rule.domain?.includes("config.nikcode.xyz"));
+    bootstrap.domain = bootstrap.domain.filter((host) => !["192.0.2.3", "192.0.2.4"].includes(host));
+    assert.deepEqual(normalized, previous);
+  }
+  assert.deepEqual(config, unchanged);
+});
+
+test("revoked, invalid and unknown pilots never use the legacy catalog", async () => {
+  const config = await fourNodeSixDeviceFixture();
+  const legacy = await fixture();
+  legacy.subscriptions[0].hash = config.devices[0].hash;
+  config.devices[0].enabled = false;
+  assert.equal((await pilotCall("/s/" + pilotToken, config, legacy)).status, 404);
+  assert.equal((await pilotCall("/s/p_" + "Z".repeat(43), config, legacy)).status, 404);
+  assert.equal((await pilotCall("/s/" + pilotToken, {}, legacy)).status, 503);
+  assert.equal((await pilotCall("/s/" + pilotToken, { ...config, nodes: [null, null] }, legacy)).status, 503);
+  config.devices[0].enabled = true;
+  for (const [deviceIndex, nodeId, otherIndex, otherNodeId] of [
+    [0, "france", 1, "france"], [5, "italy", 0, "france"], [2, "poland", 2, "frankfurt"],
+  ]) {
+    const duplicate = structuredClone(config);
+    duplicate.devices[deviceIndex].credentials[nodeId].uuid = duplicate.devices[otherIndex].credentials[otherNodeId].uuid;
+    assert.equal((await pilotCall("/s/" + pilotToken, duplicate, legacy)).status, 503);
+    duplicate.nodes.find((node) => node.id === nodeId).enabled = false;
+    assert.equal((await pilotCall("/s/" + pilotToken, duplicate, legacy)).status, 503);
+  }
+});
+
+test("pilot pool never includes DIRECT and disabled nodes cannot enter a new profile", async () => {
+  const config = await fourNodeSixDeviceFixture();
+  const profile = singBoxPilot(config, config.devices[0]);
+  assert.equal(profile.route.final, "proxy");
+  const pool = profile.outbounds.find((o) => o.tag === "proxy");
+  assert.equal(pool.type, "urltest");
+  assert.deepEqual(pool.outbounds, ["france", "frankfurt", "poland", "italy"]);
+  assert.equal(pool.interval, "1m");
+  assert.equal(pool.tolerance, 100);
+  assert.equal(pool.interrupt_exist_connections, false);
+  config.nodes[2].enabled = false;
+  const withoutPoland = await (await pilotCall("/s/" + pilotToken, config)).json();
+  assert.deepEqual(withoutPoland.outbounds[0].outbounds, ["france", "frankfurt", "italy"]);
+  assert.equal(withoutPoland.outbounds.some((o) => o.tag === "poland"), false);
+  assert.doesNotMatch(JSON.stringify(withoutPoland), /192\.0\.2\.3/);
+  assert.ok(!JSON.stringify(withoutPoland).includes(config.devices[0].credentials.poland.uuid));
+  for (const node of config.nodes) node.enabled = false;
+  assert.equal((await pilotCall("/s/" + pilotToken, config)).status, 503);
+});
+
+test("thin pilot keeps routing and identity while only replacing the inline rule set", async () => {
+  const config = await pilotFixture();
+  const fullBody = await (await pilotCall("/s/" + pilotToken, config)).text();
+  const otherBefore = await (await pilotCall("/s/p_" + "D".repeat(43), config)).text();
+  config.devices[0].rule_set_mode = "inline";
+  assert.equal(await (await pilotCall("/s/" + pilotToken, config)).text(), fullBody);
+  config.devices[0].rule_set_mode = "remote";
+  const response = await pilotCall("/s/" + pilotToken, config);
+  assert.equal(response.status, 200);
+  const body = await response.text();
+  assert.ok(new TextEncoder().encode(body).length < 8192);
+  const thin = JSON.parse(body);
+  const full = JSON.parse(fullBody);
+  const rules = thin.route.rule_set;
+  assert.equal(rules[0].type, "remote");
+  assert.match(rules[0].url, /^https:\/\/raw\.githubusercontent\.com\/SagerNet\/sing-geoip\/[a-f0-9]{40}\/geoip-ru\.srs$/);
+  assert.deepEqual(rules[0].http_client, { engine: "go", detour: "proxy" });
+  assert.equal(rules[0].download_detour, undefined);
+  assert.equal(thin.experimental.cache_file.enabled, true);
+  assert.equal(thin.experimental.cache_file.cache_id, config.devices[0].id);
+  thin.route.rule_set = full.route.rule_set;
+  assert.deepEqual(thin, full);
+  assert.equal(await (await pilotCall("/s/p_" + "D".repeat(43), config)).text(), otherBefore);
+  config.devices[0].rule_set_mode = "unsupported";
+  assert.equal((await pilotCall("/s/" + pilotToken, config)).status, 503);
+});
+
+test("pilot subscription HTTPS and bootstrap DNS bypass failed pool narrowly", async () => {
+  const config = await pilotFixture();
+  const profile = singBoxPilot(config, config.devices[0]);
+  const direct = profile.route.rules.find((r) => r.domain?.includes("config.nikcode.xyz"));
+  assert.deepEqual(direct, { domain: ["config.nikcode.xyz"], network: "tcp", port: [443], action: "route", outbound: "direct" });
+  assert.equal(profile.dns.rules.find((r) => r.domain?.includes("config.nikcode.xyz")).server, "bootstrap");
+  assert.equal(profile.dns.servers.find((s) => s.tag === "bootstrap").detour, "direct");
+  assert.equal(profile.dns.servers.find((s) => s.tag === "remote").detour, "proxy");
+  assert.ok(profile.route.rules.some((r) => r.rule_set?.includes("geoip-ru") && r.outbound === "direct"));
+});
+
+test("integrated tailnet routing and MagicDNS precede private DIRECT and public AAAA policy", async () => {
+  const config = await pilotFixture();
+  const profile = singBoxPilot(config, config.devices[0]);
+  const tail = profile.route.rules.findIndex((r) => r.ip_cidr?.includes("100.64.0.0/10"));
+  const privateRule = profile.route.rules.findIndex((r) => r.ip_is_private);
+  assert.ok(tail < privateRule);
+  assert.equal(profile.route.rules[tail].outbound, "ts-ep");
+  assert.equal(profile.dns.rules[0].preferred_by, "ts-dns");
+  assert.equal(profile.dns.rules[1].domain_suffix[0], "example.ts.net");
+  assert.equal(profile.endpoints[0].auth_key, undefined);
+  assert.equal(profile.endpoints[0].accept_routes, false);
+  assert.equal(profile.endpoints[0].system_interface, false);
+  assert.equal(profile.endpoints[0].domain_resolver, "bootstrap");
+  assert.equal(profile.inbounds[0].stack, "gvisor");
+  assert.ok(profile.dns.rules.findIndex((r) => r.server === "local") < profile.dns.rules.findIndex((r) => r.query_type?.includes("AAAA")));
+  assert.equal(profile.route.rule_set[0].type, "inline");
+  assert.ok(profile.route.rule_set[0].rules[0].ip_cidr.length > 10000);
+});
+
+test("optional pilot binding leaves every legacy response byte identical", async () => {
+  const legacy = await fixture();
+  for (const binding of [await pilotFixture(), {}, null]) {
+    for (const format of legacy.subscriptions[0].formats) {
+      const path = "/s/" + token + "/" + format;
+      const before = await call(path, legacy);
+      const after = await pilotCall(path, binding, legacy);
+      assert.equal(after.status, before.status);
+      assert.equal(await after.text(), await before.text());
+    }
+  }
+});
+
+test("owned-host options are strict and preserve narrow bootstrap and DIRECT exceptions", async () => {
+  const config = await pilotFixture();
+  config.subscription_hosts = ["config.nikcode.xyz", OWN_SUBSCRIPTION_HOST];
+  config.rules_url = OWN_RULES_URL;
+  config.devices[0].rule_set_mode = "remote";
+  assert.equal(validPilot(config), true);
+  const response = await pilotCall("/s/" + pilotToken, config);
+  const body = await response.text();
+  assert.ok(new TextEncoder().encode(body).length < 8192);
+  const profile = JSON.parse(body);
+  assert.equal(profile.route.rule_set[0].url, OWN_RULES_URL);
+  assert.deepEqual(profile.route.rule_set[0].http_client, { engine: "go", detour: "direct" });
+  assert.equal(profile.outbounds.find((outbound) => outbound.tag === "direct").domain_resolver, "bootstrap");
+  assert.ok(profile.dns.rules.some((r) => r.domain?.includes(OWN_SUBSCRIPTION_HOST) && r.server === "bootstrap"));
+  assert.deepEqual(profile.route.rules.find((r) => r.domain?.includes(OWN_SUBSCRIPTION_HOST)), {
+    domain: ["config.nikcode.xyz", OWN_SUBSCRIPTION_HOST], network: "tcp", port: [443], action: "route", outbound: "direct",
+  });
+  for (const hosts of [["untrusted.example"], [OWN_SUBSCRIPTION_HOST, OWN_SUBSCRIPTION_HOST], ["https://" + OWN_SUBSCRIPTION_HOST], []]) {
+    assert.equal(validPilot({ ...config, subscription_hosts: hosts }), false);
+  }
+  for (const url of ["http://" + OWN_SUBSCRIPTION_HOST + "/rules/test.srs", OWN_RULES_URL + "?token=secret", OWN_RULES_URL.replace(OWN_SUBSCRIPTION_HOST, "untrusted.example")]) {
+    assert.equal(validPilot({ ...config, rules_url: url }), false);
+  }
+});
+
+test("Cloudflare redirect is confined to pilot paths and an exact owned HTTPS origin", async () => {
+  const legacy = await fixture();
+  const origin = "https://" + OWN_SUBSCRIPTION_HOST;
+  const env = { SERVICE_CONFIG: JSON.stringify(legacy), PILOT_ORIGIN: origin };
+  for (const suffix of ["", "/sing-box-ios"]) {
+    const path = "/s/" + pilotToken + suffix;
+    for (const method of ["GET", "HEAD"]) {
+      const response = await worker.fetch(new Request("https://config.nikcode.xyz" + path, { method }), env);
+      assert.equal(response.status, 307);
+      assert.equal(response.headers.get("location"), origin + path);
+      assert.match(response.headers.get("cache-control"), /no-store/);
+      assert.equal(await response.text(), "");
+    }
+  }
+  for (const format of legacy.subscriptions[0].formats) {
+    const path = "/s/" + token + "/" + format;
+    const before = await call(path, legacy);
+    const after = await worker.fetch(new Request("https://config.nikcode.xyz" + path), env);
+    assert.equal(after.status, before.status);
+    assert.equal(after.headers.get("location"), null);
+    assert.equal(await after.text(), await before.text());
+  }
+  for (const path of ["/s/" + pilotToken + "?anything=1", "/s/" + pilotToken + "/incy", "/s/p_short"]) {
+    assert.equal((await worker.fetch(new Request("https://config.nikcode.xyz" + path), env)).headers.get("location"), null);
+  }
+  for (const invalid of ["http://" + OWN_SUBSCRIPTION_HOST, origin + "/", origin + ":443", "https://untrusted.example", "https://user@" + OWN_SUBSCRIPTION_HOST]) {
+    assert.equal((await worker.fetch(new Request("https://config.nikcode.xyz/s/" + pilotToken), { PILOT_ORIGIN: invalid })).status, 503);
+  }
+});
 
 test("unauthorized_or_revoked_subscription_shouldNotDiscloseCredentials", async () => {
   const config = await fixture();

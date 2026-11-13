@@ -1,0 +1,20 @@
+{
+  "node": {
+    "version": "24.22.3",
+    "url": "https://nodejs.org/dist/v24.22.3/node-v24.22.3-linux-x64.tar.xz",
+    "archive_sha256": "4f2b175a6d53a5c617a80dba2676238a0688cef28c6da4eba35c7d844e66fcfb",
+    "manifest": "https://nodejs.org/dist/v24.22.3/SHASUMS256.txt",
+    "binary_sha256": "a7ec1b37e6ff9d187e4198c5b6df9a4eb1c74dd31804fb3bac55cc4ceca1ac01"
+  },
+  "caddy": {
+    "version": "2.11.9",
+    "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.9/caddy_2.11.9_linux_amd64.tar.gz",
+    "archive_sha256": "5b8cb7faf8726a2028ad96a66e54e6e81e8f361bc6175e5d22bbd997cc5177fb",
+    "digest_source": "https://api.github.com/repos/caddyserver/caddy/releases/tags/v2.11.9",
+    "binary_sha256": "a563843e11cbce39c557bd429ebb787d56f49d51d9bbb3292cd9b36b37a60cdf"
+  },
+  "rules": {
+    "sha256": "bdca5cdb44cdcf0940001e5952386822a6f4ffa8b2c8eea00340aa6f585c7f9d",
+    "bytes": 50096
+  }
+}
